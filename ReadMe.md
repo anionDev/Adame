@@ -17,9 +17,9 @@ Adame is able to do the following things:
 
 Adame is intended to run on linux-systems.
 Furthermore Adame requires that the following commandline-commands are available on your system:
+- python3
 - docker
 - git
-- python3
 - snort
 
 # Installation
