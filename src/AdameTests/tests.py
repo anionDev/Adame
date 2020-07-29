@@ -1,10 +1,10 @@
-from Adame.core import *
+from Adame.core import get_adame_version, create_new_environment, AdameCore
+import pytest
 
 
-def test_1():
-    assert adame.get_adame_version() == "0.1.1"
+def test_current_version():
+    assert "0.1.1" == get_adame_version()
 
 
-def test_2():
-    adame.create_new_environment("name", "repository_folder", "image", False)
-    assert 1 == 1
+def test_adamecore_constructor_does_not_throw_an_exception():
+    AdameCore()

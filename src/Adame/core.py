@@ -1,7 +1,9 @@
 import argparse
 from argparse import RawTextHelpFormatter
+from ScriptCollection.core import write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr
 import sys
-version = "0.1.0"
+import traceback
+version = "0.1.1"
 
 
 class AdameCore(object):
@@ -11,13 +13,44 @@ class AdameCore(object):
         pass
 
     def create_new_environment(self, name: str, folder: str, image: str):
-        print("Hello from Adame: create_new_environment. This function is not implemented yet. name: "+name+",  folder: "+folder+",  image: "+image)
+        return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image))
+
+    def _private_create_new_environment(self, name: str, folder: str, image: str):
+        write_message_to_stdout(f"name: {name}")
+        write_message_to_stdout(f"folder: {folder}")
+        write_message_to_stdout(f"image: {image}")
+        write_message_to_stderr("This function is not implemented yet.")
+        return 1
 
     def start_environment(self, configuration_file: str):
-        print("Hello from Adame: stop_environment. This function is not implemented yet. file: "+configuration_file)
+        return self._private_execute_task("Start environment", lambda: self._private_start_environment(configuration_file))
 
-    def stop_environment(self, configuration_file: str):
-        print("Hello from Adame: stop_environment. This function is not implemented yet. file: "+configuration_file)
+    def _private_start_environment(self, configurationfile: str):
+        write_message_to_stdout(f"configurationfile: {configurationfile}")
+        write_message_to_stderr("This function is not implemented yet.")
+        return 1
+
+    def stop_environment(self, configurationfile: str):
+        return self._private_execute_task("Stop environment", lambda: self._private_stop_environment(configurationfile))
+
+    def _private_stop_environment(self, configurationfile: str):
+        write_message_to_stdout(f"configurationfile: {configurationfile}")
+        write_message_to_stderr("This function is not implemented yet.")
+        return 1
+
+    def _private_execute_task(self, name: str, function):
+        try:
+            if(self.verbose):
+                write_message_to_stdout(f"Start task '{name}'")
+            return function()
+        except Exception as exception:
+            if(self.verbose):
+                write_exception_to_stderr_with_traceback(exception, traceback, f"Exception occurred in task '{name}'")
+            else:
+                write_exception_to_stderr(exception, f"Exception occurred in task '{name}'")
+        finally:
+            if(self.verbose):
+                write_message_to_stdout(f"Finished task '{name}'")
 
 
 def create_new_environment(name: str, folder: str, image: str, verbose: bool):
@@ -45,11 +78,11 @@ def get_adame_version():
 def adame_cli():
     arger = argparse.ArgumentParser(description="""Adame
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
-One focus of adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with adame it is very easy move the application with all its data and configurations to another computer.
-Another focus of adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
+One focus of Adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with Adame it is very easy move the application with all its data and configurations to another computer.
+Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
 
-Requirements:
--docker
+Required commandline-commands:
+-docker-compose
 -git
 -snort""", formatter_class=RawTextHelpFormatter)
 
@@ -74,16 +107,16 @@ Requirements:
     options = arger.parse_args()
     verbose = options.v
     if options.command == create_command_name:
-        create_new_environment(options.name, options.folder, options.image, verbose)
+        return create_new_environment(options.name, options.folder, options.image, verbose)
     elif options.command == start_command_name:
-        start_environment(options.configurationfile, verbose)
+        return start_environment(options.configurationfile, verbose)
     elif options.command == stop_command_name:
-        stop_environment(options.configurationfile, verbose)
+        return stop_environment(options.configurationfile, verbose)
     else:
         if options.command == None:
             print("Adame " + get_adame_version())
             print('Enter a command or run "adame --help" to get help about the usage')
         else:
             print("Unknown command: "+options.command)
-            sys.exit(1)
-    sys.exit(0)
+            return 1
+    return 0
