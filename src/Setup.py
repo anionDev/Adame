@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 import os
 
-productname = "adame"
-version="0.1.0"
+productname = "Adame"
+version = "0.2.0"
 
 with open(f"..{os.path.sep}ReadMe.md", "r", encoding='utf-8') as f:
     long_description = f.read()
