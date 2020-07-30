@@ -29,7 +29,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "scriptCollection==1.0.3",
+        "ScriptCollection==1.3.3",
     ],
     entry_points={
         'console_scripts': [
