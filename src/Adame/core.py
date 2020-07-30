@@ -3,7 +3,7 @@ from argparse import RawTextHelpFormatter
 from ScriptCollection.core import write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr
 import sys
 import traceback
-version = "0.2.1"
+version = "0.2.2"
 
 
 class AdameCore(object):
