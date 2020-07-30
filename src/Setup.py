@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 productname = "Adame"
-version = "0.2.0"
+version = "0.2.1"
 
 with open(f"..{os.path.sep}ReadMe.md", "r", encoding='utf-8') as f:
     long_description = f.read()
@@ -29,7 +29,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "scriptCollection==1.0.3",
+        "ScriptCollection==1.3.3",
     ],
     entry_points={
         'console_scripts': [
