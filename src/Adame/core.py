@@ -41,13 +41,16 @@ class AdameCore(object):
     def _private_execute_task(self, name: str, function):
         try:
             if(self.verbose):
-                write_message_to_stdout(f"Start task '{name}'")
+                write_message_to_stdout(f"Started task '{name}'")
             return function()
         except Exception as exception:
+            exception_message = f"Exception occurred in task '{name}'"
             if(self.verbose):
-                write_exception_to_stderr_with_traceback(exception, traceback, f"Exception occurred in task '{name}'")
+
+                write_exception_to_stderr_with_traceback(exception, traceback, exception_message)
             else:
-                write_exception_to_stderr(exception, f"Exception occurred in task '{name}'")
+                write_exception_to_stderr(exception, exception_message)
+            return 2
         finally:
             if(self.verbose):
                 write_message_to_stdout(f"Finished task '{name}'")
@@ -86,7 +89,7 @@ Required commandline-commands:
 -git
 -snort""", formatter_class=RawTextHelpFormatter)
 
-    arger.add_argument("-v", action="store_true")
+    arger.add_argument("--verbose", action="store_true")
 
     subparsers = arger.add_subparsers(dest="command")
 
@@ -105,7 +108,7 @@ Required commandline-commands:
     stop_parser.add_argument("configurationfile")
 
     options = arger.parse_args()
-    verbose = options.v
+    verbose = options.verbose
     if options.command == create_command_name:
         return create_new_environment(options.name, options.folder, options.image, verbose)
     elif options.command == start_command_name:
@@ -114,9 +117,9 @@ Required commandline-commands:
         return stop_environment(options.configurationfile, verbose)
     else:
         if options.command == None:
-            print("Adame " + get_adame_version())
-            print('Enter a command or run "adame --help" to get help about the usage')
+            write_message_to_stdout(f"Adame {get_adame_version()}")
+            write_message_to_stdout(f"Enter a command or run 'adame --help' to get help about the usage")
+            return 0
         else:
-            print("Unknown command: "+options.command)
+            write_message_to_stdout(f"Unknown command: {options.command}")
             return 1
-    return 0
