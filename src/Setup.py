@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 
 productname = "Adame"
-version = "0.2.1"
+version = "0.2.2"
 
 with open(f"..{os.path.sep}ReadMe.md", "r", encoding='utf-8') as f:
     long_description = f.read()
