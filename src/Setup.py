@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 import os
 
 productname = "Adame"
@@ -33,7 +33,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            f"adame = adame:adame_cli"
+            f"adame = Adame.core:adame_cli"
         ],
     },
 )
