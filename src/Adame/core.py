@@ -201,7 +201,7 @@ This repository manages the data of the application '{configuration.get(self._co
         return False  # TODO
 
     def _private_commit(self, repository: str, message: str):
-        commit_id = git_commit(repository, message, adame_commit_author_name, adame_commit_author_email)
+        commit_id = git_commit(repository, message, self._adame_commit_author_name, self._adame_commit_author_email)
         if(self.verbose):
             write_message_to_stdout(f"Created commit {commit_id} in repository '{repository}'")
 
