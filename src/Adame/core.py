@@ -14,12 +14,11 @@ class AdameCore(object):
 
     # <constants>
 
-    _private_adame_commit_author_name = "Adame"
-    _private_adame_commit_author_email = "Adame@example.com"
-    _private_configuration_section_general = "general"
-    _private_configuration_section_general_key_name = "name"
-    _private_configuration_section_general_key_owner = "owner"
-    _private_configuration_file: str
+    _private_adame_commit_author_name: str = "Adame"
+    _private_configuration_section_general: str = "general"
+    _private_configuration_section_general_key_name: str = "name"
+    _private_configuration_section_general_key_owner: str = "owner"
+    _private_configuration_file: str  # Represents "Adame.configuration" (with folder)
     _private_configuration_folder: str
     _private_security_related_configuration_folder: str
     _private_repository_folder: str
@@ -47,11 +46,10 @@ class AdameCore(object):
         return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner))
 
     def _private_create_new_environment(self, name: str, folder: str, image: str, owner: str):
-        configuration_file = os.path.join(folder, "Adame.configuration")
-        ensure_directory_exists(self._private_security_related_configuration_folder)
+        configuration_file = resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
 
-        self._private_create_adame_configuration_file(configuration_file, folder, owner)
-        self._private_load_configuration(configuration_file)
+        self._private_create_adame_configuration_file(configuration_file, name, owner)
+        ensure_directory_exists(self._private_security_related_configuration_folder)
 
         self._private_create_file_in_repository(self._private_repository_folder, "ReadMe.md", self._private_get_readme_file_content(self._private_configuration))
         self._private_create_file_in_repository(self._private_repository_folder, "License.txt", self._private_get_license_file_content(self._private_configuration))
@@ -72,7 +70,8 @@ class AdameCore(object):
 
     def start_environment(self, configurationfile: str):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        self._private_load_configuration(configurationfile)
+        if self._private_load_configuration(configurationfile) != 0:
+            return 1
         return self._private_execute_task("Start environment", lambda: self._private_start_environment(configurationfile))
 
     def _private_start_environment(self, configurationfile: str):
@@ -86,7 +85,8 @@ class AdameCore(object):
 
     def stop_environment(self, configurationfile: str):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        self._private_load_configuration(configurationfile)
+        if self._private_load_configuration(configurationfile) != 0:
+            return 1
         return self._private_execute_task("Stop environment", lambda: self._private_stop_environment(configurationfile))
 
     def _private_stop_environment(self, configurationfile: str):
@@ -100,13 +100,14 @@ class AdameCore(object):
 
     def apply_configuration(self, configurationfile: str):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        self._private_load_configuration(configurationfile)
+        if self._private_load_configuration(configurationfile) != 0:
+            return 1
         return self._private_execute_task("Apply configuration", lambda: self._private_apply_configuration(configurationfile))
 
     def _private_apply_configuration(self, configurationfile: str):
         # TODO
         write_message_to_stderr(f"Not implemented yet")
-        return 1
+        return 0
 
     # </apply_configuration-command>
 
@@ -114,7 +115,8 @@ class AdameCore(object):
 
     def run(self, configurationfile: str):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        self._private_load_configuration(configurationfile)
+        if self._private_load_configuration(configurationfile) != 0:
+            return 1
         return self._private_execute_task("Run", lambda: self._private_run(configurationfile))
 
     def _private_run(self, configurationfile: str):
@@ -130,7 +132,8 @@ class AdameCore(object):
 
     def save(self, configurationfile: str):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        self._private_load_configuration(configurationfile)
+        if self._private_load_configuration(configurationfile) != 0:
+            return 1
         return self._private_execute_task("Save", lambda: self._private_save(configurationfile))
 
     def _private_save(self, configurationfile: str):
@@ -141,17 +144,20 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_create_adame_configuration_file(self, file: str, name: str, owner: str):
-        folder = os.path.basename(file)
-        ensure_directory_exists(folder)
-        self._private_configuration = ConfigParser()
+    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str):
+        self._private_configuration_file = configuration_file
+        ensure_directory_exists(os.path.dirname(self._private_configuration_file))
+        configparser = ConfigParser()
 
-        self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_name] = name
-        self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
+        configparser.add_section(self._private_configuration_section_general)
+        configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_name] = name
+        configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
-            self._private_configuration.write(configfile)
+            configparser.write(configfile)
         if(self.verbose):
             write_message_to_stdout(f"Created file '{self._private_configuration_file}'")
+
+        self._private_load_configuration(self._private_configuration_file)
 
     def _private_verbose_log_start_by_configuration_file(self, configurationfile: str):
         if(self.verbose):
@@ -170,8 +176,10 @@ class AdameCore(object):
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             self._private_configuration_folder = os.path.join(self._private_repository_folder, "Configuration")
             self._private_security_related_configuration_folder = os.path.join(self._private_configuration_folder, "Security")
+            return True
         except Exception as exception:
             self._private_handle_exception(exception, f"Error while loading configurationfile '{configurationfile}'")
+            return False
 
     def _private_get_dockercompose_file_content(self, image: str):
         return f"""version: '3.8'
@@ -181,7 +189,6 @@ services:
     container_name: '{self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}'
     ports:
     volumes:
-    container_name: '{self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}'
 """
 
     def _private_create_file_in_repository(self, folder, filename, filecontent):
@@ -215,7 +222,7 @@ This repository manages the data of the application {configuration.get(self._pri
         return False  # TODO
 
     def _private_commit(self, repository: str, message: str):
-        commit_id = git_commit(repository, message, self._private_adame_commit_author_name, self._private_adame_commit_author_email)
+        commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "")
         if(self.verbose):
             write_message_to_stdout(f"Created commit {commit_id} in repository '{repository}'")
 
@@ -245,13 +252,13 @@ This repository manages the data of the application {configuration.get(self._pri
 def create_new_environment(name: str, folder: str, image: str, owner: str,  verbose: bool):
     core = AdameCore()
     core.verbose = verbose
-    return core.create_new_environment(name, resolve_relative_path_from_current_working_directory(folder), image, owner)
+    return core.create_new_environment(name, folder, image, owner)
 
 
 def start_environment(configuration_file, verbose: bool):
     core = AdameCore()
     core.verbose = verbose
-    return core.start_environment(resolve_relative_path_from_current_working_directory(configuration_file))
+    return core.start_environment(configuration_file)
 
 
 def stop_environment(configuration_file, verbose: bool):
@@ -263,19 +270,19 @@ def stop_environment(configuration_file, verbose: bool):
 def apply_configuration(configuration_file, verbose: bool):
     core = AdameCore()
     core.verbose = verbose
-    return core.apply_configuration(resolve_relative_path_from_current_working_directory(configuration_file))
+    return core.apply_configuration(configuration_file)
 
 
 def run(configuration_file, verbose: bool):
     core = AdameCore()
     core.verbose = verbose
-    return core.run(resolve_relative_path_from_current_working_directory(configuration_file))
+    return core.run(configuration_file)
 
 
 def save(configuration_file, verbose: bool):
     core = AdameCore()
     core.verbose = verbose
-    return core.save(resolve_relative_path_from_current_working_directory(configuration_file))
+    return core.save(configuration_file)
 
 # </commands>
 
