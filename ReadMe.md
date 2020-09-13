@@ -28,6 +28,11 @@ Furthermore Adame requires that the following commandline-commands are available
 pip install Adame.whl
 ```
 
+# Reference
+
+The reference can be found [here](Reference/index.md);
+
+
 # License
 
-Adame is licensed under the terms of [MIT](https://TODO/Adame/master/License.txt)
+No license available yet.
