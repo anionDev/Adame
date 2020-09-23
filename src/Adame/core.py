@@ -187,8 +187,8 @@ services:
   {self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}:
     image: '{image}'
     container_name: '{self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}'
-    ports:
-    volumes:
+#    ports:
+#    volumes:
 """
 
     def _private_create_file_in_repository(self, folder, filename, filecontent):
@@ -199,7 +199,8 @@ services:
 
     def _private_get_license_file_content(self, configuration: ConfigParser):
         return f"""Owner of this repository and its content: {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_owner)}
-Only the owner of this repository is allowed to read, use, change or publish this repository or its content.
+Only the owner of this repository is allowed to read, use, change, publish this repository or its content.
+Only the owner of this repository is allowed to change the license of this repository or its content.
 """
 
     def _private_get_gitignore_file_content(self, configuration: ConfigParser):
@@ -208,18 +209,20 @@ Only the owner of this repository is allowed to read, use, change or publish thi
     def _private_get_readme_file_content(self, configuration: ConfigParser):
         return f"""# Purpose
 
-This repository manages the data of the application {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}
+This repository manages the data of the application {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}.
 """
 
     def _private_stop_container(self, configuration: ConfigParser):
-        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down", self._private_repository_folder)
+        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_repository_folder)
+        # TODO write in certain file the current timestamp and the info that the container was stopped now
 
     def _private_start_container(self, configuration: ConfigParser):
-        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up -d", self._private_repository_folder)
+        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_repository_folder)
+        # TODO write in certain file the current timestamp and the info that the container was started now
 
     def _private_container_is_running(self, configurationfile: str):
         write_message_to_stderr(f"Not implemented yet")
-        return False  # TODO
+        return False # TODO
 
     def _private_commit(self, repository: str, message: str):
         commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "")
@@ -310,30 +313,30 @@ Required commandline-commands:
 
     create_command_name = "create"
     create_parser = subparsers.add_parser(create_command_name)
-    create_parser.add_argument("name")
-    create_parser.add_argument("folder")
-    create_parser.add_argument("image")
-    create_parser.add_argument("owner")
+    create_parser.add_argument("--name", required=True)
+    create_parser.add_argument("--folder", required=True)
+    create_parser.add_argument("--image", required=True)
+    create_parser.add_argument("--owner", required=True)
 
     start_command_name = "start"
     start_parser = subparsers.add_parser(start_command_name)
-    start_parser.add_argument("configurationfile")
+    start_parser.add_argument("--configurationfile", required=True)
 
     stop_command_name = "stop"
     stop_parser = subparsers.add_parser(stop_command_name)
-    stop_parser.add_argument("configurationfile")
+    stop_parser.add_argument("--configurationfile", required=True)
 
     apply_configuration_command_name = "applyconfiguration"
     apply_configuration_parser = subparsers.add_parser(apply_configuration_command_name)
-    apply_configuration_parser.add_argument("configurationfile")
+    apply_configuration_parser.add_argument("--configurationfile", required=True)
 
     run_command_name = "run"
     run_parser = subparsers.add_parser(run_command_name)
-    run_parser.add_argument("run")
+    apply_configuration_parser.add_argument("--configurationfile", required=True)
 
     save_command_name = "save"
     save_parser = subparsers.add_parser(run_command_name)
-    save_parser.add_argument("save")
+    apply_configuration_parser.add_argument("--configurationfile", required=True)
 
     options = arger.parse_args()
     verbose = options.verbose
@@ -351,11 +354,11 @@ Required commandline-commands:
         return save(options.configurationfile, verbose)
     else:
         if options.command == None:
-            write_message_to_stdout(f"Adame {get_adame_version()}")
-            write_message_to_stdout(f"Enter a command or run 'adame --help' to get help about the usage")
+            write_message_to_stdout(f"Adame v{get_adame_version()}")
+            write_message_to_stdout(f"Run 'adame --help' to get help about the usage.")
             return 0
         else:
-            write_message_to_stdout(f"Unknown command: {options.command}")
+            write_message_to_stdout(f"Unknown command: '{options.command}'")
             return 1
 
 # </miscellaneous>
