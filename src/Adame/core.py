@@ -42,6 +42,7 @@ class AdameCore(object):
     # <create_new_environment-command>
 
     def create_new_environment(self, name: str, folder: str, image: str, owner: str):
+        name=name.replace(" ","-")
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
         return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner))
 
@@ -182,11 +183,12 @@ class AdameCore(object):
             return False
 
     def _private_get_dockercompose_file_content(self, image: str):
+        to_docker_allowed_name=_private_name_to_docker_allowed_name(name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)))
         return f"""version: '3.8'
 services:
-  {self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}:
+  {to_docker_allowed_name}:
     image: '{image}'
-    container_name: '{self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}'
+    container_name: '{to_docker_allowed_name}'
 #    ports:
 #    volumes:
 """
@@ -246,6 +248,10 @@ This repository manages the data of the application {configuration.get(self._pri
             write_exception_to_stderr_with_traceback(exception, traceback, message)
         else:
             write_exception_to_stderr(exception, message)
+
+    def _private_name_to_docker_allowed_name(self, name:str):
+        name=name.lower()
+        return name
 
     # </helper-functions>
 
