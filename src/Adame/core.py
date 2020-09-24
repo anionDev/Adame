@@ -18,6 +18,7 @@ class AdameCore(object):
     _private_configuration_section_general: str = "general"
     _private_configuration_section_general_key_name: str = "name"
     _private_configuration_section_general_key_owner: str = "owner"
+    _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_file: str  # Represents "Adame.configuration" (with folder)
     _private_configuration_folder: str
     _private_security_related_configuration_folder: str
@@ -51,15 +52,15 @@ class AdameCore(object):
 
     # <create_new_environment-command>
 
-    def create_new_environment(self, name: str, folder: str, image: str, owner: str):
+    def create_new_environment(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str):
         name = name.replace(" ", "-")
-        self._private_verbose_log_start_by_create_command(name, folder, image, owner)
-        return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner))
+        self._private_verbose_log_start_by_create_command(name, folder, image, owner, gpgkey_of_owner)
+        return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner, gpgkey_of_owner))
 
-    def _private_create_new_environment(self, name: str, folder: str, image: str, owner: str):
+    def _private_create_new_environment(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str):
         configuration_file = resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
 
-        self._private_create_adame_configuration_file(configuration_file, name, owner)
+        self._private_create_adame_configuration_file(configuration_file, name, owner, gpgkey_of_owner)
         ensure_directory_exists(self._private_security_related_configuration_folder)
 
         self._private_create_file_in_repository(self._private_readme_file, self._private_get_readme_file_content(self._private_configuration))
@@ -73,6 +74,8 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
 
         execute_and_raise_exception_if_exit_code_is_not_zero("git", "init", self._private_repository_folder)
+        execute_and_raise_exception_if_exit_code_is_not_zero("git", "config commit.gpgsign true", self._private_repository_folder)
+        execute_and_raise_exception_if_exit_code_is_not_zero("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
         self._private_commit(self._private_repository_folder, f"Initial commit for Adame app-repository of {name}")
         return 0
@@ -118,6 +121,7 @@ class AdameCore(object):
         return self._private_execute_task("Apply configuration", lambda: self._private_apply_configuration())
 
     def _private_apply_configuration(self):
+        self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
         self._private_recreate_firewall_connection()
@@ -159,22 +163,27 @@ class AdameCore(object):
 
     # <helper-functions>
 
+    def _private_check_integrity_of_repository(self):
+        """This function checks the integrity of the app-repository.
+This function is idempotent."""
+        pass  # TODO Implement this function. This function should print/log a warning is the last commit in this repository was not signed with the key defined in the config or if any commit in the last 24*7h (configurable) days was not signed with the key defined in the config because this seems to be an unexpected/unwanted change.
+
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self):
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
-        pass  # TODO implement this function
+        pass  # TODO Implement this function.
 
     def _private_recreate_siem_connection(self):
         """This function recreate the SIEM-system-connection.
 This function is idempotent."""
-        pass  # TODO implement this function
+        pass  # TODO Implement this function.
 
     def _private_recreate_firewall_connection(self):
         """This function recreate the connection to the firewall and ensures that the firewall-rules will be applied correctly.
 This function is idempotent."""
-        pass  # TODO implement this function
+        pass  # TODO Implement this function.
 
-    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str):
+    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str):
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
         configparser = ConfigParser()
@@ -182,6 +191,7 @@ This function is idempotent."""
         configparser.add_section(self._private_configuration_section_general)
         configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_name] = name
         configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
+        configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
             configparser.write(configfile)
         if(self.verbose):
@@ -193,9 +203,9 @@ This function is idempotent."""
         if(self.verbose):
             write_message_to_stdout(f"Started Adame with configurationfile '{configurationfile}'")
 
-    def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str):
+    def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str):
         if(self.verbose):
-            write_message_to_stdout(f"Started Adame with  name='{name}', folder='{folder}', image='{image}', owner='{owner}'")
+            write_message_to_stdout(f"Started Adame with  name='{name}', folder='{folder}', image='{image}', owner='{owner}', gpgkey_of_owner='{gpgkey_of_owner}'")
 
     def _private_load_configuration(self, configurationfile):
         try:
@@ -298,10 +308,10 @@ This repository manages the data of the application {configuration.get(self._pri
 # <commands>
 
 
-def create_new_environment(name: str, folder: str, image: str, owner: str,  verbose: bool):
+def create_new_environment(name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, verbose: bool):
     core = AdameCore()
     core.verbose = verbose
-    return core.create_new_environment(name, folder, image, owner)
+    return core.create_new_environment(name, folder, image, gpgkey_of_owner, owner)
 
 
 def start_environment(configuration_file, verbose: bool):
@@ -351,6 +361,7 @@ Another focus of Adame is it-forensics and it-security: Adame generates a basic 
 Required commandline-commands:
 -docker-compose
 -git
+-gpg
 -snort""", formatter_class=RawTextHelpFormatter)
 
     arger.add_argument("--verbose", action="store_true")
@@ -363,6 +374,7 @@ Required commandline-commands:
     create_parser.add_argument("--folder", required=True)
     create_parser.add_argument("--image", required=True)
     create_parser.add_argument("--owner", required=True)
+    create_parser.add_argument("--gpgkey_of_owner", required=True)
 
     start_command_name = "start"
     start_parser = subparsers.add_parser(start_command_name)
@@ -387,7 +399,7 @@ Required commandline-commands:
     options = arger.parse_args()
     verbose = options.verbose
     if options.command == create_command_name:
-        return create_new_environment(options.name, options.folder, options.image, options.owner, verbose)
+        return create_new_environment(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, verbose)
     elif options.command == start_command_name:
         return start_environment(options.configurationfile, verbose)
     elif options.command == stop_command_name:
