@@ -23,6 +23,16 @@ class AdameCore(object):
     _private_security_related_configuration_folder: str
     _private_repository_folder: str
     _private_configuration: ConfigParser
+
+    _private_readme_file: str
+    _private_license_file: str
+    _private_gitignore_file: str
+    _private_dockercompose_file: str
+    _private_applicationprovidedsecurityinformation_file: str
+    _private_networktrafficgeneratedrules_file: str
+    _private_networktrafficcustomrules_file: str
+    _private_logfilepatterns_file: str
+    _private_propertiesconfiguration_file: str
     # </constants>
 
     # <properties>
@@ -52,15 +62,15 @@ class AdameCore(object):
         self._private_create_adame_configuration_file(configuration_file, name, owner)
         ensure_directory_exists(self._private_security_related_configuration_folder)
 
-        self._private_create_file_in_repository(self._private_repository_folder, "ReadMe.md", self._private_get_readme_file_content(self._private_configuration))
-        self._private_create_file_in_repository(self._private_repository_folder, "License.txt", self._private_get_license_file_content(self._private_configuration))
-        self._private_create_file_in_repository(self._private_repository_folder, ".gitignore", self._private_get_gitignore_file_content(self._private_configuration))
-        self._private_create_file_in_repository(self._private_configuration_folder, "docker-compose.yml", self._private_get_dockercompose_file_content(image))
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "VisitedRoutesInTestcases.csv", "")
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules", "#<TODO Generate rules from VisitedRoutesInTestcases.csv>")
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules", "")
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "LogfilePatterns.txt", "#<TODO add patterns>")
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "Properties.configuration", "#<TODO add SIEM-address etc>")
+        self._private_create_file_in_repository(self._private_readme_file, self._private_get_readme_file_content(self._private_configuration))
+        self._private_create_file_in_repository(self._private_license_file, self._private_get_license_file_content(self._private_configuration))
+        self._private_create_file_in_repository(self._private_gitignore_file, self._private_get_gitignore_file_content(self._private_configuration))
+        self._private_create_file_in_repository(self._private_dockercompose_file, self._private_get_dockercompose_file_content(image))
+        self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
+        self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
+        self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
+        self._private_create_file_in_repository(self._private_logfilepatterns_file, "")
+        self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
 
         execute_and_raise_exception_if_exit_code_is_not_zero("git", "init", self._private_repository_folder)
 
@@ -75,11 +85,11 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Start environment", lambda: self._private_start_environment(configurationfile))
+        return self._private_execute_task("Start environment", lambda: self._private_start_environment())
 
-    def _private_start_environment(self, configurationfile: str):
-        if(not self._private_container_is_running(configurationfile)):
-            self._private_start_container(self._private_configuration)
+    def _private_start_environment(self):
+        if(not self._private_container_is_running()):
+            self._private_start_container()
         return 0
 
     # </start_environment-command>
@@ -90,11 +100,11 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Stop environment", lambda: self._private_stop_environment(configurationfile))
+        return self._private_execute_task("Stop environment", lambda: self._private_stop_environment())
 
-    def _private_stop_environment(self, configurationfile: str):
-        if(self._private_container_is_running(configurationfile)):
-            self._private_stop_container(self._private_configuration)
+    def _private_stop_environment(self):
+        if(self._private_container_is_running()):
+            self._private_stop_container()
         return 0
 
     # </stop_environment-command>
@@ -105,10 +115,12 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Apply configuration", lambda: self._private_apply_configuration(configurationfile))
+        return self._private_execute_task("Apply configuration", lambda: self._private_apply_configuration())
 
-    def _private_apply_configuration(self, configurationfile: str):
-        # TODO
+    def _private_apply_configuration(self):
+        self._private_regenerate_networktrafficgeneratedrules_filecontent()
+        self._private_recreate_siem_connection()
+        self._private_recreate_firewall_connection()
         write_message_to_stderr(f"Not implemented yet")
         return 0
 
@@ -120,13 +132,13 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Run", lambda: self._private_run(configurationfile))
+        return self._private_execute_task("Run", lambda: self._private_run())
 
-    def _private_run(self, configurationfile: str):
-        self._private_stop_environment(configurationfile)
-        self._private_apply_configuration(configurationfile)
-        self._private_save(configurationfile)
-        self._private_start_environment(configurationfile)
+    def _private_run(self):
+        self._private_stop_environment()
+        self._private_apply_configuration()
+        self._private_save()
+        self._private_start_environment()
         return 0
 
     # </run-command>
@@ -137,15 +149,30 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Save", lambda: self._private_save(configurationfile))
+        return self._private_execute_task("Save", lambda: self._private_save())
 
-    def _private_save(self, configurationfile: str):
+    def _private_save(self):
         self._private_commit(self._private_repository_folder, f"Saved changes")
         return 0
 
     # </save-command>
 
     # <helper-functions>
+
+    def _private_regenerate_networktrafficgeneratedrules_filecontent(self):
+        """This function regenerates the content of the file Networktraffic.Generated.rules.
+This function is idempotent."""
+        pass  # TODO implement this function
+
+    def _private_recreate_siem_connection(self):
+        """This function recreate the SIEM-system-connection.
+This function is idempotent."""
+        pass  # TODO implement this function
+
+    def _private_recreate_firewall_connection(self):
+        """This function recreate the connection to the firewall and ensures that the firewall-rules will be applied correctly.
+This function is idempotent."""
+        pass  # TODO implement this function
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str):
         self._private_configuration_file = configuration_file
@@ -179,9 +206,21 @@ class AdameCore(object):
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             self._private_configuration_folder = os.path.join(self._private_repository_folder, "Configuration")
             self._private_security_related_configuration_folder = os.path.join(self._private_configuration_folder, "Security")
+
+            _private_readme_file = os.path.join(self._private_repository_folder, "ReadMe.md")
+            _private_license_file = os.path.join(self._private_repository_folder, "License.txt")
+            _private_gitignore_file = os.path.join(self._private_repository_folder, ".gitignore")
+            _private_dockercompose_file = os.path.join(self._private_configuration_folder, "docker-compose.yml")
+            _private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
+            _private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
+            _private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
+            _private_logfilepatterns_file = os.path.join(self._private_security_related_configuration_folder, "LogfilePatterns.txt")
+            _private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Properties.configuration")
+
             return True
+
         except Exception as exception:
-            self._private_handle_exception(exception, f"Error while loading configurationfile '{configurationfile}'")
+            self._private_handle_exception(exception, f"Error while loading configurationfile '{configurationfile}'.")
             return False
 
     def _private_get_dockercompose_file_content(self, image: str):
@@ -195,8 +234,7 @@ services:
 #    volumes:
 """
 
-    def _private_create_file_in_repository(self, folder, filename, filecontent):
-        file = os.path.join(folder, filename)
+    def _private_create_file_in_repository(self,  file, filecontent):
         write_text_to_file(file, filecontent, self.encoding)
         if(self.verbose):
             write_message_to_stdout(f"Created file '{file}'")
@@ -216,15 +254,15 @@ Only the owner of this repository is allowed to change the license of this repos
 This repository manages the data of the application {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)}.
 """
 
-    def _private_stop_container(self, configuration: ConfigParser):
+    def _private_stop_container(self):
         execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_repository_folder)
         # TODO write in certain file the current timestamp and the info that the container was stopped now
 
-    def _private_start_container(self, configuration: ConfigParser):
+    def _private_start_container(self):
         execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_repository_folder)
         # TODO write in certain file the current timestamp and the info that the container was started now
 
-    def _private_container_is_running(self, configurationfile: str):
+    def _private_container_is_running(self):
         write_message_to_stderr(f"Not implemented yet")
         return False  # TODO
 
