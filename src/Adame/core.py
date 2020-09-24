@@ -56,9 +56,11 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_repository_folder, "License.txt", self._private_get_license_file_content(self._private_configuration))
         self._private_create_file_in_repository(self._private_repository_folder, ".gitignore", self._private_get_gitignore_file_content(self._private_configuration))
         self._private_create_file_in_repository(self._private_configuration_folder, "docker-compose.yml", self._private_get_dockercompose_file_content(image))
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "networktraffic.rules", "TODO add rules")
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "logfilepatterns.txt", "TODO add patterns")
-        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "properties.configuration", "TODO add SIEM-address etc")
+        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "VisitedRoutesInTestcases.csv", "")
+        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules", "#<TODO Generate rules from VisitedRoutesInTestcases.csv>")
+        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules", "")
+        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "LogfilePatterns.txt", "#<TODO add patterns>")
+        self._private_create_file_in_repository(self._private_security_related_configuration_folder, "Properties.configuration", "#<TODO add SIEM-address etc>")
 
         execute_and_raise_exception_if_exit_code_is_not_zero("git", "init", self._private_repository_folder)
 
