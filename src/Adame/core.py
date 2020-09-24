@@ -1,10 +1,11 @@
 import argparse
 from argparse import RawTextHelpFormatter
-from ScriptCollection.core import write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory
+from ScriptCollection.core import write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace
 import sys
 import traceback
 import configparser
 import os
+from datetime import datetime
 from configparser import ConfigParser
 
 version = "0.2.3"
@@ -172,17 +173,21 @@ class AdameCore(object):
         return self._private_execute_task("Check integrity", lambda: self._private_check_integrity())
 
     def _private_check_integrity(self):
-        # TODO Implement command
+        self._private_check_integrity_of_repository(7)
         return 0
 
     # </check_integrity-command>
 
     # <helper-functions>
 
-    def _private_check_integrity_of_repository(self):
+
+    def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None):
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
-        pass  # TODO Implement this function. This function should print/log a warning is the last commit in this repository was not signed with the key defined in the config or if any commit in the last 24*7h (configurable) days was not signed with the key defined in the config because this seems to be an unexpected/unwanted change.
+        until = datetime.datetime.today()
+        since = until - datetime.timedelta(days=amount_of_days_of_history_to_check)
+        commit_hashs_to_check_in_given_interval = self._private_get_commit_ids_between_dates(until, since)
+        pass  # TODO Implement this function. This function should print a warning is the last commit in this repository was not signed with the key defined in the config or if any commit in the last amount_of_days_of_history_to_check days (configurable) days was not signed with the key defined in the config because this seems to be an unexpected/unwanted change.
 
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self):
         """This function regenerates the content of the file Networktraffic.Generated.rules.
