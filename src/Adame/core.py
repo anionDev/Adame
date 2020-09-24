@@ -8,13 +8,15 @@ import os
 from configparser import ConfigParser
 
 version = "0.2.3"
+product_name = f"Adame"
+adame_with_version = f"{product_name} v{get_adame_version()}"
 
 
 class AdameCore(object):
 
     # <constants>
 
-    _private_adame_commit_author_name: str = "Adame"
+    _private_adame_commit_author_name: str = product_name
     _private_configuration_section_general: str = "general"
     _private_configuration_section_general_key_name: str = "name"
     _private_configuration_section_general_key_owner: str = "owner"
@@ -160,6 +162,20 @@ class AdameCore(object):
         return 0
 
     # </save-command>
+
+    # <check_integrity-command>
+
+    def check_integrity(self, configurationfile: str):
+        self._private_verbose_log_start_by_configuration_file(configurationfile)
+        if self._private_load_configuration(configurationfile) != 0:
+            return 1
+        return self._private_execute_task("Check integrity", lambda: self._private_check_integrity())
+
+    def _private_check_integrity(self):
+        # TODO Implement command
+        return 0
+
+    # </check_integrity-command>
 
     # <helper-functions>
 
@@ -343,6 +359,12 @@ def save(configuration_file, verbose: bool):
     core.verbose = verbose
     return core.save(configuration_file)
 
+
+def check_integrity(configuration_file, verbose: bool):
+    core = AdameCore()
+    core.verbose = verbose
+    return core.check_integrity(configuration_file)
+
 # </commands>
 
 # <miscellaneous>
@@ -353,7 +375,7 @@ def get_adame_version():
 
 
 def adame_cli():
-    arger = argparse.ArgumentParser(description="""Adame
+    arger = argparse.ArgumentParser(description=f"""{adame_with_version}
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
 One focus of Adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with Adame it is very easy move the application with all its data and configurations to another computer.
 Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
@@ -396,6 +418,10 @@ Required commandline-commands:
     save_parser = subparsers.add_parser(run_command_name)
     save_parser.add_argument("--configurationfile", required=True)
 
+    check_integrity_command_name = "checkintegrity"
+    check_integrity_parser = subparsers.add_parser(run_command_name)
+    check_integrity_parser.add_argument("--configurationfile", required=True)
+
     options = arger.parse_args()
     verbose = options.verbose
     if options.command == create_command_name:
@@ -410,10 +436,12 @@ Required commandline-commands:
         return run(options.configurationfile, verbose)
     elif options.command == save_command_name:
         return save(options.configurationfile, verbose)
+    elif options.command == check_integrity_command_name:
+        return check_integrity(options.configurationfile, verbose)
     else:
         if options.command == None:
-            write_message_to_stdout(f"Adame v{get_adame_version()}")
-            write_message_to_stdout(f"Run 'adame --help' to get help about the usage.")
+            write_message_to_stdout(adame_with_version)
+            write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
             return 0
         else:
             write_message_to_stdout(f"Unknown command: '{options.command}'")
