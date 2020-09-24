@@ -250,12 +250,12 @@ This function is idempotent."""
             return False
 
     def _private_get_dockercompose_file_content(self, image: str):
-        to_docker_allowed_name = self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
+        name_as_docker_allowed_name = self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
         return f"""version: '3.8'
 services:
-  {to_docker_allowed_name}:
+  {name_as_docker_allowed_name}:
     image: '{image}'
-    container_name: '{to_docker_allowed_name}'
+    container_name: '{name_as_docker_allowed_name}'
 #    ports:
 #    volumes:
 """
@@ -386,7 +386,7 @@ Required commandline-commands:
 -gpg
 -snort""", formatter_class=RawTextHelpFormatter)
 
-    arger.add_argument("--verbose", action="store_true")
+    arger.add_argument("--verbose", action="store_true", required=False)
 
     subparsers = arger.add_subparsers(dest="command")
 
@@ -415,36 +415,34 @@ Required commandline-commands:
     run_parser.add_argument("--configurationfile", required=True)
 
     save_command_name = "save"
-    save_parser = subparsers.add_parser(run_command_name)
+    save_parser = subparsers.add_parser(save_command_name)
     save_parser.add_argument("--configurationfile", required=True)
 
     check_integrity_command_name = "checkintegrity"
-    check_integrity_parser = subparsers.add_parser(run_command_name)
+    check_integrity_parser = subparsers.add_parser(check_integrity_command_name)
     check_integrity_parser.add_argument("--configurationfile", required=True)
 
     options = arger.parse_args()
-    verbose = options.verbose
+
+    core = AdameCore()
+    core.verbose = options.verbose
     if options.command == create_command_name:
-        return create_new_environment(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, verbose)
+        return core.create_new_environment(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
     elif options.command == start_command_name:
-        return start_environment(options.configurationfile, verbose)
+        return core.start_environment(options.configurationfile)
     elif options.command == stop_command_name:
-        return stop_environment(options.configurationfile, verbose)
+        return core.stop_environment(options.configurationfile)
     elif options.command == apply_configuration_command_name:
-        return apply_configuration(options.configurationfile, verbose)
+        return core.apply_configuration(options.configurationfile)
     elif options.command == run_command_name:
-        return run(options.configurationfile, verbose)
+        return core.run(options.configurationfile)
     elif options.command == save_command_name:
-        return save(options.configurationfile, verbose)
+        return core.save(options.configurationfile)
     elif options.command == check_integrity_command_name:
-        return check_integrity(options.configurationfile, verbose)
+        return core.check_integrity(options.configurationfile)
     else:
-        if options.command == None:
-            write_message_to_stdout(adame_with_version)
-            write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
-            return 0
-        else:
-            write_message_to_stdout(f"Unknown command: '{options.command}'")
-            return 1
+        write_message_to_stdout(adame_with_version)
+        write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
+        return 0
 
 # </miscellaneous>
