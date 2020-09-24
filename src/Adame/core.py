@@ -42,7 +42,7 @@ class AdameCore(object):
     # <create_new_environment-command>
 
     def create_new_environment(self, name: str, folder: str, image: str, owner: str):
-        name=name.replace(" ","-")
+        name = name.replace(" ", "-")
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
         return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner))
 
@@ -183,7 +183,7 @@ class AdameCore(object):
             return False
 
     def _private_get_dockercompose_file_content(self, image: str):
-        to_docker_allowed_name=_private_name_to_docker_allowed_name(name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name)))
+        to_docker_allowed_name = self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
         return f"""version: '3.8'
 services:
   {to_docker_allowed_name}:
@@ -224,7 +224,7 @@ This repository manages the data of the application {configuration.get(self._pri
 
     def _private_container_is_running(self, configurationfile: str):
         write_message_to_stderr(f"Not implemented yet")
-        return False # TODO
+        return False  # TODO
 
     def _private_commit(self, repository: str, message: str):
         commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "")
@@ -249,8 +249,8 @@ This repository manages the data of the application {configuration.get(self._pri
         else:
             write_exception_to_stderr(exception, message)
 
-    def _private_name_to_docker_allowed_name(self, name:str):
-        name=name.lower()
+    def _private_name_to_docker_allowed_name(self, name: str):
+        name = name.lower()
         return name
 
     # </helper-functions>
@@ -338,11 +338,11 @@ Required commandline-commands:
 
     run_command_name = "run"
     run_parser = subparsers.add_parser(run_command_name)
-    apply_configuration_parser.add_argument("--configurationfile", required=True)
+    run_parser.add_argument("--configurationfile", required=True)
 
     save_command_name = "save"
     save_parser = subparsers.add_parser(run_command_name)
-    apply_configuration_parser.add_argument("--configurationfile", required=True)
+    save_parser.add_argument("--configurationfile", required=True)
 
     options = arger.parse_args()
     verbose = options.verbose
