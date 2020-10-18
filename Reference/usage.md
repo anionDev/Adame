@@ -4,6 +4,8 @@
 
 The behavior of all commands (except `create`) is idempotent.
 
+Caution: The commands are not intended to be executed in an unattended script since it contains user-interaction (gpg-pinentry).
+
 ## Commands
 
 Adame knows the following commands:
@@ -67,7 +69,6 @@ An application is running. Now we configure the environment to use a new version
 - saves the current state
 - ensures that the application will be started again
 
-Caution: This command is not intended to be executed in an unattended script since it contains user-interaction (caling the `save`-command).
 
 ### save
 
@@ -79,4 +80,3 @@ Caution: This command is not intended to be executed in an unattended script sin
 
 This command saves the current state of the Docker-container. This command assumes that whenever the docker-container is writing anything into a volume mounted into the docker-container then this is a (part of a) valid state of the application.
 
-Caution: This command is not intended to be executed in an unattended script since it contains user-interaction (gpg-pinentry).
