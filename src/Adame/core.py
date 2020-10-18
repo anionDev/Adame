@@ -145,6 +145,7 @@ class AdameCore(object):
         self._private_recreate_siem_connection()
         self._private_recreate_firewall_connection()
         self._private_save()
+        self._private_log_information("Reapplied configuration")
         return 0
 
     # </apply_configuration-command>
