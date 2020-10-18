@@ -145,7 +145,7 @@ class AdameCore(object):
         self._private_recreate_siem_connection()
         self._private_recreate_firewall_connection()
         self._private_save()
-        self._private_log_information("Reapplied configuration")
+        self._private_log_information("Reapplied configuration", False, True, True)
         return 0
 
     # </apply_configuration-command>
@@ -348,11 +348,11 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_stop_container(self):
         execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_repository_folder)
-        self._private_log_information("Container was stopped")
+        self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self):
         execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_repository_folder)
-        self._private_log_information("Container was started")
+        self._private_log_information("Container was started", False, True, True)
 
     def _private_container_is_running(self):
         return False  # TODO
@@ -362,11 +362,11 @@ The license of this repository is defined in the file 'License.txt'.
         remote_name = "Backup"
         branch_name = "master"
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
-        self._private_log_information(f"Created commit {commit_id} in repository '{repository}'", True)
+        self._private_log_information(f"Created commit {commit_id} in repository '{repository}'", False, True, True)
         if self._private_remote_address_is_available:
             git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
             git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
-            self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}")
+            self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}", False, True, True)
 
     def _private_name_to_docker_allowed_name(self, name: str):
         name = name.lower()
@@ -374,13 +374,13 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_execute_task(self, name: str, function):
         try:
-            self._private_log_information(f"Started task '{name}'", True)
+            self._private_log_information(f"Started task '{name}'")
             return function()
         except Exception as exception:
             self._private_log_exception(f"Exception occurred in task '{name}'", exception)
             return 2
         finally:
-            self._private_log_information(f"Finished task '{name}'", True)
+            self._private_log_information(f"Finished task '{name}'")
 
     def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
