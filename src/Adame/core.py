@@ -12,7 +12,7 @@ import time
 import datetime
 
 version = "0.2.3"
-product_name = f"Adame"
+product_name = "Adame"
 adame_with_version = f"{product_name} v{get_adame_version()}"
 
 
@@ -46,9 +46,10 @@ class AdameCore(object):
     _private_logfilepatterns_file: str
     _private_propertiesconfiguration_file: str
 
-    gpgkey_of_owner_is_available: bool
-    remote_address_is_available: bool
- # </constants>
+    _private_gpgkey_of_owner_is_available: bool
+    _private_remote_address_is_available: bool
+
+    # </constants>
 
     # <properties>
 
@@ -90,7 +91,7 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
 
         execute_and_raise_exception_if_exit_code_is_not_zero("git", "init", self._private_repository_folder)
-        if self.gpgkey_of_owner_is_available:
+        if self._private_gpgkey_of_owner_is_available:
             execute_and_raise_exception_if_exit_code_is_not_zero("git", "config commit.gpgsign true", self._private_repository_folder)
             execute_and_raise_exception_if_exit_code_is_not_zero("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
@@ -231,18 +232,15 @@ This function is idempotent."""
 
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
             configparser.write(configfile)
-        if(self.verbose):
-            write_message_to_stdout(f"Created file '{self._private_configuration_file}'")
+        self._private_log_information(f"Created file '{self._private_configuration_file}'", True)
 
         return self._private_load_configuration(self._private_configuration_file)
 
     def _private_verbose_log_start_by_configuration_file(self, configurationfile: str):
-        if(self.verbose):
-            write_message_to_stdout(f"Started Adame with configurationfile '{configurationfile}'")
+        self._private_log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
 
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str):
-        if(self.verbose):
-            write_message_to_stdout(f"Started Adame with  name='{name}', folder='{folder}', image='{image}', owner='{owner}', gpgkey_of_owner='{gpgkey_of_owner}'")
+        self._private_log_information(f"Started Adame with  name='{name}', folder='{folder}', image='{image}', owner='{owner}', gpgkey_of_owner='{gpgkey_of_owner}'", True)
 
     def _private_load_configuration(self, configurationfile):
         try:
@@ -272,18 +270,18 @@ This function is idempotent."""
             ensure_directory_exists(self._private_log_folder_for_application)
             self._private_log_file_for_adame_overhead: str = os.path.join(self._private_log_folder_for_internal_overhead, "Adame.log")
 
-            self.gpgkey_of_owner_is_available = string_is_none_or_whitespace(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
-            self.remote_address_is_available = string_is_none_or_whitespace(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress])
+            self._private_gpgkey_of_owner_is_available = string_is_none_or_whitespace(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
+            self._private_remote_address_is_available = string_is_none_or_whitespace(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress])
 
-            if(not self.gpgkey_of_owner_is_available):
-                write_message_to_stdout(f"Warning: GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
-            if(not self.remote_address_is_available):
-                write_message_to_stdout(f"Warning: Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
+            if(not self._private_gpgkey_of_owner_is_available):
+                self._private_log_information(f"Warning: GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
+            if(not self._private_remote_address_is_available):
+                self._private_log_information(f"Warning: Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
 
             return 0
 
         except Exception as exception:
-            self._private_handle_exception(exception, f"Error while loading configurationfile '{configurationfile}'.")
+            self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             return 1
 
     def _private_get_dockercompose_file_content(self, image: str):
@@ -299,8 +297,7 @@ services:
 
     def _private_create_file_in_repository(self,  file, filecontent):
         write_text_to_file(file, filecontent, self.encoding)
-        if(self.verbose):
-            write_message_to_stdout(f"Created file '{file}'")
+        self._private_log_information(f"Created file '{file}'", True)
 
     def _private_get_license_file_content(self, configuration: ConfigParser):
         return f"""Owner of this repository and its content: {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_owner)}
@@ -314,12 +311,12 @@ Only the owner of this repository is allowed to change the license of this repos
 
     def _private_get_readme_file_content(self, configuration: ConfigParser, image: str):
 
-        if self.remote_address_is_available:
+        if self._private_remote_address_is_available:
             remote_address_info = f"The data of this repository will be saved as backup in '{configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)}'."
         else:
             remote_address_info = "Currently there is no backup-address defined for backups of this repository."
 
-        if self.gpgkey_of_owner_is_available:
+        if self._private_gpgkey_of_owner_is_available:
             gpgkey_of_owner_info = f"The integrity of the data of this repository will ensured using the GPG-key {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_gpgkeyofowner)}."
         else:
             gpgkey_of_owner_info = "Currently there is no GPG-key defined to ensure the integrity of this repository."
@@ -364,9 +361,8 @@ The license of this repository is defined in the file 'License.txt'.
         remote_name = "Backup"
         branch_name = "master"
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
-        if(self.verbose):
-            write_message_to_stdout(f"Created commit {commit_id} in repository '{repository}'")
-        if self.remote_address_is_available:
+        self._private_log_information(f"Created commit {commit_id} in repository '{repository}'", True)
+        if self._private_remote_address_is_available:
             git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
             git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
             self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}")
@@ -377,46 +373,46 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_execute_task(self, name: str, function):
         try:
-            if(self.verbose):
-                write_message_to_stdout(f"Started task '{name}'")
+            self._private_log_information(f"Started task '{name}'", True)
             return function()
         except Exception as exception:
-            self._private_handle_exception(exception, f"Exception occurred in task '{name}'")
+            self._private_log_exception(f"Exception occurred in task '{name}'", exception)
             return 2
         finally:
-            if(self.verbose):
-                write_message_to_stdout(f"Finished task '{name}'")
+            self._private_log_information(f"Finished task '{name}'", True)
 
-    def _private_handle_exception(self, exception: Exception, message: str, log_to_logfile: bool = True):
+    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+        self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
+
+    def _private_log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+        self._private_write_to_log("Warning", message, is_verbose_log_entry, write_to_console, write_to_logfile)
+
+    def _private_log_error(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+        self._private_write_to_log("Error", message, is_verbose_log_entry, write_to_console, write_to_logfile)
+
+    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+        self._private_write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
         if(self.verbose):
             write_exception_to_stderr_with_traceback(exception, traceback, message)
-        else:
-            write_exception_to_stderr(exception, message)
-        if log_to_logfile:
-            self._private_log_exception(message, exception)
 
-    def _private_log_information(self, message: str):
-        self._private_write_to_log("Information", message)
-
-    def _private_log_warning(self, message: str):
-        self._private_write_to_log("Warning", message)
-
-    def _private_log_error(self, message: str):
-        self._private_write_to_log("Error", message)
-
-    def _private_log_exception(self, message: str, exception: Exception):
-        self._private_write_to_log("Error", f"{message}; {str(exception)}")
-
-    def _private_write_to_log(self, loglevel: str, message: str):
-        ensure_file_exists(self._private_log_file_for_adame_overhead)
+    def _private_write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool):
+        if is_verbose_log_entry and not self.verbose:
+            return
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         logentry = f"[{timestamp}] [{loglevel}] {message}"
-        if file_is_empty(self._private_log_file_for_adame_overhead):
-            prefix = ''
-        else:
-            prefix = '\n'
-        with open(self._private_log_file_for_adame_overhead, "a") as file:
-            file.write(prefix+logentry)
+        if(write_to_console):
+            if(loglevel == "Error"):
+                write_message_to_stderr(logentry)
+            else:
+                write_message_to_stdout(logentry)
+        if(write_to_logfile):
+            ensure_file_exists(self._private_log_file_for_adame_overhead)
+            if file_is_empty(self._private_log_file_for_adame_overhead):
+                prefix = ''
+            else:
+                prefix = '\n'
+            with open(self._private_log_file_for_adame_overhead, "a") as file:
+                file.write(prefix+logentry)
 
     # </helper-functions>
 
