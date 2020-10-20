@@ -218,7 +218,21 @@ This function is idempotent."""
     def _private_recreate_firewall_connection(self):
         """This function recreate the connection to the firewall and ensures that the firewall-rules will be applied correctly.
 This function is idempotent."""
-        pass  # TODO Implement this function.
+        self._private_ensure_firewall_rules_will_be_applied()
+        self._private_test_firewall()
+
+    def _private_ensure_firewall_rules_will_be_applied(self):
+        if(not self._private_firewall_is_connection()):
+            self._private_add_firewall_connection()
+
+    def _private_firewall_is_connection(self):
+        pass  # TODO
+
+    def _private_add_firewall_connection(self):
+        pass  # TODO
+
+    def _private_test_firewall(self):
+        pass  # TODO
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str):
         self._private_configuration_file = configuration_file
