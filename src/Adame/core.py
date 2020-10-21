@@ -143,7 +143,7 @@ class AdameCore(object):
         self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
-        self._private_recreate_firewall_connection()
+        self._private_ensure_intrusion_detection_is_running()
         self._private_save()
         self._private_log_information("Reapplied configuration", False, True, True)
         return 0
@@ -161,7 +161,6 @@ class AdameCore(object):
     def _private_run(self):
         self._private_stop_environment()
         self._private_apply_configuration()
-        self._private_save()
         self._private_start_environment()
         return 0
 
@@ -208,31 +207,35 @@ This function is idempotent."""
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self):
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
-        pass  # TODO Implement this function.
+        pass  # TODO This function must
+        # - process ApplicationProvidedSecurityInformation.xml
+        # - add a testrule for _private_test_intrusion_detection()
+        # - add the rules from Networktraffic.Custom.rules
 
     def _private_recreate_siem_connection(self):
         """This function recreate the SIEM-system-connection.
 This function is idempotent."""
         pass  # TODO Implement this function.
 
-    def _private_recreate_firewall_connection(self):
-        """This function recreate the connection to the firewall and ensures that the firewall-rules will be applied correctly.
+    def _private_ensure_intrusion_detection_is_running(self):
+        """This function ensures that the intrusion-detection-system is running and the rules will be applied correctly.
 This function is idempotent."""
-        self._private_ensure_firewall_rules_will_be_applied()
-        self._private_test_firewall()
+        if(not self._private_intrusion_detection_is_running()):
+            self._private_stop_intrusion_detection()
+        self._private_start_intrusion_detection()
+        self._private_test_intrusion_detection()
 
-    def _private_ensure_firewall_rules_will_be_applied(self):
-        if(not self._private_firewall_is_connection()):
-            self._private_add_firewall_connection()
+    def _private_intrusion_detection_is_running(self):
+        pass  # TODO return true if and only if the intrusion-detection-system (which was started by self._private_start_intrusion_detection()) is running
 
-    def _private_firewall_is_connection(self):
-        pass  # TODO
+    def _private_start_intrusion_detection(self):
+        pass  # TODO start the intrusion-detection-system as daemon
 
-    def _private_add_firewall_connection(self):
-        pass  # TODO
+    def _private_stop_intrusion_detection(self):
+        pass  # TODO stop a intrusion-detection-system (which was started by self._private_start_intrusion_detection())
 
-    def _private_test_firewall(self):
-        pass  # TODO
+    def _private_test_intrusion_detection(self):
+        pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str):
         self._private_configuration_file = configuration_file
