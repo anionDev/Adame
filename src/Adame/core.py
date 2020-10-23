@@ -12,7 +12,7 @@ import time
 import datetime
 
 
-version = "0.2.4"
+version = "0.2.5"
 product_name = "Adame"
 adame_with_version = f"{product_name} v{version}"
 
@@ -495,20 +495,37 @@ Required commandline-commands:
 
     core = AdameCore()
     core.verbose = options.verbose
+
     if options.command == create_command_name:
-        return core.create_new_environment(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, options.remote_address)
+
+        gpgkey_of_owner = options.gpgkey_of_owner
+        if gpgkey_of_owner is None:
+            gpgkey_of_owner = ""
+
+        remote_address = options.remote_address
+        if remote_address is None:
+            remote_address = ""
+
+        return core.create_new_environment(options.name, options.folder, options.image, options.owner, gpgkey_of_owner, remote_address)
+
     elif options.command == start_command_name:
         return core.start_environment(options.configurationfile)
+
     elif options.command == stop_command_name:
         return core.stop_environment(options.configurationfile)
+
     elif options.command == apply_configuration_command_name:
         return core.apply_configuration(options.configurationfile)
+
     elif options.command == run_command_name:
         return core.run(options.configurationfile)
+
     elif options.command == save_command_name:
         return core.save(options.configurationfile)
+
     elif options.command == check_integrity_command_name:
         return core.check_integrity(options.configurationfile)
+
     else:
         write_message_to_stdout(adame_with_version)
         write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
