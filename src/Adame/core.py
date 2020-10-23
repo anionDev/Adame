@@ -68,8 +68,28 @@ class AdameCore(object):
 
     # <create_new_environment-command>
 
-    def create_new_environment(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = "", remote_address: str = ""):
+    def create_new_environment(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
+
+        if name is None:
+            raise Exception("Argument 'name' is not defined")
+
+        if folder is None:
+            raise Exception("Argument 'folder' is not defined")
+
+        if image is None:
+            raise Exception("Argument 'image' is not defined")
+
+        if owner is None:
+            raise Exception("Argument 'owner' is not defined")
+
+        if gpgkey_of_owner is None:
+            gpgkey_of_owner = ""
+
+        if remote_address is None:
+            remote_address = ""
+
         name = name.replace(" ", "-")
+
         self._private_verbose_log_start_by_create_command(name, folder, image, owner, gpgkey_of_owner)
         return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
@@ -105,6 +125,9 @@ class AdameCore(object):
     # <start_environment-command>
 
     def start_environment(self, configurationfile: str):
+
+        _private_check_configurationfile_argument(configurationfile)
+
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
@@ -120,6 +143,9 @@ class AdameCore(object):
     # <stop_environment-command>
 
     def stop_environment(self, configurationfile: str):
+
+        _private_check_configurationfile_argument(configurationfile)
+
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
@@ -135,6 +161,9 @@ class AdameCore(object):
     # <apply_configuration-command>
 
     def apply_configuration(self, configurationfile: str):
+
+        _private_check_configurationfile_argument(configurationfile)
+
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
@@ -154,6 +183,9 @@ class AdameCore(object):
     # <run-command>
 
     def run(self, configurationfile: str):
+
+        _private_check_configurationfile_argument(configurationfile)
+
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
@@ -170,6 +202,9 @@ class AdameCore(object):
     # <save-command>
 
     def save(self, configurationfile: str):
+
+        _private_check_configurationfile_argument(configurationfile)
+
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
@@ -184,6 +219,9 @@ class AdameCore(object):
     # <check_integrity-command>
 
     def check_integrity(self, configurationfile: str):
+
+        _private_check_configurationfile_argument(configurationfile)
+
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
@@ -196,6 +234,11 @@ class AdameCore(object):
     # </check_integrity-command>
 
     # <helper-functions>
+
+    def _private_check_configurationfile_argument(configurationfile:str):
+        if configurationfile is None:
+            raise Exception("Argument 'configurationfile' is not defined")
+
 
     def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None):
         """This function checks the integrity of the app-repository.
@@ -498,15 +541,7 @@ Required commandline-commands:
 
     if options.command == create_command_name:
 
-        gpgkey_of_owner = options.gpgkey_of_owner
-        if gpgkey_of_owner is None:
-            gpgkey_of_owner = ""
-
-        remote_address = options.remote_address
-        if remote_address is None:
-            remote_address = ""
-
-        return core.create_new_environment(options.name, options.folder, options.image, options.owner, gpgkey_of_owner, remote_address)
+        return core.create_new_environment(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, options.remote_address)
 
     elif options.command == start_command_name:
         return core.start_environment(options.configurationfile)
