@@ -1,4 +1,4 @@
-from Adame.core import get_adame_version, create_new_environment, AdameCore
+from Adame.core import get_adame_version, AdameCore
 import pytest
 import unittest
 
