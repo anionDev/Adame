@@ -11,9 +11,10 @@ from configparser import ConfigParser
 import time
 import datetime
 
+
 version = "0.2.3"
 product_name = "Adame"
-adame_with_version = f"{product_name} v{get_adame_version()}"
+adame_with_version = f"{product_name} v{version}"
 
 
 class AdameCore(object):
