@@ -1,7 +1,7 @@
 import argparse
 import socket
 from argparse import RawTextHelpFormatter
-from ScriptCollection.core import file_is_empty, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace
+from ScriptCollection.core import file_is_empty, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content
 import sys
 import traceback
 import configparser
@@ -10,7 +10,6 @@ from datetime import datetime
 from configparser import ConfigParser
 import time
 import datetime
-
 
 version = "0.2.6"
 product_name = "Adame"
@@ -126,7 +125,7 @@ class AdameCore(object):
 
     def start_environment(self, configurationfile: str):
 
-        _private_check_configurationfile_argument(configurationfile)
+        self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
@@ -144,7 +143,7 @@ class AdameCore(object):
 
     def stop_environment(self, configurationfile: str):
 
-        _private_check_configurationfile_argument(configurationfile)
+        self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
@@ -162,7 +161,7 @@ class AdameCore(object):
 
     def apply_configuration(self, configurationfile: str):
 
-        _private_check_configurationfile_argument(configurationfile)
+        self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
@@ -184,7 +183,7 @@ class AdameCore(object):
 
     def run(self, configurationfile: str):
 
-        _private_check_configurationfile_argument(configurationfile)
+        self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
@@ -203,7 +202,7 @@ class AdameCore(object):
 
     def save(self, configurationfile: str):
 
-        _private_check_configurationfile_argument(configurationfile)
+        self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
@@ -220,7 +219,7 @@ class AdameCore(object):
 
     def check_integrity(self, configurationfile: str):
 
-        _private_check_configurationfile_argument(configurationfile)
+        self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
@@ -235,10 +234,9 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_check_configurationfile_argument(configurationfile:str):
+    def _private_check_configurationfile_argument(self, configurationfile: str):
         if configurationfile is None:
             raise Exception("Argument 'configurationfile' is not defined")
-
 
     def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None):
         """This function checks the integrity of the app-repository.
@@ -332,8 +330,8 @@ This function is idempotent."""
             ensure_directory_exists(self._private_log_folder_for_application)
             self._private_log_file_for_adame_overhead: str = os.path.join(self._private_log_folder_for_internal_overhead, "Adame.log")
 
-            self._private_gpgkey_of_owner_is_available = string_is_none_or_whitespace(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
-            self._private_remote_address_is_available = string_is_none_or_whitespace(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress])
+            self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
+            self._private_remote_address_is_available = string_has_nonwhitespace_content(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress])
 
             if(not self._private_gpgkey_of_owner_is_available):
                 self._private_log_information(f"Warning: GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
