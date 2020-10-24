@@ -26,7 +26,7 @@ class AdameCore(object):
     _private_configuration_section_general_key_owner: str = "owner"
     _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
-    _private_configuration_file: str  # Represents "Adame.configuration" (with folder)
+    _private_configuration_file: str # Represents "Adame.configuration" (with folder)
     _private_configuration_folder: str
     _private_security_related_configuration_folder: str
     _private_repository_folder: str
