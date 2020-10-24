@@ -4,7 +4,9 @@
 
 The behavior of all commands (except `create`) is idempotent.
 
-Caution: The commands are not intended to be executed in an unattended script since it contains user-interaction (gpg-pinentry).
+Caution:
+- The commands are not intended to be executed in an unattended script since it contains user-interaction (gpg-pinentry).
+- Adame requires elevated privileges for executing commands like snort.
 
 ## Commands
 

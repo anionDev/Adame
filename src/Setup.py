@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 productname = "Adame"
-version = "0.2.7"
+version = "0.2.8"
 
 
 
