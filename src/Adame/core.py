@@ -237,7 +237,33 @@ class AdameCore(object):
 
     # </checkintegrity-command>
 
+    # <diagnosis-command>
+
+    def diagnosis(self, configurationfile: str):
+
+        self._private_verbose_log_start_by_configuration_file(configurationfile)
+        if configurationfile is not None:
+            if self._private_load_configuration(configurationfile) != 0:
+                return 1
+        return self._private_execute_task("Diagnosis", lambda: self._private_diagnosis())
+
+    def _private_diagnosis(self):
+        if self._private_adame_general_diagonisis() != 0:
+            return 1
+        if self._private_configuration is not None:
+            if self._private_adame_repository_diagonisis() != 0:
+                return 1
+        return 0
+
+    # </checkintegrity-command>
+
     # <helper-functions>
+
+    def _private_adame_general_diagonisis(self):
+        pass  # TODO implement function
+
+    def _private_adame_repository_diagonisis(self):
+        pass  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str):
         if configurationfile is None:
@@ -476,7 +502,7 @@ The license of this repository is defined in the file 'License.txt'.
                 write_message_to_stderr(logentry)
             else:
                 write_message_to_stdout(logentry)
-        if(write_to_logfile):
+        if(write_to_logfile and self._private_log_file_for_adame_overhead is not None):
             ensure_file_exists(self._private_log_file_for_adame_overhead)
             if file_is_empty(self._private_log_file_for_adame_overhead):
                 prefix = ''
@@ -543,6 +569,10 @@ Required commandline-commands:
     checkintegrity_parser = subparsers.add_parser(checkintegrity_command_name)
     checkintegrity_parser.add_argument("--configurationfile", required=True)
 
+    diagnosis_command_name = "diagnosis"
+    diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
+    diagnosis_parser.add_argument("--configurationfile", required=False)
+
     options = arger.parse_args()
 
     core = AdameCore()
@@ -568,6 +598,9 @@ Required commandline-commands:
 
     elif options.command == checkintegrity_command_name:
         return core.checkintegrity(options.configurationfile)
+
+    elif options.command == diagnosis_command_name:
+        return core.diagnosis(options.configurationfile)
 
     else:
         write_message_to_stdout(adame_with_version)
