@@ -1,7 +1,7 @@
 import argparse
 import socket
 from argparse import RawTextHelpFormatter
-from ScriptCollection.core import file_is_empty, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content
+from ScriptCollection.core import file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content
 import sys
 import traceback
 import configparser
@@ -11,7 +11,7 @@ from configparser import ConfigParser
 import time
 import datetime
 
-version = "0.2.9"
+version = "0.2.10"
 product_name = "Adame"
 adame_with_version = f"{product_name} v{version}"
 
@@ -26,7 +26,7 @@ class AdameCore(object):
     _private_configuration_section_general_key_owner: str = "owner"
     _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
-    _private_configuration_file: str # Represents "Adame.configuration" (with folder)
+    _private_configuration_file: str  # Represents "Adame.configuration" (with folder)
     _private_configuration_folder: str
     _private_security_related_configuration_folder: str
     _private_repository_folder: str
@@ -65,15 +65,27 @@ class AdameCore(object):
 
     # </initialization>
 
-    # <create_new_environment-command>
+    # <create-command>
 
-    def create_new_environment(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
+    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
+
+        self._private_verbose_log_start_by_create_command(name, folder, image, owner)
+        return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
+
+    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = ""):
 
         if name is None:
             raise Exception("Argument 'name' is not defined")
+        else:
+            name = name.replace(" ", "-")
 
         if folder is None:
             raise Exception("Argument 'folder' is not defined")
+        else:
+            if(os.path.isdir(folder) and not folder_is_empty(folder)):
+                raise Exception(f"Folder '{folder}' does already have content")
+            else:
+                ensure_directory_exists(folder)
 
         if image is None:
             raise Exception("Argument 'image' is not defined")
@@ -86,13 +98,6 @@ class AdameCore(object):
 
         if remote_address is None:
             remote_address = ""
-
-        name = name.replace(" ", "-")
-
-        self._private_verbose_log_start_by_create_command(name, folder, image, owner, gpgkey_of_owner)
-        return self._private_execute_task("Create new environment", lambda: self._private_create_new_environment(name, folder, image, owner, gpgkey_of_owner, remote_address))
-
-    def _private_create_new_environment(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = ""):
         configuration_file = resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
 
         if self._private_create_adame_configuration_file(configuration_file, name, owner, gpgkey_of_owner, remote_address) != 0:
@@ -115,124 +120,150 @@ class AdameCore(object):
             execute_and_raise_exception_if_exit_code_is_not_zero("git", "config commit.gpgsign true", self._private_repository_folder)
             execute_and_raise_exception_if_exit_code_is_not_zero("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
-        self._private_commit(self._private_repository_folder, f"Initial commit for Adame app-repository of {name}")
-        self._private_log_information(f"Created repository for application '{name}' in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'.")
+        self._private_commit(self._private_repository_folder, f"Initial commit for Adame app-repository of {name} in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
         return 0
 
-    # </create_new_environment-command>
+    # </create-command>
 
-    # <start_environment-command>
+    # <start-command>
 
-    def start_environment(self, configurationfile: str):
+    def start(self, configurationfile: str):
 
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Start environment", lambda: self._private_start_environment())
+        return self._private_execute_task("Start environment", lambda: self._private_start())
 
-    def _private_start_environment(self):
+    def _private_start(self):
         if(not self._private_container_is_running()):
             self._private_start_container()
+            self._private_ensure_intrusion_detection_is_running()
         return 0
 
-    # </start_environment-command>
+    # </start-command>
 
-    # <stop_environment-command>
+    # <stop-command>
 
-    def stop_environment(self, configurationfile: str):
+    def stop(self, configurationfile: str):
 
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Stop environment", lambda: self._private_stop_environment())
+        return self._private_execute_task("Stop environment", lambda: self._private_stop())
 
-    def _private_stop_environment(self):
+    def _private_stop(self):
         if(self._private_container_is_running()):
             self._private_stop_container()
+            self._private_ensure_intrusion_detection_is_not_running()
         return 0
 
-    # </stop_environment-command>
+    # </stop>
 
-    # <apply_configuration-command>
+    # <applyconfiguration-command>
 
-    def apply_configuration(self, configurationfile: str):
+    def applyconfiguration(self, configurationfile: str):
 
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Apply configuration", lambda: self._private_apply_configuration())
+        return self._private_execute_task("Apply configuration", lambda: self._private_applyconfiguration())
 
-    def _private_apply_configuration(self):
+    def _private_applyconfiguration(self):
         self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
-        self._private_ensure_intrusion_detection_is_running()
-        self._private_save()
-        self._private_log_information("Reapplied configuration", False, True, True)
+        self._private_commit(self._private_repository_folder, f"Reapplied configuration")
         return 0
 
-    # </apply_configuration-command>
+    # </applyconfiguration-command>
 
-    # <run-command>
+    # <startadvanced-command>
 
-    def run(self, configurationfile: str):
+    def startadvanced(self, configurationfile: str):
 
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Run", lambda: self._private_run())
+        return self._private_execute_task("StartAdvanced", lambda: self._private_startadvanced())
 
-    def _private_run(self):
-        self._private_stop_environment()
-        self._private_apply_configuration()
-        self._private_start_environment()
+    def _private_startadvanced(self):
+        self._private_stopadvanced()
+        self._private_applyconfiguration()
+        self._private_start()
         return 0
 
-    # </run-command>
+    # </startadvanced-command>
 
-    # <save-command>
+    # <stopadvanced-command>
 
-    def save(self, configurationfile: str):
+    def stopadvanced(self, configurationfile: str):
 
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Save", lambda: self._private_save())
+        return self._private_execute_task("StopAdvanced", lambda: self._private_stopadvanced())
 
-    def _private_save(self):
+    def _private_stopadvanced(self):
+        self._private_stop()
         self._private_commit(self._private_repository_folder, f"Saved changes")
         return 0
 
-    # </save-command>
+    # </stopadvanced-command>
 
-    # <check_integrity-command>
+    # <checkintegrity-command>
 
-    def check_integrity(self, configurationfile: str):
+    def checkintegrity(self, configurationfile: str):
 
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Check integrity", lambda: self._private_check_integrity())
+        return self._private_execute_task("Check integrity", lambda: self._private_checkintegrity())
 
-    def _private_check_integrity(self):
+    def _private_checkintegrity(self):
         self._private_check_integrity_of_repository(7)
         return 0
 
-    # </check_integrity-command>
+    # </checkintegrity-command>
+
+    # <diagnosis-command>
+
+    def diagnosis(self, configurationfile: str):
+
+        self._private_verbose_log_start_by_configuration_file(configurationfile)
+        if configurationfile is not None:
+            if self._private_load_configuration(configurationfile) != 0:
+                return 1
+        return self._private_execute_task("Diagnosis", lambda: self._private_diagnosis())
+
+    def _private_diagnosis(self):
+        if self._private_adame_general_diagonisis() != 0:
+            return 1
+        if self._private_configuration is not None:
+            if self._private_adame_repository_diagonisis() != 0:
+                return 1
+        return 0
+
+    # </checkintegrity-command>
 
     # <helper-functions>
+
+    def _private_adame_general_diagonisis(self):
+        pass  # TODO implement function
+
+    def _private_adame_repository_diagonisis(self):
+        pass  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str):
         if configurationfile is None:
@@ -267,6 +298,12 @@ This function is idempotent."""
         self._private_start_intrusion_detection()
         self._private_test_intrusion_detection()
 
+    def _private_ensure_intrusion_detection_is_not_running(self):
+        """This function ensures that the intrusion-detection-system is not running anymore.
+This function is idempotent."""
+        if(self._private_intrusion_detection_is_running()):
+            self._private_stop_intrusion_detection()
+
     def _private_intrusion_detection_is_running(self):
         pass  # TODO return true if and only if the intrusion-detection-system (which was started by self._private_start_intrusion_detection()) is running
 
@@ -299,8 +336,8 @@ This function is idempotent."""
     def _private_verbose_log_start_by_configuration_file(self, configurationfile: str):
         self._private_log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
 
-    def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str):
-        self._private_log_information(f"Started Adame with  name='{name}', folder='{folder}', image='{image}', owner='{owner}', gpgkey_of_owner='{gpgkey_of_owner}'", True)
+    def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str):
+        self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
     def _private_load_configuration(self, configurationfile):
         try:
@@ -421,7 +458,7 @@ The license of this repository is defined in the file 'License.txt'.
         remote_name = "Backup"
         branch_name = "master"
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
-        self._private_log_information(f"Created commit {commit_id} in repository '{repository}'", False, True, True)
+        self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
         if self._private_remote_address_is_available:
             git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
             git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
@@ -465,7 +502,7 @@ The license of this repository is defined in the file 'License.txt'.
                 write_message_to_stderr(logentry)
             else:
                 write_message_to_stdout(logentry)
-        if(write_to_logfile):
+        if(write_to_logfile and self._private_log_file_for_adame_overhead is not None):
             ensure_file_exists(self._private_log_file_for_adame_overhead)
             if file_is_empty(self._private_log_file_for_adame_overhead):
                 prefix = ''
@@ -520,17 +557,21 @@ Required commandline-commands:
     apply_configuration_parser = subparsers.add_parser(apply_configuration_command_name)
     apply_configuration_parser.add_argument("--configurationfile", required=True)
 
-    run_command_name = "run"
-    run_parser = subparsers.add_parser(run_command_name)
-    run_parser.add_argument("--configurationfile", required=True)
+    startadvanced_command_name = "startadvanced"
+    startadvanced_parser = subparsers.add_parser(startadvanced_command_name)
+    startadvanced_parser.add_argument("--configurationfile", required=True)
 
-    save_command_name = "save"
-    save_parser = subparsers.add_parser(save_command_name)
-    save_parser.add_argument("--configurationfile", required=True)
+    stopadvanced_command_name = "stopadvanced"
+    stopadvanced_parser = subparsers.add_parser(stopadvanced_command_name)
+    stopadvanced_parser.add_argument("--configurationfile", required=True)
 
-    check_integrity_command_name = "checkintegrity"
-    check_integrity_parser = subparsers.add_parser(check_integrity_command_name)
-    check_integrity_parser.add_argument("--configurationfile", required=True)
+    checkintegrity_command_name = "checkintegrity"
+    checkintegrity_parser = subparsers.add_parser(checkintegrity_command_name)
+    checkintegrity_parser.add_argument("--configurationfile", required=True)
+
+    diagnosis_command_name = "diagnosis"
+    diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
+    diagnosis_parser.add_argument("--configurationfile", required=False)
 
     options = arger.parse_args()
 
@@ -538,26 +579,28 @@ Required commandline-commands:
     core.verbose = options.verbose
 
     if options.command == create_command_name:
-
-        return core.create_new_environment(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, options.remote_address)
+        return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, options.remote_address)
 
     elif options.command == start_command_name:
-        return core.start_environment(options.configurationfile)
+        return core.start(options.configurationfile)
 
     elif options.command == stop_command_name:
-        return core.stop_environment(options.configurationfile)
+        return core.stop(options.configurationfile)
 
     elif options.command == apply_configuration_command_name:
-        return core.apply_configuration(options.configurationfile)
+        return core.applyconfiguration(options.configurationfile)
 
-    elif options.command == run_command_name:
-        return core.run(options.configurationfile)
+    elif options.command == startadvanced_command_name:
+        return core.startadvanced(options.configurationfile)
 
-    elif options.command == save_command_name:
-        return core.save(options.configurationfile)
+    elif options.command == stopadvanced_command_name:
+        return core.stopadvanced(options.configurationfile)
 
-    elif options.command == check_integrity_command_name:
-        return core.check_integrity(options.configurationfile)
+    elif options.command == checkintegrity_command_name:
+        return core.checkintegrity(options.configurationfile)
+
+    elif options.command == diagnosis_command_name:
+        return core.diagnosis(options.configurationfile)
 
     else:
         write_message_to_stdout(adame_with_version)
