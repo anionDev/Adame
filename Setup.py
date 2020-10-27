@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 productname = "Adame"
-version = "0.2.11"
+version = "0.2.12"
 
 
 folder_of_current_file = os.path.dirname(os.path.realpath(__file__))

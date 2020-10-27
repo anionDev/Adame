@@ -11,7 +11,7 @@ from configparser import ConfigParser
 import time
 import datetime
 
-version = "0.2.11"
+version = "0.2.12"
 product_name = "Adame"
 adame_with_version = f"{product_name} v{version}"
 
