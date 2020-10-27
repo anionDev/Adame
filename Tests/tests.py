@@ -1,6 +1,6 @@
-from Adame.core import get_adame_version, AdameCore
 import pytest
 import unittest
+from Adame.core import get_adame_version, AdameCore
 
 
 class MiscellaneousTests(unittest.TestCase):
