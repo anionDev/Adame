@@ -19,7 +19,6 @@ adame_with_version = f"{product_name} v{version}"
 class AdameCore(object):
 
     # <constants>
-
     _private_adame_commit_author_name: str = product_name
     _private_configuration_section_general: str = "general"
     _private_configuration_section_general_key_name: str = "name"
@@ -53,8 +52,8 @@ class AdameCore(object):
 
     # <properties>
 
-    verbose = False
-    encoding = "utf-8"
+    verbose: bool = False
+    encoding: str = "utf-8"
 
     # </properties>
 
@@ -73,7 +72,6 @@ class AdameCore(object):
         return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
     def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = ""):
-
         if name is None:
             raise Exception("Argument 'name' is not defined")
         else:
