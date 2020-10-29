@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 productname = "Adame"
-version = "0.2.13"
+version = "0.2.14"
 
 
 folder_of_current_file = os.path.dirname(os.path.realpath(__file__))
@@ -32,7 +32,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "ScriptCollection>=1.12.45",
+        "ScriptCollection>=1.12.49",
     ],
     entry_points={
         'console_scripts': [

@@ -1,7 +1,7 @@
 import argparse
 import socket
 from argparse import RawTextHelpFormatter
-from ScriptCollection.core import file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content
+from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content
 import sys
 import traceback
 import configparser
@@ -11,15 +11,15 @@ from configparser import ConfigParser
 import time
 import datetime
 
-version = "0.2.13"
 product_name = "Adame"
+version = "0.2.14"
+__version__ = version
 adame_with_version = f"{product_name} v{version}"
 
 
 class AdameCore(object):
 
     # <constants>
-
     _private_adame_commit_author_name: str = product_name
     _private_configuration_section_general: str = "general"
     _private_configuration_section_general_key_name: str = "name"
@@ -53,8 +53,8 @@ class AdameCore(object):
 
     # <properties>
 
-    verbose = False
-    encoding = "utf-8"
+    verbose: bool = False
+    encoding: str = "utf-8"
 
     # </properties>
 
@@ -73,7 +73,6 @@ class AdameCore(object):
         return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
     def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = ""):
-
         if name is None:
             raise Exception("Argument 'name' is not defined")
         else:
@@ -115,10 +114,10 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_logfilepatterns_file, "")
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
 
-        execute_and_raise_exception_if_exit_code_is_not_zero("git", "init", self._private_repository_folder)
+        start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
-            execute_and_raise_exception_if_exit_code_is_not_zero("git", "config commit.gpgsign true", self._private_repository_folder)
-            execute_and_raise_exception_if_exit_code_is_not_zero("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
+            start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder)
+            start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
         self._private_commit(self._private_repository_folder, f"Initial commit for Adame app-repository of {name} in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
         return 0
