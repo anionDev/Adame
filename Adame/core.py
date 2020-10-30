@@ -385,13 +385,17 @@ This function is idempotent."""
 
     def _private_get_dockercompose_file_content(self, image: str):
         name_as_docker_allowed_name = self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
-        return f"""version: '3.8'
+        return f"""version: '3.2'
 services:
   {name_as_docker_allowed_name}:
     image: '{image}'
     container_name: '{name_as_docker_allowed_name}'
+#     environment:
+#       - variable=value
 #     ports:
+#       - 443:443
 #     volumes:
+#       - ./DirectoryOnHost:/DirectoryInContainer
 """
 
     def _private_create_file_in_repository(self,  file, filecontent):
