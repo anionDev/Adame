@@ -5,8 +5,8 @@
 The behavior of all commands (except `create`) is idempotent.
 
 Caution:
-- The commands are not intended to be executed in an unattended script since it contains user-interaction (gpg-pinentry).
-- Adame requires elevated privileges for executing commands like snort.
+- The commands are not intended to be executed in an unattended script since it is recommended to enable gpg-signing which contains the user-interaction of the pinentry-dialog.
+- Adame requires elevated privileges for executing commands like snort or docker-compose.
 
 ## Commands
 
@@ -40,7 +40,8 @@ This command ensures that the container is running without modifying anything el
 
 #### Description
 
-This command ensures that the container is not running without modifying anything else.
+This command ensures that the container is not running anymore without modifying anything else.
+This command saves the current state of the Docker-container. This command assumes that whenever the docker-container is writing anything into a volume mounted into the docker-container then this is a (part of a) valid state of the application.
 
 ### applyconfiguration
 
@@ -50,13 +51,13 @@ This command ensures that the container is not running without modifying anythin
 
 #### Description
 
-This command ensures that the current configuration of the Adame-managed environment will be applied (e. g. new firewall-rules).
+This command ensures that the current configuration of the Adame-managed environment will be applied (e. g. new rules for the intrusion detection system).
 
-### run
+### startadvanced
 
 #### Syntax
 
-`Adame run --configurationfile Adame.configuration`
+`Adame startadvanced --configurationfile Adame.configuration`
 
 #### Description
 
@@ -64,21 +65,19 @@ This command ensures that the docker-application is running with the current con
 
 Example:
 
-An application is running. Now we configure the environment to use a new version and add a firewall-rule. Then this command combines some of the other commands of Adame: It
+An application is running. Now we configure the environment to use a new version and add a rule for the intrusion detection system. Then this command combines some of the other commands of Adame: It
 
 - ensures the container is currently not running
 - reapllies the configuration defined in the environment
 - saves the current state
 - ensures that the application will be started again
 
-
-### save
+### stopadvanced
 
 #### Syntax
 
-`Adame save --configurationfile Adame.configuration`
+`Adame stopadvanced --configurationfile Adame.configuration`
 
 #### Description
 
-This command saves the current state of the Docker-container. This command assumes that whenever the docker-container is writing anything into a volume mounted into the docker-container then this is a (part of a) valid state of the application.
-
+Tops the container and saves the current state of the repository.

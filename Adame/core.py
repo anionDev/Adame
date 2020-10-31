@@ -259,9 +259,19 @@ class AdameCore(object):
     # <helper-functions>
 
     def _private_adame_general_diagonisis(self):
-        pass  # TODO implement function
+        self._private_check_whether_required_tools_for_adame_are_available()
+        self._private_check_whether_required_permissions_for_adame_are_available()
 
     def _private_adame_repository_diagonisis(self):
+        self._private_check_whether_required_files_for_adamerepository_are_available()
+
+    def _private_check_whether_required_permissions_for_adame_are_available(self):
+        pass  # TODO implement function
+
+    def _private_check_whether_required_tools_for_adame_are_available(self):
+        pass  # TODO implement function
+
+    def _private_check_whether_required_files_for_adamerepository_are_available(self):
         pass  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str):
