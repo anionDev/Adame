@@ -259,7 +259,6 @@ class AdameCore(object):
     # <helper-functions>
 
     def _private_adame_general_diagonisis(self):
-<<<<<<< HEAD
         self._private_check_whether_required_tools_for_adame_are_available()
         self._private_check_whether_required_permissions_for_adame_are_available()
 
@@ -273,21 +272,13 @@ class AdameCore(object):
         pass  # TODO implement function
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self):
-=======
-        pass  # TODO implement function
-
-    def _private_adame_repository_diagonisis(self):
->>>>>>> development
         pass  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str):
         if configurationfile is None:
             raise Exception("Argument 'configurationfile' is not defined")
-<<<<<<< HEAD
-=======
         if not os.path.isfile(configurationfile):
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
->>>>>>> development
 
     def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None):
         """This function checks the integrity of the app-repository.
@@ -359,14 +350,9 @@ This function is idempotent."""
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str):
         self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
-<<<<<<< HEAD
-    def _private_load_configuration(self, configurationfile):
-        try:
-=======
     def _private_load_configuration(self, configurationfile: str):
         try:
 
->>>>>>> development
             self._private_configuration_file = configurationfile
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
