@@ -259,6 +259,7 @@ class AdameCore(object):
     # <helper-functions>
 
     def _private_adame_general_diagonisis(self):
+<<<<<<< HEAD
         self._private_check_whether_required_tools_for_adame_are_available()
         self._private_check_whether_required_permissions_for_adame_are_available()
 
@@ -272,11 +273,21 @@ class AdameCore(object):
         pass  # TODO implement function
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self):
+=======
+        pass  # TODO implement function
+
+    def _private_adame_repository_diagonisis(self):
+>>>>>>> development
         pass  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str):
         if configurationfile is None:
             raise Exception("Argument 'configurationfile' is not defined")
+<<<<<<< HEAD
+=======
+        if not os.path.isfile(configurationfile):
+            raise FileNotFoundError(f"File '{configurationfile}' does not exist")
+>>>>>>> development
 
     def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None):
         """This function checks the integrity of the app-repository.
@@ -348,8 +359,14 @@ This function is idempotent."""
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str):
         self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
+<<<<<<< HEAD
     def _private_load_configuration(self, configurationfile):
         try:
+=======
+    def _private_load_configuration(self, configurationfile: str):
+        try:
+
+>>>>>>> development
             self._private_configuration_file = configurationfile
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
@@ -392,13 +409,17 @@ This function is idempotent."""
 
     def _private_get_dockercompose_file_content(self, image: str):
         name_as_docker_allowed_name = self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
-        return f"""version: '3.8'
+        return f"""version: '3.2'
 services:
   {name_as_docker_allowed_name}:
     image: '{image}'
     container_name: '{name_as_docker_allowed_name}'
+#     environment:
+#       - variable=value
 #     ports:
+#       - 443:443
 #     volumes:
+#       - ./DirectoryOnHost:/DirectoryInContainer
 """
 
     def _private_create_file_in_repository(self,  file, filecontent):
@@ -456,7 +477,7 @@ The license of this repository is defined in the file 'License.txt'.
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self):
-        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_repository_folder)
+        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         self._private_log_information("Container was started", False, True, True)
 
     def _private_container_is_running(self):
@@ -480,7 +501,9 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_execute_task(self, name: str, function):
         try:
             self._private_log_information(f"Started task '{name}'")
-            return function()
+            exit_code = function()
+            self._private_log_information(f"Task '{name}' resulted in exitcode {str(exit_code)}", True, True, True)
+            return exit_code
         except Exception as exception:
             self._private_log_exception(f"Exception occurred in task '{name}'", exception)
             return 2
@@ -496,7 +519,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_log_error(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
         self._private_write_to_log("Error", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True):
         self._private_write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
         if(self.verbose):
             write_exception_to_stderr_with_traceback(exception, traceback, message)
