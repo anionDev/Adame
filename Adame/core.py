@@ -12,7 +12,7 @@ import time
 import traceback
 
 product_name = "Adame"
-version = "0.2.16"
+version = "0.2.17"
 __version__ = version
 adame_with_version = f"{product_name} v{version}"
 
