@@ -32,7 +32,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "ScriptCollection>=1.12.49",
+        "ScriptCollection>=1.12.51",
     ],
     entry_points={
         'console_scripts': [
