@@ -1,7 +1,7 @@
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime
-from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content
+from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content, current_user_has_elevated_privileges
 import argparse
 import configparser
 import datetime
@@ -57,7 +57,7 @@ class AdameCore(object):
 
     verbose: bool = False
     encoding: str = "utf-8"
-    userpassword:str=None
+    userpassword:str=None# This attribute should only be used for testing-purposes (e. g. to run unit-tests). When using this password it will be treated as password of a system-user who has sudo-privileges.
 
 
     # </properties>
@@ -273,6 +273,11 @@ class AdameCore(object):
         pass  # TODO implement function
 
     def _private_check_whether_required_tools_for_adame_are_available(self):
+        # TODO check for:
+        # -sudo docker-compose
+        # -sudo snort
+        # -git
+        # -gpg
         pass  # TODO implement function
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self):
@@ -467,7 +472,7 @@ The license of this repository is defined in the file 'License.txt'.
 """
 
     def _private_stop_container(self):
-        self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_repository_folder)
+        self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_configuration_folder)
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self):
@@ -502,24 +507,27 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_start_program_synchronously_as_root(self,program:str,argument:str,workingdirectory:str=None):
         workingdirectory=str_none_safe(workingdirectory)
-        if self.userpassword is None:
-            password = getpass.getpass(f"Password for current user (required for '{workingdirectory}>{program} {argument}'):")
+        if(current_user_has_elevated_privileges()):
+            return  start_program_synchronously(program, argument, workingdirectory)
         else:
-            password = self.userpassword
-        output= start_program_synchronously(f"echo {password} | sudo -S {program}",argument)
+            if self.userpassword is None:
+                raise Exception(f"Not enough privileges to execute '{workingdirectory}>{program} {argument}' with root-provoleges")
+            else:
+                password = self.userpassword
+            output= start_program_synchronously(f"echo {password} | sudo -S {program}",argument, workingdirectory)
 
-        stderrlines=[]
+            stderrlines=[]
 
-        for stderrline in output[2].splitlines():
-            if(not stderrline.startswith("[sudo] password for")):
-                stderrlines.append(stderrline)
+            for stderrline in output[2].splitlines():
+                if(not stderrline.startswith("[sudo] password for")):
+                    stderrlines.append(stderrline)
 
-        result=[
-            output[0],
-            output[1],
-            "\n".join(stderrlines)
-        ]
-        return result
+            result=[
+                output[0],
+                output[1],
+                "\n".join(stderrlines)
+            ]
+            return result
 
     def _private_execute_task(self, name: str, function):
         try:

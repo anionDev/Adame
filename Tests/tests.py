@@ -4,27 +4,27 @@ import tempfile
 import uuid
 import os
 from Adame.core import get_adame_version, AdameCore
-from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists
+from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists, read_text_from_file
 
 
 class EnvironmentForTest:
     adame: AdameCore = None
     folder: str = None
     adame_configuration_file: str = None
-
     def __init__(self):
-
         folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
         ensure_directory_exists(folder)
         self.folder = folder
         self.adame = AdameCore()
         self.adame.verbose = True
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
-        self.adame.userpassword="user"
+        userpassword_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "userpasswordfortests")
+        if os.path.isfile(userpassword_file):
+            self.adame.userpassword=read_text_from_file(userpassword_file)
 
     def create(self):
-        exit_code = self.adame.create("myapplication", self.folder, "httpd:latest", "owner")
-        assert exit_code == 0
+        assert self.adame.create("myapplication", self.folder, "httpd:latest", "owner") == 0
+        assert self.adame._private_container_is_running()==False
 
     def purge(self):
         self.adame.stop(self.adame_configuration_file)
@@ -70,6 +70,7 @@ class MiscellaneousTests(unittest.TestCase):
             exit_code = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
 
             # assert
+            assert environment_for_test.adame._private_container_is_running()==True
             assert exit_code == 0
             # TODO add more assertions
 
@@ -77,4 +78,21 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.purge()
 
     def test_command_stop(self):
-        pass  # TODO implement test
+        try:
+
+            # arrange
+            environment_for_test = EnvironmentForTest()
+            environment_for_test.create()
+            assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
+            assert environment_for_test.adame._private_container_is_running()==True
+
+            # act
+            exit_code = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
+
+            # assert
+            assert environment_for_test.adame._private_container_is_running()==False
+            assert exit_code == 0
+            # TODO add more assertions
+
+        finally:
+            environment_for_test.purge()
