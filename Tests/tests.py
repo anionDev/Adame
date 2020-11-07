@@ -28,6 +28,7 @@ class EnvironmentForTest:
 
     def purge(self):
         self.adame.stop(self.adame_configuration_file)
+        assert self.adame._private_container_is_running()==False
         ensure_directory_does_not_exist(self.folder)
 
 
@@ -72,7 +73,6 @@ class MiscellaneousTests(unittest.TestCase):
             # assert
             assert environment_for_test.adame._private_container_is_running()==True
             assert exit_code == 0
-            # TODO add more assertions
 
         finally:
             environment_for_test.purge()
@@ -92,7 +92,38 @@ class MiscellaneousTests(unittest.TestCase):
             # assert
             assert environment_for_test.adame._private_container_is_running()==False
             assert exit_code == 0
-            # TODO add more assertions
+
+        finally:
+            environment_for_test.purge()
+
+    def test_command_diagnosis_with_configurationfile(self):
+        try:
+
+            # arrange
+            environment_for_test = EnvironmentForTest()
+            environment_for_test.create()
+
+            # act
+            exit_code = environment_for_test.adame.diagnosis(environment_for_test.adame_configuration_file)
+
+            # assert
+            assert exit_code == 0
+
+        finally:
+            environment_for_test.purge()
+
+
+    def test_command_diagnosis_without_configurationfile(self):
+        try:
+
+            # arrange
+            environment_for_test = EnvironmentForTest()
+
+            # act
+            exit_code = environment_for_test.adame.diagnosis(None)
+
+            # assert
+            assert exit_code == 0
 
         finally:
             environment_for_test.purge()

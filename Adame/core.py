@@ -1,3 +1,4 @@
+from distutils.spawn import find_executable
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime
@@ -57,8 +58,7 @@ class AdameCore(object):
 
     verbose: bool = False
     encoding: str = "utf-8"
-    userpassword:str=None# This attribute should only be used for testing-purposes (e. g. to run unit-tests). When using this password it will be treated as password of a system-user who has sudo-privileges.
-
+    userpassword: str = None  # This attribute should only be used for testing-purposes (e. g. to run unit-tests). When using this password it will be treated as password of a system-user who has sudo-privileges.
 
     # </properties>
 
@@ -273,12 +273,18 @@ class AdameCore(object):
         pass  # TODO implement function
 
     def _private_check_whether_required_tools_for_adame_are_available(self):
-        # TODO check for:
-        # -sudo docker-compose
-        # -sudo snort
-        # -git
-        # -gpg
-        pass  # TODO implement function
+        tools = ["git", "gpg"]
+        tools_with_elevated_privileges = ["docker-compose", "snort"]
+        result = 0
+        for tool in tools:
+            if not self._private_tool_exists_in_path(tool, False):
+                write_exception_to_stderr(f"'{tool}' is not available")
+                result = 1
+        for tool in tools_with_elevated_privileges:
+            if not self._private_tool_exists_in_path(tool, True):
+                write_exception_to_stderr(f"'sudo {tool}' is not available")
+                result = 1
+        return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self):
         pass  # TODO implement function
@@ -402,7 +408,6 @@ This function is idempotent."""
             self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             return 1
 
-
     def _private_get_container_name(self):
         return self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
 
@@ -499,35 +504,41 @@ The license of this repository is defined in the file 'License.txt'.
         name = name.lower()
         return name
 
-    def _private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero(self,program:str,argument:str,workingdirectory:str=None):
-        result=self._private_start_program_synchronously_as_root(program,argument,workingdirectory)
-        if(result[0]!=0):
+    def _private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None):
+        result = self._private_start_program_synchronously_as_root(program, argument, workingdirectory)
+        if(result[0] != 0):
             raise Exception(f"'{workingdirectory}> sudo {program} {argument}' had exitcode {str(result[0])}")
         return result
 
-    def _private_start_program_synchronously_as_root(self,program:str,argument:str,workingdirectory:str=None):
-        workingdirectory=str_none_safe(workingdirectory)
+    def _private_start_program_synchronously_as_root(self, program: str, argument: str, workingdirectory: str = None):
+        workingdirectory = str_none_safe(workingdirectory)
         if(current_user_has_elevated_privileges()):
-            return  start_program_synchronously(program, argument, workingdirectory)
+            return start_program_synchronously(program, argument, workingdirectory)
         else:
             if self.userpassword is None:
                 raise Exception(f"Not enough privileges to execute '{workingdirectory}>{program} {argument}' with root-provoleges")
             else:
                 password = self.userpassword
-            output= start_program_synchronously(f"echo {password} | sudo -S {program}",argument, workingdirectory)
+            output = start_program_synchronously(f"echo {password} | sudo -S {program}", argument, workingdirectory)
 
-            stderrlines=[]
+            stderrlines = []
 
             for stderrline in output[2].splitlines():
                 if(not stderrline.startswith("[sudo] password for")):
                     stderrlines.append(stderrline)
 
-            result=[
+            result = [
                 output[0],
                 output[1],
                 "\n".join(stderrlines)
             ]
             return result
+
+    def _private_tool_exists_in_path(self, name: str, execute_with_elevated_privileges):
+        if execute_with_elevated_privileges:
+            return self._private_start_program_synchronously_as_root(name, "", None)[1] == 0
+        else:
+            return start_program_synchronously(name, "", None)[1] == 0
 
     def _private_execute_task(self, name: str, function):
         try:
