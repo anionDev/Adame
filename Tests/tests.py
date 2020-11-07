@@ -20,12 +20,14 @@ class EnvironmentForTest:
         self.adame = AdameCore()
         self.adame.verbose = True
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
+        self.adame.userpassword="user"
 
     def create(self):
         exit_code = self.adame.create("myapplication", self.folder, "httpd:latest", "owner")
         assert exit_code == 0
 
     def purge(self):
+        self.adame.stop(self.adame_configuration_file)
         ensure_directory_does_not_exist(self.folder)
 
 

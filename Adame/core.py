@@ -5,7 +5,9 @@ from ScriptCollection.core import start_program_synchronously, file_is_empty, fo
 import argparse
 import configparser
 import datetime
+import getpass
 import os
+import subprocess
 import socket
 import sys
 import time
@@ -55,6 +57,8 @@ class AdameCore(object):
 
     verbose: bool = False
     encoding: str = "utf-8"
+    userpassword:str=None
+
 
     # </properties>
 
@@ -393,8 +397,12 @@ This function is idempotent."""
             self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             return 1
 
+
+    def _private_get_container_name(self):
+        return self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
+
     def _private_get_dockercompose_file_content(self, image: str):
-        name_as_docker_allowed_name = self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
+        name_as_docker_allowed_name = self._private_get_container_name()
         return f"""version: '3.2'
 services:
   {name_as_docker_allowed_name}:
@@ -459,15 +467,17 @@ The license of this repository is defined in the file 'License.txt'.
 """
 
     def _private_stop_container(self):
-        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_repository_folder)
+        self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_repository_folder)
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self):
-        execute_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         self._private_log_information("Container was started", False, True, True)
 
     def _private_container_is_running(self):
-        return False  # TODO
+        result = self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker", "ps")
+        contains = self._private_get_container_name() in result[1]
+        return contains
 
     def _private_commit(self, repository: str, message: str):
         commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "")
@@ -483,6 +493,33 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_name_to_docker_allowed_name(self, name: str):
         name = name.lower()
         return name
+
+    def _private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero(self,program:str,argument:str,workingdirectory:str=None):
+        result=self._private_start_program_synchronously_as_root(program,argument,workingdirectory)
+        if(result[0]!=0):
+            raise Exception(f"'{workingdirectory}> sudo {program} {argument}' had exitcode {str(result[0])}")
+        return result
+
+    def _private_start_program_synchronously_as_root(self,program:str,argument:str,workingdirectory:str=None):
+        workingdirectory=str_none_safe(workingdirectory)
+        if self.userpassword is None:
+            password = getpass.getpass(f"Password for current user (required for '{workingdirectory}>{program} {argument}'):")
+        else:
+            password = self.userpassword
+        output= start_program_synchronously(f"echo {password} | sudo -S {program}",argument)
+
+        stderrlines=[]
+
+        for stderrline in output[2].splitlines():
+            if(not stderrline.startswith("[sudo] password for")):
+                stderrlines.append(stderrline)
+
+        result=[
+            output[0],
+            output[1],
+            "\n".join(stderrlines)
+        ]
+        return result
 
     def _private_execute_task(self, name: str, function):
         try:
