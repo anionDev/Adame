@@ -8,6 +8,7 @@ import configparser
 import datetime
 import getpass
 import os
+import psutil
 import subprocess
 import socket
 import sys
@@ -537,17 +538,14 @@ The license of this repository is defined in the file 'License.txt'.
         return process_id
 
     def _private_container_is_running(self):
-        return _private_process_is_running(self._private_get_running_processes()[0],"sudo docker-compose up ")
+        return self._private_process_is_running(self._private_get_running_processes()[0],"sudo docker-compose up ")
 
     def _private_process_is_running(self, process_id:int, command_start:str):
-        output=execute_and_raise_exception_if_exit_code_is_not_zero("ps","aux")
-        stdout_lines=output[1].splitlines()
-        for line in lines:
-            #line is like:
-            #USER        PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-            #root       5243  0.0  0.2  10476  4044 pts/2    S+   21:25   0:00 sudo docker-compose up
-            pass # TODO
-        result=
+        for process in psutil.process_iter():
+            if(process.cmdline.startswith(command_start)):
+                return True
+            else:
+                self._private_log_warning(f"The process with id {str(process_id)} changed unexpectedly. Expected a process with a commandline like '{command_start}...' but was '{process.cmdline}...'",False,True,False)
         return False
 
     def _private_commit(self, message: str,stage_all_changes:bool=True):
