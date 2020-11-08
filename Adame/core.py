@@ -2,7 +2,7 @@ from distutils.spawn import find_executable
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime
-from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content, current_user_has_elevated_privileges
+from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content, current_user_has_elevated_privileges, git_unstage_all_changes, git_stage_file, read_text_from_file
 import argparse
 import configparser
 import datetime
@@ -43,6 +43,7 @@ class AdameCore(object):
     _private_license_file: str
     _private_gitignore_file: str
     _private_dockercompose_file: str
+    _private_running_information_file: str
     _private_applicationprovidedsecurityinformation_file: str
     _private_networktrafficgeneratedrules_file: str
     _private_networktrafficcustomrules_file: str
@@ -101,6 +102,7 @@ class AdameCore(object):
 
         if remote_address is None:
             remote_address = ""
+
         configuration_file = resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
 
         if self._private_create_adame_configuration_file(configuration_file, name, owner, gpgkey_of_owner, remote_address) != 0:
@@ -117,13 +119,14 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
         self._private_create_file_in_repository(self._private_logfilepatterns_file, "")
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
+        self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None,None))
 
         start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
             start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder)
             start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
-        self._private_commit(self._private_repository_folder, f"Initial commit for Adame app-repository of {name} in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
+        self._private_commit( f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
         return 0
 
     # </create-command>
@@ -140,9 +143,12 @@ class AdameCore(object):
         return self._private_execute_task("Start environment", lambda: self._private_start())
 
     def _private_start(self):
-        if(not self._private_container_is_running()):
-            self._private_start_container()
-            self._private_ensure_intrusion_detection_is_running()
+        if(self._private_container_is_running()):
+            self._private_log_information("Container and other tools not started since the container is already running",True,True,False)
+        else:
+            process_id_of_container=self._private_start_container()
+            process_id_of_intrusion_detection_system=self._private_ensure_intrusion_detection_is_running()
+            self._private_log_running_state(process_id_of_container,process_id_of_intrusion_detection_system,"Started")
         return 0
 
     # </start-command>
@@ -162,6 +168,9 @@ class AdameCore(object):
         if(self._private_container_is_running()):
             self._private_stop_container()
             self._private_ensure_intrusion_detection_is_not_running()
+            self._private_log_running_state(None,None,"Stopped")
+        else:
+            self._private_log_information("Container and other tools not stopped since the container is not running",True,True,False)
         return 0
 
     # </stop>
@@ -181,7 +190,7 @@ class AdameCore(object):
         self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
-        self._private_commit(self._private_repository_folder, f"Reapplied configuration")
+        self._private_commit( f"Reapplied configuration")
         return 0
 
     # </applyconfiguration-command>
@@ -218,7 +227,7 @@ class AdameCore(object):
 
     def _private_stopadvanced(self):
         self._private_stop()
-        self._private_commit(self._private_repository_folder, f"Saved changes")
+        self._private_commit( f"Saved changes")
         return 0
 
     # </stopadvanced-command>
@@ -262,6 +271,14 @@ class AdameCore(object):
 
     # <helper-functions>
 
+    def _private_log_running_state(self, process_id_of_container:int,process_id_of_intrusion_detection_system:int,action:str):
+        process_id_of_container_as_string=str_none_safe(process_id_of_container)
+        process_id_of_intrusion_detection_system_as_string=str_none_safe(process_id_of_intrusion_detection_system)
+        write_text_to_file(self._private_running_information_file,self._private_get_running_information_file_content(process_id_of_container_as_string,process_id_of_intrusion_detection_system_as_string))
+        git_unstage_all_changes(self._private_repository_folder)
+        git_stage_file(self._private_repository_folder,self._private_running_information_file)
+        self._private_commit(f"{action} container (Container-process: {process_id_of_container_as_string}; IDS-process: {process_id_of_intrusion_detection_system_as_string})",False)
+
     def _private_adame_general_diagonisis(self):
         self._private_check_whether_required_tools_for_adame_are_available()
         self._private_check_whether_required_permissions_for_adame_are_available()
@@ -273,8 +290,15 @@ class AdameCore(object):
         pass  # TODO implement function
 
     def _private_check_whether_required_tools_for_adame_are_available(self):
-        tools = ["git", "gpg"]
-        tools_with_elevated_privileges = ["docker-compose", "snort"]
+        tools = [
+            "git",
+            "gpg",
+        ]
+        tools_with_elevated_privileges = [
+            "docker",
+            "docker-compose",
+            "snort",
+        ]
         result = 0
         for tool in tools:
             if not self._private_tool_exists_in_path(tool, False):
@@ -321,8 +345,9 @@ This function is idempotent."""
 This function is idempotent."""
         if(not self._private_intrusion_detection_is_running()):
             self._private_stop_intrusion_detection()
-        self._private_start_intrusion_detection()
+        process_id=self._private_start_intrusion_detection()
         self._private_test_intrusion_detection()
+        return process_id
 
     def _private_ensure_intrusion_detection_is_not_running(self):
         """This function ensures that the intrusion-detection-system is not running anymore.
@@ -331,16 +356,40 @@ This function is idempotent."""
             self._private_stop_intrusion_detection()
 
     def _private_intrusion_detection_is_running(self):
-        pass  # TODO return true if and only if the intrusion-detection-system (which was started by self._private_start_intrusion_detection()) is running
+        return _private_process_is_running(self._private_get_running_processes()[1],"sudo snort ")
 
     def _private_start_intrusion_detection(self):
-        pass  # TODO start the intrusion-detection-system as daemon
+        pass  # TODO start the intrusion-detection-system as daemon and return its process-id
+        return 0
 
     def _private_stop_intrusion_detection(self):
-        pass  # TODO stop a intrusion-detection-system (which was started by self._private_start_intrusion_detection())
+        self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("kill",str(self._private_get_running_processes()[1]))
 
     def _private_test_intrusion_detection(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
+
+    def _private_get_running_processes(self):
+        lines=read_text_from_file(self._private_running_information_file).splitlines()
+        processid_of_container_as_string=None
+        processid_of_network_intrusion_detection_system_as_string=None
+        for line in lines:
+            if ":" in line:
+                splitted=line.split(":")
+                value_as_string=splitted[1].strip()
+                if string_has_nonwhitespace_content(value_as_string):
+                    value=int(value_as_string)
+                    if splitted=="Container-process":
+                        processid_of_container_as_string=value
+                    if splitted=="IDS-process":
+                        processid_of_network_intrusion_detection_system_as_string=value
+        return (processid_of_container_as_string,processid_of_network_intrusion_detection_system_as_string)
+
+    def _private_get_running_information_file_content(self,processid_of_container:int,processid_of_network_intrusion_detection_system:int):
+        processid_of_container_as_string=str_none_safe( processid_of_container)
+        processid_of_network_intrusion_detection_system_as_string=str_none_safe( processid_of_network_intrusion_detection_system)
+        return f"""Container-process:{processid_of_container_as_string}
+IDS-process:{processid_of_network_intrusion_detection_system_as_string}
+"""
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str):
         self._private_configuration_file = configuration_file
@@ -423,7 +472,9 @@ services:
 #     ports:
 #       - 443:443
 #     volumes:
-#       - ./DirectoryOnHost:/DirectoryInContainer
+#       - ./Volumes/Configuration:/DirectoryInContainer/Configuration
+#       - ./Volumes/Data:/DirectoryInContainer/Data
+#       - ./../Logs/Application:/DirectoryInContainer/Logs
 """
 
     def _private_create_file_in_repository(self,  file, filecontent):
@@ -481,16 +532,27 @@ The license of this repository is defined in the file 'License.txt'.
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self):
-        self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        process_id=self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
         self._private_log_information("Container was started", False, True, True)
+        return process_id
 
     def _private_container_is_running(self):
-        result = self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker", "ps")
-        contains = self._private_get_container_name() in result[1]
-        return contains
+        return _private_process_is_running(self._private_get_running_processes()[0],"sudo docker-compose up ")
 
-    def _private_commit(self, repository: str, message: str):
-        commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "")
+    def _private_process_is_running(self, process_id:int, command_start:str):
+        output=execute_and_raise_exception_if_exit_code_is_not_zero("ps","aux")
+        stdout_lines=output[1].splitlines()
+        for line in lines:
+            #line is like:
+            #USER        PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+            #root       5243  0.0  0.2  10476  4044 pts/2    S+   21:25   0:00 sudo docker-compose up
+            pass # TODO
+        result=
+        return False
+
+    def _private_commit(self, message: str,stage_all_changes:bool=True):
+        repository=self._private_repository_folder
+        commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "",stage_all_changes)
         remote_name = "Backup"
         branch_name = "master"
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
@@ -601,10 +663,12 @@ One focus of Adame is to store the state of an application: Adame stores all dat
 Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
 
 Required commandline-commands:
--docker-compose
+-docker (with elevated privileges)
+-docker-compose (with elevated privileges)
+-snort (with elevated privileges)
 -git
 -gpg
--snort""", formatter_class=RawTextHelpFormatter)
+""", formatter_class=RawTextHelpFormatter)
 
     arger.add_argument("--verbose", action="store_true", required=False)
 
