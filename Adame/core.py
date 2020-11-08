@@ -367,7 +367,7 @@ This function is idempotent."""
 
     def _private_load_configuration(self, configurationfile: str):
         try:
-
+            configurationfile=resolve_relative_path_from_current_working_directory(configurationfile)
             self._private_configuration_file = configurationfile
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
