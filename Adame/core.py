@@ -2,7 +2,7 @@ from distutils.spawn import find_executable
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime
-from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, execute_and_raise_exception_if_exit_code_is_not_zero, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content, current_user_has_elevated_privileges, git_unstage_all_changes, git_stage_file, read_text_from_file
+from ScriptCollection.core import start_program_synchronously, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, git_add_or_set_remote_address, git_push, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, git_commit, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_is_none_or_whitespace, string_has_nonwhitespace_content, current_user_has_elevated_privileges, git_unstage_all_changes, git_stage_file, read_text_from_file
 import argparse
 import configparser
 import datetime
@@ -16,7 +16,7 @@ import time
 import traceback
 
 product_name = "Adame"
-version = "0.2.18"
+version = "0.2.19"
 __version__ = version
 adame_with_version = f"{product_name} v{version}"
 
@@ -122,10 +122,10 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None,None))
 
-        start_program_synchronously("git", "init", self._private_repository_folder)
+        start_program_synchronously("git", "init", self._private_repository_folder,1,False,None,3600,False,None,False,False,False)
         if self._private_gpgkey_of_owner_is_available:
-            start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder)
-            start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
+            start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder,1,False,None,3600,False,None,False,False,False)
+            start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder,1,False,None,3600,False,None,False,False,False)
 
         self._private_commit( f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
         return 0
@@ -357,7 +357,7 @@ This function is idempotent."""
             self._private_stop_intrusion_detection()
 
     def _private_intrusion_detection_is_running(self):
-        return _private_process_is_running(self._private_get_running_processes()[1],"sudo snort ")
+        return self._private_process_is_running(self._private_get_running_processes()[1],"sudo snort ")
 
     def _private_start_intrusion_detection(self):
         pass  # TODO start the intrusion-detection-system as daemon and return its process-id
@@ -573,13 +573,13 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_start_program_synchronously_as_root(self, program: str, argument: str, workingdirectory: str = None):
         workingdirectory = str_none_safe(workingdirectory)
         if(current_user_has_elevated_privileges()):
-            return start_program_synchronously(program, argument, workingdirectory)
+            return start_program_synchronously(program, argument, workingdirectory,1,False,None,3600,False,None,False,False,False)
         else:
             if self.userpassword is None:
                 raise Exception(f"Not enough privileges to execute '{workingdirectory}>{program} {argument}' with root-provoleges")
             else:
                 password = self.userpassword
-            output = start_program_synchronously(f"echo {password} | sudo -S {program}", argument, workingdirectory)
+            output = start_program_synchronously(f"echo {password} | sudo -S {program}", argument, workingdirectory,1,False,None,3600,False,None,False,False,False)
 
             stderrlines = []
 
@@ -598,7 +598,7 @@ The license of this repository is defined in the file 'License.txt'.
         if execute_with_elevated_privileges:
             return self._private_start_program_synchronously_as_root(name, "", None)[1] == 0
         else:
-            return start_program_synchronously(name, "", None)[1] == 0
+            return start_program_synchronously(name, "", None,1,False,None,3600,False,None,False,False,False)[1] == 0
 
     def _private_execute_task(self, name: str, function):
         try:
