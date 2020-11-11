@@ -7,8 +7,8 @@ version = "0.2.19"
 
 
 folder_of_current_file = os.path.dirname(os.path.realpath(__file__))
-with open(str(Path(os.path.join(folder_of_current_file, f".{os.sep}ReadMe.md")).resolve()), "r", encoding='utf-8') as f:
-    long_description = f.read()
+with open(os.path.join(folder_of_current_file, f"ReadMe.md"), "r", encoding='utf-8') as file:
+    long_description = file.read()
 
 setup(
     name=productname,
@@ -33,7 +33,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "psutil>=5.7.3",
-        "ScriptCollection>=1.12.56",
+        "ScriptCollection>=1.12.61",
     ],
     entry_points={
         'console_scripts': [
