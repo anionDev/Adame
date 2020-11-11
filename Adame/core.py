@@ -18,7 +18,7 @@ import traceback
 product_name = "Adame"
 version = "0.2.19"
 __version__ = version
-adame_with_version = f"{product_name} v{version}"
+versioned_product_name = f"{product_name} v{version}"
 
 
 class AdameCore(object):
@@ -54,6 +54,9 @@ class AdameCore(object):
     _private_gpgkey_of_owner_is_available: bool
     _private_remote_address_is_available: bool
 
+    _private_testrule_trigger_content:str="adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
+    _private_testrule_log_content:str="adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
+
     # </constants>
 
     # <properties>
@@ -73,12 +76,12 @@ class AdameCore(object):
 
     # <create-command>
 
-    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
+    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None)->int:
 
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
         return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
-    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = ""):
+    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = "")->int:
         if name is None:
             raise Exception("Argument 'name' is not defined")
         else:
@@ -117,7 +120,7 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_dockercompose_file, self._private_get_dockercompose_file_content(image))
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
-        self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
+        self._private_create_file_in_repository(self._private_networktrafficcustomrules_file,  self._private_get_networktrafficcustomrules_file_content())
         self._private_create_file_in_repository(self._private_logfilepatterns_file, "")
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None,None))
@@ -134,7 +137,7 @@ class AdameCore(object):
 
     # <start-command>
 
-    def start(self, configurationfile: str):
+    def start(self, configurationfile: str)->int:
 
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -143,7 +146,7 @@ class AdameCore(object):
             return 1
         return self._private_execute_task("Start environment", lambda: self._private_start())
 
-    def _private_start(self):
+    def _private_start(self)->int:
         if(self._private_container_is_running()):
             self._private_log_information("Container and other tools not started since the container is already running",True,True,False)
         else:
@@ -156,7 +159,7 @@ class AdameCore(object):
 
     # <stop-command>
 
-    def stop(self, configurationfile: str):
+    def stop(self, configurationfile: str)->int:
 
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -165,7 +168,7 @@ class AdameCore(object):
             return 1
         return self._private_execute_task("Stop environment", lambda: self._private_stop())
 
-    def _private_stop(self):
+    def _private_stop(self)->int:
         if(self._private_container_is_running()):
             self._private_stop_container()
             self._private_ensure_intrusion_detection_is_not_running()
@@ -178,7 +181,7 @@ class AdameCore(object):
 
     # <applyconfiguration-command>
 
-    def applyconfiguration(self, configurationfile: str):
+    def applyconfiguration(self, configurationfile: str)->int:
 
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -187,7 +190,7 @@ class AdameCore(object):
             return 1
         return self._private_execute_task("Apply configuration", lambda: self._private_applyconfiguration())
 
-    def _private_applyconfiguration(self):
+    def _private_applyconfiguration(self)->int:
         self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
@@ -198,7 +201,7 @@ class AdameCore(object):
 
     # <startadvanced-command>
 
-    def startadvanced(self, configurationfile: str):
+    def startadvanced(self, configurationfile: str)->int:
 
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -207,7 +210,7 @@ class AdameCore(object):
             return 1
         return self._private_execute_task("StartAdvanced", lambda: self._private_startadvanced())
 
-    def _private_startadvanced(self):
+    def _private_startadvanced(self)->int:
         self._private_stopadvanced()
         self._private_applyconfiguration()
         self._private_start()
@@ -217,7 +220,7 @@ class AdameCore(object):
 
     # <stopadvanced-command>
 
-    def stopadvanced(self, configurationfile: str):
+    def stopadvanced(self, configurationfile: str)->int:
 
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -226,7 +229,7 @@ class AdameCore(object):
             return 1
         return self._private_execute_task("StopAdvanced", lambda: self._private_stopadvanced())
 
-    def _private_stopadvanced(self):
+    def _private_stopadvanced(self)->int:
         self._private_stop()
         self._private_commit( f"Saved changes")
         return 0
@@ -235,7 +238,7 @@ class AdameCore(object):
 
     # <checkintegrity-command>
 
-    def checkintegrity(self, configurationfile: str):
+    def checkintegrity(self, configurationfile: str)->int:
 
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -244,7 +247,7 @@ class AdameCore(object):
             return 1
         return self._private_execute_task("Check integrity", lambda: self._private_checkintegrity())
 
-    def _private_checkintegrity(self):
+    def _private_checkintegrity(self)->int:
         self._private_check_integrity_of_repository(7)
         return 0
 
@@ -252,7 +255,7 @@ class AdameCore(object):
 
     # <diagnosis-command>
 
-    def diagnosis(self, configurationfile: str):
+    def diagnosis(self, configurationfile: str)->int:
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if configurationfile is not None:
@@ -260,7 +263,7 @@ class AdameCore(object):
                 return 1
         return self._private_execute_task("Diagnosis", lambda: self._private_diagnosis())
 
-    def _private_diagnosis(self):
+    def _private_diagnosis(self)->int:
         if self._private_adame_general_diagonisis() != 0:
             return 1
         if self._private_configuration is not None:
@@ -272,7 +275,7 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_log_running_state(self, process_id_of_container:int,process_id_of_intrusion_detection_system:int,action:str):
+    def _private_log_running_state(self, process_id_of_container:int,process_id_of_intrusion_detection_system:int,action:str)-> None:
         process_id_of_container_as_string=str_none_safe(process_id_of_container)
         process_id_of_intrusion_detection_system_as_string=str_none_safe(process_id_of_intrusion_detection_system)
         write_text_to_file(self._private_running_information_file,self._private_get_running_information_file_content(process_id_of_container_as_string,process_id_of_intrusion_detection_system_as_string))
@@ -280,17 +283,17 @@ class AdameCore(object):
         git_stage_file(self._private_repository_folder,self._private_running_information_file)
         self._private_commit(f"{action} container (Container-process: {process_id_of_container_as_string}; IDS-process: {process_id_of_intrusion_detection_system_as_string})",False)
 
-    def _private_adame_general_diagonisis(self):
+    def _private_adame_general_diagonisis(self)-> None:
         self._private_check_whether_required_tools_for_adame_are_available()
         self._private_check_whether_required_permissions_for_adame_are_available()
 
-    def _private_adame_repository_diagonisis(self):
+    def _private_adame_repository_diagonisis(self)-> None:
         self._private_check_whether_required_files_for_adamerepository_are_available()
 
-    def _private_check_whether_required_permissions_for_adame_are_available(self):
+    def _private_check_whether_required_permissions_for_adame_are_available(self)-> None:
         pass  # TODO implement function
 
-    def _private_check_whether_required_tools_for_adame_are_available(self):
+    def _private_check_whether_required_tools_for_adame_are_available(self)->int:
         tools = [
             "git",
             "gpg",
@@ -311,16 +314,16 @@ class AdameCore(object):
                 result = 1
         return result
 
-    def _private_check_whether_required_files_for_adamerepository_are_available(self):
+    def _private_check_whether_required_files_for_adamerepository_are_available(self)-> None:
         pass  # TODO implement function
 
-    def _private_check_configurationfile_argument(self, configurationfile: str):
+    def _private_check_configurationfile_argument(self, configurationfile: str)-> None:
         if configurationfile is None:
             raise Exception("Argument 'configurationfile' is not defined")
         if not os.path.isfile(configurationfile):
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
 
-    def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None):
+    def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None)-> None:
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
         # until = datetime.datetime.today()
@@ -328,7 +331,7 @@ This function is idempotent."""
         # commit_hashs_to_check_in_given_interval = self._private_get_commit_ids_between_dates(until, since)
         pass  # TODO Implement this function. This function should print a warning is the last commit in this repository was not signed with the key defined in the config or if any commit in the last amount_of_days_of_history_to_check days (configurable) days was not signed with the key defined in the config because this seems to be an unexpected/unwanted change.
 
-    def _private_regenerate_networktrafficgeneratedrules_filecontent(self):
+    def _private_regenerate_networktrafficgeneratedrules_filecontent(self)-> None:
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
         pass  # TODO This function must
@@ -336,12 +339,12 @@ This function is idempotent."""
         # - add a testrule for _private_test_intrusion_detection()
         # - add the rules from Networktraffic.Custom.rules
 
-    def _private_recreate_siem_connection(self):
+    def _private_recreate_siem_connection(self)-> None:
         """This function recreate the SIEM-system-connection.
 This function is idempotent."""
         pass  # TODO Implement this function.
 
-    def _private_ensure_intrusion_detection_is_running(self):
+    def _private_ensure_intrusion_detection_is_running(self)->int:
         """This function ensures that the intrusion-detection-system is running and the rules will be applied correctly.
 This function is idempotent."""
         if(not self._private_intrusion_detection_is_running()):
@@ -350,26 +353,26 @@ This function is idempotent."""
         self._private_test_intrusion_detection()
         return process_id
 
-    def _private_ensure_intrusion_detection_is_not_running(self):
+    def _private_ensure_intrusion_detection_is_not_running(self)-> None:
         """This function ensures that the intrusion-detection-system is not running anymore.
 This function is idempotent."""
         if(self._private_intrusion_detection_is_running()):
             self._private_stop_intrusion_detection()
 
-    def _private_intrusion_detection_is_running(self):
+    def _private_intrusion_detection_is_running(self)->bool:
         return self._private_process_is_running(self._private_get_running_processes()[1],"sudo snort ")
 
-    def _private_start_intrusion_detection(self):
+    def _private_start_intrusion_detection(self)->int:
         pass  # TODO start the intrusion-detection-system as daemon and return its process-id
         return 0
 
-    def _private_stop_intrusion_detection(self):
+    def _private_stop_intrusion_detection(self)-> None:
         self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("kill",str(self._private_get_running_processes()[1]))
 
     def _private_test_intrusion_detection(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
 
-    def _private_get_running_processes(self):
+    def _private_get_running_processes(self)->tuple:
         lines=read_text_from_file(self._private_running_information_file).splitlines()
         processid_of_container_as_string=None
         processid_of_network_intrusion_detection_system_as_string=None
@@ -385,14 +388,14 @@ This function is idempotent."""
                         processid_of_network_intrusion_detection_system_as_string=value
         return (processid_of_container_as_string,processid_of_network_intrusion_detection_system_as_string)
 
-    def _private_get_running_information_file_content(self,processid_of_container:int,processid_of_network_intrusion_detection_system:int):
+    def _private_get_running_information_file_content(self,processid_of_container:int,processid_of_network_intrusion_detection_system:int)->str:
         processid_of_container_as_string=str_none_safe( processid_of_container)
         processid_of_network_intrusion_detection_system_as_string=str_none_safe( processid_of_network_intrusion_detection_system)
         return f"""Container-process:{processid_of_container_as_string}
 IDS-process:{processid_of_network_intrusion_detection_system_as_string}
 """
 
-    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str):
+    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str)->int:
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
         configparser = ConfigParser()
@@ -409,13 +412,13 @@ IDS-process:{processid_of_network_intrusion_detection_system_as_string}
 
         return self._private_load_configuration(self._private_configuration_file)
 
-    def _private_verbose_log_start_by_configuration_file(self, configurationfile: str):
+    def _private_verbose_log_start_by_configuration_file(self, configurationfile: str)-> None:
         self._private_log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
 
-    def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str):
+    def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str)-> None:
         self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
-    def _private_load_configuration(self, configurationfile: str):
+    def _private_load_configuration(self, configurationfile: str)->int:
         try:
             configurationfile=resolve_relative_path_from_current_working_directory(configurationfile)
             self._private_configuration_file = configurationfile
@@ -458,10 +461,17 @@ IDS-process:{processid_of_network_intrusion_detection_system_as_string}
             self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             return 1
 
-    def _private_get_container_name(self):
+    def _private_get_container_name(self)->str:
         return self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
 
-    def _private_get_dockercompose_file_content(self, image: str):
+    def _private_get_networktrafficcustomrules_file_content(self)->str:
+        return f"""{self._private_get_testrule()}
+"""
+
+    def _private_get_testrule(self)->str:
+        return f'log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for internal functionality test'
+
+    def _private_get_dockercompose_file_content(self, image: str)->str:
         name_as_docker_allowed_name = self._private_get_container_name()
         return f"""version: '3.2'
 services:
@@ -478,21 +488,21 @@ services:
 #       - ./../Logs/Application:/DirectoryInContainer/Logs
 """
 
-    def _private_create_file_in_repository(self,  file, filecontent):
+    def _private_create_file_in_repository(self,  file, filecontent)-> None:
         write_text_to_file(file, filecontent, self.encoding)
         self._private_log_information(f"Created file '{file}'", True)
 
-    def _private_get_license_file_content(self, configuration: ConfigParser):
+    def _private_get_license_file_content(self, configuration: ConfigParser)->str:
         return f"""Owner of this repository and its content: {configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_owner)}
 Only the owner of this repository is allowed to read, use, change, publish this repository or its content.
 Only the owner of this repository is allowed to change the license of this repository or its content.
 """
 
-    def _private_get_gitignore_file_content(self, configuration: ConfigParser):
+    def _private_get_gitignore_file_content(self, configuration: ConfigParser)->str:
         return """Logs/**
 """
 
-    def _private_get_readme_file_content(self, configuration: ConfigParser, image: str):
+    def _private_get_readme_file_content(self, configuration: ConfigParser, image: str)->str:
 
         if self._private_remote_address_is_available:
             remote_address_info = f"The data of this repository will be saved as backup in '{configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)}'."
@@ -528,19 +538,19 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
-    def _private_stop_container(self):
+    def _private_stop_container(self)-> None:
         self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_configuration_folder)
         self._private_log_information("Container was stopped", False, True, True)
 
-    def _private_start_container(self):
+    def _private_start_container(self)->int:
         process_id=self._private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
         self._private_log_information("Container was started", False, True, True)
         return process_id
 
-    def _private_container_is_running(self):
+    def _private_container_is_running(self)->bool:
         return self._private_process_is_running(self._private_get_running_processes()[0],"sudo docker-compose up ")
 
-    def _private_process_is_running(self, process_id:int, command_start:str):
+    def _private_process_is_running(self, process_id:int, command_start:str)->bool:
         for process in psutil.process_iter():
             if(process.cmdline.startswith(command_start)):
                 return True
@@ -548,7 +558,7 @@ The license of this repository is defined in the file 'License.txt'.
                 self._private_log_warning(f"The process with id {str(process_id)} changed unexpectedly. Expected a process with a commandline like '{command_start}...' but was '{process.cmdline}...'",False,True,False)
         return False
 
-    def _private_commit(self, message: str,stage_all_changes:bool=True):
+    def _private_commit(self, message: str,stage_all_changes:bool=True)-> None:
         repository=self._private_repository_folder
         commit_id = git_commit(repository, message, self._private_adame_commit_author_name, "",stage_all_changes)
         remote_name = "Backup"
@@ -560,17 +570,17 @@ The license of this repository is defined in the file 'License.txt'.
             git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
             self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}", False, True, True)
 
-    def _private_name_to_docker_allowed_name(self, name: str):
+    def _private_name_to_docker_allowed_name(self, name: str)->str:
         name = name.lower()
         return name
 
-    def _private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None):
+    def _private_start_program_synchronously_as_root_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None)->list:
         result = self._private_start_program_synchronously_as_root(program, argument, workingdirectory)
         if(result[0] != 0):
             raise Exception(f"'{workingdirectory}> sudo {program} {argument}' had exitcode {str(result[0])}")
         return result
 
-    def _private_start_program_synchronously_as_root(self, program: str, argument: str, workingdirectory: str = None):
+    def _private_start_program_synchronously_as_root(self, program: str, argument: str, workingdirectory: str = None)->list:
         workingdirectory = str_none_safe(workingdirectory)
         if(current_user_has_elevated_privileges()):
             return start_program_synchronously(program, argument, workingdirectory,1,False,None,3600,False,None,False,False,False)
@@ -594,13 +604,13 @@ The license of this repository is defined in the file 'License.txt'.
             ]
             return result
 
-    def _private_tool_exists_in_path(self, name: str, execute_with_elevated_privileges):
+    def _private_tool_exists_in_path(self, name: str, execute_with_elevated_privileges)->bool:
         if execute_with_elevated_privileges:
             return self._private_start_program_synchronously_as_root(name, "", None)[1] == 0
         else:
             return start_program_synchronously(name, "", None,1,False,None,3600,False,None,False,False,False)[1] == 0
 
-    def _private_execute_task(self, name: str, function):
+    def _private_execute_task(self, name: str, function)->int:
         try:
             self._private_log_information(f"Started task '{name}'")
             exit_code = function()
@@ -612,21 +622,21 @@ The license of this repository is defined in the file 'License.txt'.
         finally:
             self._private_log_information(f"Finished task '{name}'")
 
-    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False)-> None:
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+    def _private_log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False)-> None:
         self._private_write_to_log("Warning", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_error(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+    def _private_log_error(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False)-> None:
         self._private_write_to_log("Error", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True):
+    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True)-> None:
         self._private_write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
         if(self.verbose):
             write_exception_to_stderr_with_traceback(exception, traceback, message)
 
-    def _private_write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool):
+    def _private_write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool)-> None:
         if is_verbose_log_entry and not self.verbose:
             return
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -650,12 +660,12 @@ The license of this repository is defined in the file 'License.txt'.
 # <miscellaneous>
 
 
-def get_adame_version():
+def get_adame_version()->str:
     return version
 
 
-def adame_cli():
-    arger = argparse.ArgumentParser(description=f"""{adame_with_version}
+def adame_cli()->int:
+    arger = argparse.ArgumentParser(description=f"""{versioned_product_name}
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
 One focus of Adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with Adame it is very easy move the application with all its data and configurations to another computer.
 Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
@@ -739,7 +749,7 @@ Required commandline-commands:
         return core.diagnosis(options.configurationfile)
 
     else:
-        write_message_to_stdout(adame_with_version)
+        write_message_to_stdout(versioned_product_name)
         write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
         return 0
 
