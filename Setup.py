@@ -1,19 +1,18 @@
-from setuptools import setup
 import os
-from pathlib import Path
+from setuptools import setup
 
 productname = "Adame"
 version = "0.2.19"
 
 
 folder_of_current_file = os.path.dirname(os.path.realpath(__file__))
-with open(os.path.join(folder_of_current_file, f"ReadMe.md"), "r", encoding='utf-8') as file:
+with open(os.path.join(folder_of_current_file, "ReadMe.md"), "r", encoding='utf-8') as file:
     long_description = file.read()
 
 setup(
     name=productname,
     version=version,
-    description=f"Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.",
+    description="Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.",
     packages=[productname],
     author='Marius Göcke',
     author_email='marius.goecke@gmail.com',
@@ -33,11 +32,11 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "psutil>=5.7.3",
-        "ScriptCollection>=1.12.61",
+        "ScriptCollection>=2.0.2",
     ],
     entry_points={
         'console_scripts': [
-            f"adame = Adame.core:adame_cli"
+            "adame = Adame.core:adame_cli"
         ],
     },
 )

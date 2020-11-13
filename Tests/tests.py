@@ -1,35 +1,32 @@
-import pytest
 import unittest
 import tempfile
 import uuid
 import os
-from Adame.core import get_adame_version, AdameCore
-from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists, read_text_from_file
+from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists
+from Adame.core import AdameCore
 
 
 class EnvironmentForTest:
     adame: AdameCore = None
     folder: str = None
     adame_configuration_file: str = None
+
     def __init__(self):
         folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
         ensure_directory_exists(folder)
         self.folder = folder
         self.adame = AdameCore()
-        self.adame.verbose = True
+        self.adame._private_check_privileges = False
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
-        userpassword_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "userpasswordfortests")
-        if os.path.isfile(userpassword_file):
-            self.adame.userpassword=read_text_from_file(userpassword_file)
-
-    def create(self):
         assert self.adame.create("myapplication", self.folder, "httpd:latest", "owner") == 0
-        assert self.adame._private_container_is_running()==False
+        assert not self.adame._private_container_is_running()
+        self.adame._private_sc.mock_program_calls = True
 
     def purge(self):
         self.adame.stop(self.adame_configuration_file)
-        assert self.adame._private_container_is_running()==False
+        assert not self.adame._private_container_is_running()
         ensure_directory_does_not_exist(self.folder)
+        self.adame._private_sc.verify_no_pending_mock_program_calls()
 
 
 class MiscellaneousTests(unittest.TestCase):
@@ -37,13 +34,14 @@ class MiscellaneousTests(unittest.TestCase):
     def test_adamecore_constructor_does_not_throw_any_exception(self):
         AdameCore()
 
-    def test_command_create(self):
+    def test_command_create_assert_files(self):
         try:
 
             # arrange
             environment_for_test = EnvironmentForTest()
 
             # act
+            environment_for_test.adame._private_sc.mock_program_calls = False
             exit_code = environment_for_test.adame.create("myapplication", environment_for_test.folder, "httpd:latest", "owner")
 
             # assert
@@ -65,13 +63,12 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
-            environment_for_test.create()
 
             # act
             exit_code = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
 
             # assert
-            assert environment_for_test.adame._private_container_is_running()==True
+            assert environment_for_test.adame._private_container_is_running()
             assert exit_code == 0
 
         finally:
@@ -82,15 +79,14 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
-            environment_for_test.create()
             assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
-            assert environment_for_test.adame._private_container_is_running()==True
+            assert environment_for_test.adame._private_container_is_running()
 
             # act
             exit_code = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
 
             # assert
-            assert environment_for_test.adame._private_container_is_running()==False
+            assert environment_for_test.adame._private_container_is_running()
             assert exit_code == 0
 
         finally:
@@ -101,7 +97,6 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
-            environment_for_test.create()
 
             # act
             exit_code = environment_for_test.adame.diagnosis(environment_for_test.adame_configuration_file)
@@ -111,7 +106,6 @@ class MiscellaneousTests(unittest.TestCase):
 
         finally:
             environment_for_test.purge()
-
 
     def test_command_diagnosis_without_configurationfile(self):
         try:
