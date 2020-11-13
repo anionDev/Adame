@@ -27,8 +27,9 @@ class EnvironmentForTest:
         assert self.adame._private_container_is_running()==False
 
     def purge(self):
-        self.adame.stop(self.adame_configuration_file)
-        assert self.adame._private_container_is_running()==False
+        if( not (self.adame_configuration_file is None)):
+            self.adame.stop(self.adame_configuration_file)
+            assert self.adame._private_container_is_running()==False
         ensure_directory_does_not_exist(self.folder)
 
 
@@ -118,6 +119,7 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
+            environment_for_test.adame.adame_configuration_file=None
 
             # act
             exit_code = environment_for_test.adame.diagnosis(None)
