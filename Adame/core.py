@@ -75,7 +75,7 @@ class AdameCore(object):
     # <create-command>
 
     def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
         return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
@@ -136,7 +136,7 @@ class AdameCore(object):
     # <start-command>
 
     def start(self, configurationfile: str):
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -158,7 +158,7 @@ class AdameCore(object):
     # <stop-command>
 
     def stop(self, configurationfile: str) -> int:
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -180,7 +180,7 @@ class AdameCore(object):
     # <applyconfiguration-command>
 
     def applyconfiguration(self, configurationfile: str) -> int:
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -200,7 +200,7 @@ class AdameCore(object):
     # <startadvanced-command>
 
     def startadvanced(self, configurationfile: str) -> int:
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -219,7 +219,7 @@ class AdameCore(object):
     # <stopadvanced-command>
 
     def stopadvanced(self, configurationfile: str) -> int:
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -237,7 +237,7 @@ class AdameCore(object):
     # <checkintegrity-command>
 
     def checkintegrity(self, configurationfile: str) -> int:
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -254,7 +254,7 @@ class AdameCore(object):
     # <diagnosis-command>
 
     def diagnosis(self, configurationfile: str) -> int:
-        self._private_check_privileges()
+        self._private_check_for_elevated_privileges()
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if configurationfile is not None:
             if self._private_load_configuration(configurationfile) != 0:
@@ -273,7 +273,7 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_check_privileges(self) -> None:
+    def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and self._private_check_privileges):
             raise Exception("Adame requries elevated privileges to get executed")
 
@@ -560,7 +560,7 @@ The license of this repository is defined in the file 'License.txt'.
         for process in psutil.process_iter():
             if process.pid() == process_id:
                 cmd = process.cmdline()
-                if(0 < len(cmd) and (cmd[0].startswith(command_start))):
+                if(len(cmd) > 0 and (cmd[0].startswith(command_start))):
                     return True
                 else:
                     self._private_log_warning(f"The process with id {str(process_id)} changed unexpectedly. Expected a process with a commandline like '{command_start}...' but was '{cmd}...'", False, True, False)

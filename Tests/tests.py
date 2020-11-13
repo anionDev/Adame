@@ -25,7 +25,7 @@ class EnvironmentForTest:
     def purge(self):
         if(not (self.adame_configuration_file is None)):
             self.adame.stop(self.adame_configuration_file)
-            assert self.adame._private_container_is_running() == False
+            assert not self.adame._private_container_is_running()
         ensure_directory_does_not_exist(self.folder)
         self.adame._private_sc.verify_no_pending_mock_program_calls()
 
@@ -35,18 +35,16 @@ class MiscellaneousTests(unittest.TestCase):
     def test_adamecore_constructor_does_not_throw_any_exception(self):
         AdameCore()
 
-    def test_command_create_assert_files(self):
+    def test_command_create_test_environment(self):
         try:
 
             # arrange
-            environment_for_test = EnvironmentForTest()
+            # (nothing to do)
 
             # act
-            environment_for_test.adame._private_sc.mock_program_calls = False
-            exit_code = environment_for_test.adame.create("myapplication", environment_for_test.folder, "httpd:latest", "owner")
+            environment_for_test = EnvironmentForTest()
 
             # assert
-            assert exit_code == 0
             assert os.path.isfile(os.path.join(environment_for_test.folder, ".gitignore"))
             assert os.path.isfile(os.path.join(environment_for_test.folder, "ReadMe.md"))
             assert os.path.isfile(os.path.join(environment_for_test.folder, "License.txt"))
