@@ -74,8 +74,8 @@ class AdameCore(object):
 
     # <create-command>
 
-    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None) -> int:
-        self._check_privileges()
+    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
+        self._private_check_privileges()
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
         return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
@@ -135,8 +135,8 @@ class AdameCore(object):
 
     # <start-command>
 
-    def start(self, configurationfile: str) -> int:
-        self._check_privileges()
+    def start(self, configurationfile: str):
+        self._private_check_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -158,7 +158,7 @@ class AdameCore(object):
     # <stop-command>
 
     def stop(self, configurationfile: str) -> int:
-        self._check_privileges()
+        self._private_check_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -180,7 +180,7 @@ class AdameCore(object):
     # <applyconfiguration-command>
 
     def applyconfiguration(self, configurationfile: str) -> int:
-        self._check_privileges()
+        self._private_check_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -200,7 +200,7 @@ class AdameCore(object):
     # <startadvanced-command>
 
     def startadvanced(self, configurationfile: str) -> int:
-        self._check_privileges()
+        self._private_check_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -219,7 +219,7 @@ class AdameCore(object):
     # <stopadvanced-command>
 
     def stopadvanced(self, configurationfile: str) -> int:
-        self._check_privileges()
+        self._private_check_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -237,7 +237,7 @@ class AdameCore(object):
     # <checkintegrity-command>
 
     def checkintegrity(self, configurationfile: str) -> int:
-        self._check_privileges()
+        self._private_check_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -254,7 +254,7 @@ class AdameCore(object):
     # <diagnosis-command>
 
     def diagnosis(self, configurationfile: str) -> int:
-        self._check_privileges()
+        self._private_check_privileges()
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if configurationfile is not None:
             if self._private_load_configuration(configurationfile) != 0:
@@ -273,9 +273,9 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _check_privileges(self) -> None:
+    def _private_check_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and self._private_check_privileges):
-            raise Exception("Adame must be running with elevated privileges to execute this command")
+            raise Exception("Adame requries elevated privileges to get executed")
 
     def _private_log_running_state(self, process_id_of_container: int, process_id_of_intrusion_detection_system: int, action: str) -> None:
         process_id_of_container_as_string = str_none_safe(process_id_of_container)
@@ -292,11 +292,11 @@ class AdameCore(object):
             return False
         return True
 
-    def _private_adame_repository_diagonisis(self) -> bool:
+    def _private_adame_repository_diagonisis(self):
         self._private_check_whether_required_files_for_adamerepository_are_available()
 
     def _private_check_whether_required_permissions_for_adame_are_available(self) -> bool:
-        pass # TODO implement function
+        pass  # TODO implement function
 
     def _private_check_whether_required_tools_for_adame_are_available(self) -> bool:
         tools = [
@@ -314,7 +314,7 @@ class AdameCore(object):
         return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self) -> None:
-        pass # TODO implement function
+        pass  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str) -> None:
         if configurationfile is None:
@@ -369,7 +369,7 @@ This function is idempotent."""
         self._private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero("kill", str(self._private_get_running_processes()[1]))
 
     def _private_test_intrusion_detection(self):
-        pass # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
+        pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
 
     def _private_get_running_processes(self) -> tuple:
         lines = read_text_from_file(self._private_running_information_file).splitlines()
@@ -431,6 +431,7 @@ IDS-process:{processid_of_network_intrusion_detection_system_as_string}
             self._private_readme_file = os.path.join(self._private_repository_folder, "ReadMe.md")
             self._private_license_file = os.path.join(self._private_repository_folder, "License.txt")
             self._private_gitignore_file = os.path.join(self._private_repository_folder, ".gitignore")
+            self._private_running_information_file = os.path.join(self._private_configuration_folder, "Runninginformation")
             self._private_dockercompose_file = os.path.join(self._private_configuration_folder, "docker-compose.yml")
             self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
@@ -537,24 +538,32 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
-    def _private_stop_container(self) -> None:
-        self._private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "down --remove-orphans", self._private_configuration_folder)
+    def _private_stop_container(self):
+        self._private_start_program_synchronously("docker-compose", "down --remove-orphans", self._private_configuration_folder)
         self._private_log_information("Container was stopped", False, True, True)
 
-    def _private_start_container(self) -> int:
-        process_id = self._private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
+    def _private_start_container(self):
+        process_id = self._private_start_program_synchronously("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
         self._private_log_information("Container was started", False, True, True)
         return process_id
 
-    def _private_container_is_running(self) -> bool:
-        return self._private_process_is_running(self._private_get_running_processes()[0], "sudo docker-compose up ")
+    def _private_container_is_running(self):
+        return self._private_is_running_safe(self._private_get_running_processes()[0], "sudo docker-compose up ")
+
+    def _private_is_running_safe(self, index: int, cmdprefix: str):
+        if(index is None):
+            return False
+        else:
+            return self._private_process_is_running(index, cmdprefix)
 
     def _private_process_is_running(self, process_id: int, command_start: str) -> bool:
         for process in psutil.process_iter():
-            if(process.cmdline.startswith(command_start)):
-                return True
-            else:
-                self._private_log_warning(f"The process with id {str(process_id)} changed unexpectedly. Expected a process with a commandline like '{command_start}...' but was '{process.cmdline}...'", False, True, False)
+            if process.pid() == process_id:
+                cmd = process.cmdline()
+                if(0 < len(cmd) and (cmd[0].startswith(command_start))):
+                    return True
+                else:
+                    self._private_log_warning(f"The process with id {str(process_id)} changed unexpectedly. Expected a process with a commandline like '{command_start}...' but was '{cmd}...'", False, True, False)
         return False
 
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
@@ -581,7 +590,11 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None) -> list:
         workingdirectory = str_none_safe(workingdirectory)
-        return self._private_sc.start_program_synchronously(program, argument, workingdirectory, 1, False, None, 3600, False, None, False, False, False)
+        if self.verbose:
+            verbose = 2
+        else:
+            verbose = 1
+        return self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose, False, None, 3600, False, None, False, False, False)
 
     def _private_tool_exists_in_path(self, name: str) -> bool:
         return find_executable(name) is not None
@@ -598,7 +611,7 @@ The license of this repository is defined in the file 'License.txt'.
         finally:
             self._private_log_information(f"Finished task '{name}'")
 
-    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
+    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
     def _private_log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
@@ -620,6 +633,7 @@ The license of this repository is defined in the file 'License.txt'.
         if(write_to_console):
             if(loglevel == "Error"):
                 write_message_to_stderr(logentry)
+                write_message_to_stdout(logentry)
             else:
                 write_message_to_stdout(logentry)
         if(write_to_logfile and self._private_log_file_for_adame_overhead is not None):

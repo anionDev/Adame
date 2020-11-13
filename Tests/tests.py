@@ -23,8 +23,9 @@ class EnvironmentForTest:
         self.adame._private_sc.mock_program_calls = True
 
     def purge(self):
-        self.adame.stop(self.adame_configuration_file)
-        assert not self.adame._private_container_is_running()
+        if(not (self.adame_configuration_file is None)):
+            self.adame.stop(self.adame_configuration_file)
+            assert self.adame._private_container_is_running() == False
         ensure_directory_does_not_exist(self.folder)
         self.adame._private_sc.verify_no_pending_mock_program_calls()
 
@@ -112,6 +113,7 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
+            environment_for_test.adame.adame_configuration_file = None
 
             # act
             exit_code = environment_for_test.adame.diagnosis(None)
