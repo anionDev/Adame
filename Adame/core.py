@@ -142,7 +142,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Start environment", lambda: self._private_start())
+        return self._private_execute_task("Start environment", self._private_start)
 
     def _private_start(self) -> int:
         if(self._private_container_is_running()):
@@ -164,7 +164,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Stop environment", lambda: self._private_stop())
+        return self._private_execute_task("Stop environment", self._private_stop)
 
     def _private_stop(self) -> int:
         if(self._private_container_is_running()):
@@ -186,7 +186,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Apply configuration", lambda: self._private_applyconfiguration())
+        return self._private_execute_task("Apply configuration", self._private_applyconfiguration)
 
     def _private_applyconfiguration(self) -> int:
         self._private_check_integrity_of_repository()
@@ -206,7 +206,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("StartAdvanced", lambda: self._private_startadvanced())
+        return self._private_execute_task("StartAdvanced", self._private_startadvanced)
 
     def _private_startadvanced(self) -> int:
         self._private_stopadvanced()
@@ -225,7 +225,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("StopAdvanced", lambda: self._private_stopadvanced())
+        return self._private_execute_task("StopAdvanced", self._private_stopadvanced)
 
     def _private_stopadvanced(self) -> int:
         self._private_stop()
@@ -243,7 +243,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Check integrity", lambda: self._private_checkintegrity())
+        return self._private_execute_task("Check integrity", self._private_checkintegrity)
 
     def _private_checkintegrity(self) -> int:
         self._private_check_integrity_of_repository(7)
@@ -259,7 +259,7 @@ class AdameCore(object):
         if configurationfile is not None:
             if self._private_load_configuration(configurationfile) != 0:
                 return 1
-        return self._private_execute_task("Diagnosis", lambda: self._private_diagnosis())
+        return self._private_execute_task("Diagnosis", self._private_diagnosis)
 
     def _private_diagnosis(self) -> int:
         if not self._private_adame_general_diagonisis():

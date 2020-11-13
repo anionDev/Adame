@@ -18,6 +18,8 @@ class EnvironmentForTest:
         self.adame = AdameCore()
         self.adame._private_check_privileges = False
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
+
+    def create(self):
         assert self.adame.create("myapplication", self.folder, "httpd:latest", "owner") == 0
         assert not self.adame._private_container_is_running()
         self.adame._private_sc.mock_program_calls = True
@@ -36,13 +38,14 @@ class MiscellaneousTests(unittest.TestCase):
         AdameCore()
 
     def test_command_create_test_environment(self):
+
         try:
 
             # arrange
-            # (nothing to do)
+            environment_for_test = EnvironmentForTest()
 
             # act
-            environment_for_test = EnvironmentForTest()
+            environment_for_test.create()
 
             # assert
             assert os.path.isfile(os.path.join(environment_for_test.folder, ".gitignore"))
@@ -62,6 +65,8 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
+            environment_for_test.create()
+            environment_for_test.adame._private_sc.register_mock_programm_call("", "", "", 0, "", "", 0) # TODO register program-calls
 
             # act
             exit_code = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
@@ -78,6 +83,7 @@ class MiscellaneousTests(unittest.TestCase):
 
             # arrange
             environment_for_test = EnvironmentForTest()
+            environment_for_test.create()
             assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
             assert environment_for_test.adame._private_container_is_running()
 
@@ -85,7 +91,7 @@ class MiscellaneousTests(unittest.TestCase):
             exit_code = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
 
             # assert
-            assert environment_for_test.adame._private_container_is_running()
+            assert not environment_for_test.adame._private_container_is_running()
             assert exit_code == 0
 
         finally:
