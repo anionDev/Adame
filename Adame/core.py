@@ -9,7 +9,7 @@ from datetime import datetime
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder
 
 product_name = "Adame"
 version = "0.2.19"
@@ -36,7 +36,7 @@ class AdameCore(object):
     _private_log_folder: str =None# will be "{_private_repository_folder}/Logs"
     _private_log_folder_for_internal_overhead: str =None# will be "{_private_log_folder}/Overhead"
     _private_log_folder_for_application: str  =None# will be "{_private_log_folder}/Application"
-    _private_log_folder_for_intrusiondetectionsystem: str  =None# will be "{_private_log_folder}/IDS"
+    _private_log_folder_for_ids: str  =None# will be "{_private_log_folder}/IDS"
     _private_log_file_for_adame_overhead: str
 
     _private_readme_file: str
@@ -153,8 +153,8 @@ class AdameCore(object):
             self._private_log_information("Container and other tools not started since the container is already running", True, True, False)
         else:
             process_id_of_container = self._private_start_container()
-            process_id_of_intrusion_detection_system = self._private_ensure_intrusion_detection_is_running()
-            self._private_log_running_state(process_id_of_container, process_id_of_intrusion_detection_system, "Started")
+            process_id_of_ids = self._private_ensure_ids_is_running()
+            self._private_log_running_state(process_id_of_container, process_id_of_ids, "Started")
         return 0
 
     # </start-command>
@@ -173,7 +173,7 @@ class AdameCore(object):
     def _private_stop(self) -> int:
         if(self._private_container_is_running()):
             self._private_stop_container()
-            self._private_ensure_intrusion_detection_is_not_running()
+            self._private_ensure_ids_is_not_running()
             self._private_log_running_state(None, None, "Stopped")
         else:
             self._private_log_information("Container and other tools not stopped since the container is not running", True, True, False)
@@ -306,13 +306,13 @@ class AdameCore(object):
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
             raise Exception("Adame requries elevated privileges to get executed")
 
-    def _private_log_running_state(self, process_id_of_container: int, process_id_of_intrusion_detection_system: int, action: str) -> None:
+    def _private_log_running_state(self, process_id_of_container: int, process_id_of_ids: int, action: str) -> None:
         process_id_of_container_as_string = str_none_safe(process_id_of_container)
-        process_id_of_intrusion_detection_system_as_string = str_none_safe(process_id_of_intrusion_detection_system)
-        write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(process_id_of_container_as_string, process_id_of_intrusion_detection_system_as_string))
+        process_id_of_ids_as_string = str_none_safe(process_id_of_ids)
+        write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(process_id_of_container_as_string, process_id_of_ids_as_string))
         self._private_sc.git_unstage_all_changes(self._private_repository_folder)
         self._private_sc.git_stage_file(self._private_repository_folder, self._private_running_information_file)
-        self._private_commit(f"{action} container (Container-process: {process_id_of_container_as_string}; IDS-process: {process_id_of_intrusion_detection_system_as_string})", False)
+        self._private_commit(f"{action} container (Container-process: {process_id_of_container_as_string}; IDS-process: {process_id_of_ids_as_string})", False)
 
     def _private_adame_general_diagonisis(self) -> bool:
         if(not self._private_check_whether_required_tools_for_adame_are_available()):
@@ -367,7 +367,7 @@ This function is idempotent."""
 This function is idempotent."""
         # TODO This function must
         # - process ApplicationProvidedSecurityInformation.xml
-        # - add a testrule for _private_test_intrusion_detection()
+        # - add a testrule for _private_test_ids()
         # - add the rules from Networktraffic.Custom.rules
 
     def _private_recreate_siem_connection(self) -> None:
@@ -375,38 +375,38 @@ This function is idempotent."""
 This function is idempotent."""
         # TODO Implement this function.
 
-    def _private_ensure_intrusion_detection_is_running(self) -> int:
-        """This function ensures that the intrusion-detection-system is running and the rules will be applied correctly.
+    def _private_ensure_ids_is_running(self) -> int:
+        """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly.
 This function is idempotent."""
-        if(self._private_intrusion_detection_is_running()):
-            self._private_stop_intrusion_detection()
-        process_id = self._private_start_intrusion_detection()
-        self._private_test_intrusion_detection()
+        if(self._private_ids_is_running()):
+            self._private_stop_ids()
+        process_id = self._private_start_ids()
+        self._private_test_ids()
         return process_id
 
-    def _private_ensure_intrusion_detection_is_not_running(self) -> None:
-        """This function ensures that the intrusion-detection-system is not running anymore.
+    def _private_ensure_ids_is_not_running(self) -> None:
+        """This function ensures that the intrusion-detection-system (ids) is not running anymore.
 This function is idempotent."""
-        if(self._private_intrusion_detection_is_running()):
-            self._private_stop_intrusion_detection()
+        if(self._private_ids_is_running()):
+            self._private_stop_ids()
 
-    def _private_intrusion_detection_is_running(self) -> bool:
+    def _private_ids_is_running(self) -> bool:
         return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "snort")# TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
-    def _private_start_intrusion_detection(self) -> int:
-        result=self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_intrusiondetectionsystem}"',"")
+    def _private_start_ids(self) -> int:
+        result=self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"',"")
         return result
 
-    def _private_stop_intrusion_detection(self) -> None:
+    def _private_stop_ids(self) -> None:
         self._private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero("kill", str(self._private_get_stored_running_processes()[1]))
 
-    def _private_test_intrusion_detection(self):
+    def _private_test_ids(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
 
     def _private_get_stored_running_processes(self) -> tuple:
         lines = read_text_from_file(self._private_running_information_file).splitlines()
         processid_of_container_as_string = None
-        processid_of_network_intrusion_detection_system_as_string = None
+        processid_of_ids_as_string = None
         for line in lines:
             if ":" in line:
                 splitted = line.split(":")
@@ -416,14 +416,14 @@ This function is idempotent."""
                     if splitted[0] == "Container-process":
                         processid_of_container_as_string = value
                     if splitted[0] == "IDS-process":
-                        processid_of_network_intrusion_detection_system_as_string = value
-        return (processid_of_container_as_string, processid_of_network_intrusion_detection_system_as_string)
+                        processid_of_ids_as_string = value
+        return (processid_of_container_as_string, processid_of_ids_as_string)
 
-    def _private_get_running_information_file_content(self, processid_of_container: int, processid_of_network_intrusion_detection_system: int) -> str:
+    def _private_get_running_information_file_content(self, processid_of_container: int, processid_of_network_ids: int) -> str:
         processid_of_container_as_string = str_none_safe(processid_of_container)
-        processid_of_network_intrusion_detection_system_as_string = str_none_safe(processid_of_network_intrusion_detection_system)
+        processid_of_ids_as_string = str_none_safe(processid_of_network_ids)
         return f"""Container-process:{processid_of_container_as_string}
-IDS-process:{processid_of_network_intrusion_detection_system_as_string}
+IDS-process:{processid_of_ids_as_string}
 """
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str) -> int:
@@ -474,14 +474,15 @@ IDS-process:{processid_of_network_intrusion_detection_system_as_string}
             self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Properties.configuration")
 
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")
-            self._private_log_folder_for_internal_overhead: str = os.path.join(self._private_log_folder, "Overhead")
-            self._private_log_folder_for_application: str = os.path.join(self._private_log_folder, "Application")
-            self._private_log_folder_for_intrusiondetectionsystem: str = os.path.join(self._private_log_folder, "IDS")
-
-            ensure_directory_exists(self._private_log_folder_for_internal_overhead)
+            self._private_log_folder_for_application = os.path.join(self._private_log_folder, "Application")
             ensure_directory_exists(self._private_log_folder_for_application)
-            ensure_directory_exists(self._private_log_folder_for_intrusiondetectionsystem)
-            self._private_log_file_for_adame_overhead: str = os.path.join(self._private_log_folder_for_internal_overhead, "Adame.log")
+            self._private_log_folder_for_ids = os.path.join(self._private_log_folder, "IDS")
+            ensure_directory_exists(self._private_log_folder_for_ids)
+            self._private_log_folder_for_internal_overhead= os.path.join(self._private_log_folder, "Overhead")
+            ensure_directory_exists(self._private_log_folder_for_internal_overhead)
+            self._private_log_file_for_adame_overhead =get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name)
+            ensure_file_exists(self._private_log_file_for_adame_overhead)
+
 
             self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
             self._private_remote_address_is_available = string_has_nonwhitespace_content(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress])

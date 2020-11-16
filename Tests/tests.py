@@ -79,7 +79,7 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.create()
 
             environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
-            environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_intrusiondetectionsystem}"'), "", 0, "", "", 44)
+            environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_ids}"'), "", 0, "", "", 44)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 48)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
@@ -102,7 +102,7 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
 
             environment_for_test.adame.register_mock_process_query(44, "snort")
-            assert environment_for_test.adame._private_intrusion_detection_is_running()
+            assert environment_for_test.adame._private_ids_is_running()
             environment_for_test.adame.verify_no_pending_mock_process_queries()
             environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
 
@@ -118,7 +118,7 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.create()
 
             environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
-            environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_intrusiondetectionsystem}"'), "", 0, "", "", 44)
+            environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_ids}"'), "", 0, "", "", 44)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 48)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
@@ -130,7 +130,7 @@ class MiscellaneousTests(unittest.TestCase):
             assert environment_for_test.adame._private_container_is_running()
 
             environment_for_test.adame.register_mock_process_query(44, "snort")
-            assert environment_for_test.adame._private_intrusion_detection_is_running()
+            assert environment_for_test.adame._private_ids_is_running()
 
             environment_for_test.adame.verify_no_pending_mock_process_queries()
             environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
