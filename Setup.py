@@ -32,7 +32,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "psutil>=5.7.3",
-        "ScriptCollection>=2.0.5",
+        "ScriptCollection>=2.0.6",
     ],
     entry_points={
         'console_scripts': [

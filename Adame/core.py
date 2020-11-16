@@ -1,7 +1,6 @@
 import os
 import configparser
 import socket
-import time
 import traceback
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
@@ -9,7 +8,7 @@ from datetime import datetime
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_name
 
 product_name = "Adame"
 version = "0.2.19"
@@ -28,15 +27,15 @@ class AdameCore(object):
     _private_configuration_section_general_key_owner: str = "owner"
     _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
-    _private_configuration_file: str  # Represents "Adame.configuration" (with folder)
     _private_configuration_folder: str
+    _private_configuration_file: str  # Represents "{_private_configuration_folder}/Adame.configuration"
     _private_security_related_configuration_folder: str
     _private_repository_folder: str
     _private_configuration: ConfigParser
-    _private_log_folder: str =None# will be "{_private_repository_folder}/Logs"
-    _private_log_folder_for_internal_overhead: str =None# will be "{_private_log_folder}/Overhead"
-    _private_log_folder_for_application: str  =None# will be "{_private_log_folder}/Application"
-    _private_log_folder_for_ids: str  =None# will be "{_private_log_folder}/IDS"
+    _private_log_folder: str = None  # Represents "{_private_repository_folder}/Logs"
+    _private_log_folder_for_internal_overhead: str = None  # Represents "{_private_log_folder}/Overhead"
+    _private_log_folder_for_application: str = None  # Represents "{_private_log_folder}/Application"
+    _private_log_folder_for_ids: str = None  # Represents "{_private_log_folder}/IDS"
     _private_log_file_for_adame_overhead: str
 
     _private_readme_file: str
@@ -62,8 +61,9 @@ class AdameCore(object):
 
     verbose: bool = False
     encoding: str = "utf-8"
+    format_datetimes_to_utc: bool = True
 
-    _private_test_mode = True
+    _private_test_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
     _private_mock_process_queries: list = list()
 
@@ -391,10 +391,10 @@ This function is idempotent."""
             self._private_stop_ids()
 
     def _private_ids_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "snort")# TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "snort")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
     def _private_start_ids(self) -> int:
-        result=self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"',"")
+        result = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"', "")
         return result
 
     def _private_stop_ids(self) -> None:
@@ -478,11 +478,10 @@ IDS-process:{processid_of_ids_as_string}
             ensure_directory_exists(self._private_log_folder_for_application)
             self._private_log_folder_for_ids = os.path.join(self._private_log_folder, "IDS")
             ensure_directory_exists(self._private_log_folder_for_ids)
-            self._private_log_folder_for_internal_overhead= os.path.join(self._private_log_folder, "Overhead")
+            self._private_log_folder_for_internal_overhead = os.path.join(self._private_log_folder, "Overhead")
             ensure_directory_exists(self._private_log_folder_for_internal_overhead)
-            self._private_log_file_for_adame_overhead =get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name)
+            self._private_log_file_for_adame_overhead = get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
             ensure_file_exists(self._private_log_file_for_adame_overhead)
-
 
             self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
             self._private_remote_address_is_available = string_has_nonwhitespace_content(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress])
@@ -585,7 +584,7 @@ The license of this repository is defined in the file 'License.txt'.
         return process_id
 
     def _private_container_is_running(self):
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[0], "docker-compose")# TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_is_running_safe(self._private_get_stored_running_processes()[0], "docker-compose")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
     def _private_is_running_safe(self, index: int, cmdprefix: str):
         if(index is None):
@@ -609,7 +608,7 @@ The license of this repository is defined in the file 'License.txt'.
                     return True
             return False
 
-    def _private_check(self,actual_pid, actual_command, expected_pid, expected_command)->bool:
+    def _private_check(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
         if actual_pid == expected_pid:
             if actual_command.startswith(expected_command):
                 return True
@@ -617,12 +616,12 @@ The license of this repository is defined in the file 'License.txt'.
                 self._private_log_warning(f"The process with id {str(expected_pid)} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
         return False
 
-    def _private_commit(self, message: str, stage_all_changes: bool=True) -> None:
-        repository=self._private_repository_folder
-        commit_id=self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
-        remote_name="Backup"
-        branch_name="master"
-        remote_address=self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
+    def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
+        repository = self._private_repository_folder
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
+        remote_name = "Backup"
+        branch_name = "master"
+        remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
         self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
         if self._private_remote_address_is_available:
             self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
@@ -630,31 +629,31 @@ The license of this repository is defined in the file 'License.txt'.
             self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}", False, True, True)
 
     def _private_name_to_docker_allowed_name(self, name: str) -> str:
-        name=name.lower()
+        name = name.lower()
         return name
 
-    def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str=None) -> int:
+    def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
         if self.verbose:
-            verbose=2
+            verbose = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
-        result= self._private_sc.start_program_asynchronously(program,argument,workingdirectory)
+        result = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
         if(verbose):
             self._private_log_information(f"Started program has processid {result}")
         return result
 
-    def _private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str=None) -> list:
-        result=self._private_start_program_synchronously(program, argument, workingdirectory)
+    def _private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None) -> list:
+        result = self._private_start_program_synchronously(program, argument, workingdirectory)
         if(result[0] != 0):
             raise Exception(f"'{workingdirectory}> {program} {argument}' had exitcode {str(result[0])}")
         return result
 
-    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str=None) -> list:
-        workingdirectory=str_none_safe(workingdirectory)
+    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None) -> list:
+        workingdirectory = str_none_safe(workingdirectory)
         if self.verbose:
-            verbose=2
+            verbose = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
-            verbose=1
+            verbose = 1
         result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose, False, None, 3600, False, None, False, True, False)
         if(verbose):
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
@@ -670,7 +669,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_execute_task(self, name: str, function) -> int:
         try:
             self._private_log_information(f"Started task '{name}'")
-            exit_code=function()
+            exit_code = function()
             self._private_log_information(f"Task '{name}' resulted in exitcode {str(exit_code)}", True, True, True)
             return exit_code
         except Exception as exception:
@@ -680,16 +679,16 @@ The license of this repository is defined in the file 'License.txt'.
         finally:
             self._private_log_information(f"Finished task '{name}'")
 
-    def _private_log_information(self, message: str, is_verbose_log_entry: bool=False, write_to_console: bool=True, write_to_logfile: bool=False):
+    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_warning(self, message: str, is_verbose_log_entry: bool=False, write_to_console: bool=True, write_to_logfile: bool=False) -> None:
+    def _private_log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self._private_write_to_log("Warning", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_error(self, message: str, is_verbose_log_entry: bool=False, write_to_console: bool=True, write_to_logfile: bool=False) -> None:
+    def _private_log_error(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self._private_write_to_log("Error", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
-    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool=False, write_to_console: bool=True, write_to_logfile: bool=True) -> None:
+    def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True) -> None:
         self._private_write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
         if(self.verbose):
             write_exception_to_stderr_with_traceback(exception, traceback, message)
@@ -697,8 +696,11 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool) -> None:
         if is_verbose_log_entry and not self.verbose:
             return
-        timestamp=datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-        logentry=f"[{timestamp}] [{loglevel}] {message}"
+        if(self.format_datetimes_to_utc):
+            d = datetime.utcnow()
+        else:
+            d = datetime.now()
+        logentry = f"[{datetime_to_string_for_logfile_name(d)}] [{loglevel}] {message}"
         if(write_to_console):
             if(loglevel == "Error"):
                 write_message_to_stderr(logentry)
@@ -708,9 +710,9 @@ The license of this repository is defined in the file 'License.txt'.
         if(write_to_logfile and self._private_log_file_for_adame_overhead is not None):
             ensure_file_exists(self._private_log_file_for_adame_overhead)
             if file_is_empty(self._private_log_file_for_adame_overhead):
-                prefix=''
+                prefix = ''
             else:
-                prefix='\n'
+                prefix = '\n'
             with open(self._private_log_file_for_adame_overhead, "a") as file:
                 file.write(prefix+logentry)
 
@@ -724,7 +726,7 @@ def get_adame_version() -> str:
 
 
 def adame_cli() -> int:
-    arger=argparse.ArgumentParser(description=f"""{versioned_product_name}
+    arger = argparse.ArgumentParser(description=f"""{versioned_product_name}
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
 One focus of Adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with Adame it is very easy move the application with all its data and configurations to another computer.
 Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
@@ -739,10 +741,10 @@ Required commandline-commands:
 
     arger.add_argument("--verbose", action="store_true", required=False)
 
-    subparsers=arger.add_subparsers(dest="command")
+    subparsers = arger.add_subparsers(dest="command")
 
-    create_command_name="create"
-    create_parser=subparsers.add_parser(create_command_name)
+    create_command_name = "create"
+    create_parser = subparsers.add_parser(create_command_name)
     create_parser.add_argument("--name", required=True)
     create_parser.add_argument("--folder", required=True)
     create_parser.add_argument("--image", required=True)
@@ -750,38 +752,38 @@ Required commandline-commands:
     create_parser.add_argument("--gpgkey_of_owner", required=False)
     create_parser.add_argument("--remote_address", required=False)
 
-    start_command_name="start"
-    start_parser=subparsers.add_parser(start_command_name)
+    start_command_name = "start"
+    start_parser = subparsers.add_parser(start_command_name)
     start_parser.add_argument("--configurationfile", required=True)
 
-    stop_command_name="stop"
-    stop_parser=subparsers.add_parser(stop_command_name)
+    stop_command_name = "stop"
+    stop_parser = subparsers.add_parser(stop_command_name)
     stop_parser.add_argument("--configurationfile", required=True)
 
-    apply_configuration_command_name="applyconfiguration"
-    apply_configuration_parser=subparsers.add_parser(apply_configuration_command_name)
+    apply_configuration_command_name = "applyconfiguration"
+    apply_configuration_parser = subparsers.add_parser(apply_configuration_command_name)
     apply_configuration_parser.add_argument("--configurationfile", required=True)
 
-    startadvanced_command_name="startadvanced"
-    startadvanced_parser=subparsers.add_parser(startadvanced_command_name)
+    startadvanced_command_name = "startadvanced"
+    startadvanced_parser = subparsers.add_parser(startadvanced_command_name)
     startadvanced_parser.add_argument("--configurationfile", required=True)
 
-    stopadvanced_command_name="stopadvanced"
-    stopadvanced_parser=subparsers.add_parser(stopadvanced_command_name)
+    stopadvanced_command_name = "stopadvanced"
+    stopadvanced_parser = subparsers.add_parser(stopadvanced_command_name)
     stopadvanced_parser.add_argument("--configurationfile", required=True)
 
-    checkintegrity_command_name="checkintegrity"
-    checkintegrity_parser=subparsers.add_parser(checkintegrity_command_name)
+    checkintegrity_command_name = "checkintegrity"
+    checkintegrity_parser = subparsers.add_parser(checkintegrity_command_name)
     checkintegrity_parser.add_argument("--configurationfile", required=True)
 
-    diagnosis_command_name="diagnosis"
-    diagnosis_parser=subparsers.add_parser(diagnosis_command_name)
+    diagnosis_command_name = "diagnosis"
+    diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
     diagnosis_parser.add_argument("--configurationfile", required=False)
 
-    options=arger.parse_args()
+    options = arger.parse_args()
 
-    core=AdameCore()
-    core.verbose=options.verbose
+    core = AdameCore()
+    core.verbose = options.verbose
 
     if options.command == create_command_name:
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, options.remote_address)
