@@ -43,12 +43,15 @@ class MiscellaneousTests(unittest.TestCase):
         try:
 
             # arrange
+
             environment_for_test = EnvironmentForTest()
 
             # act
+
             environment_for_test.create()
 
             # assert
+
             assert os.path.isfile(os.path.join(environment_for_test.folder, ".gitignore"))
             assert os.path.isfile(os.path.join(environment_for_test.folder, "ReadMe.md"))
             assert os.path.isfile(os.path.join(environment_for_test.folder, "License.txt"))
@@ -69,8 +72,10 @@ class MiscellaneousTests(unittest.TestCase):
         try:
 
             # arrange
+
             environment_for_test = EnvironmentForTest()
             environment_for_test.create()
+
             environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_intrusiondetectionsystem}"'), "", 0, "", "", 44)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 40)
@@ -78,16 +83,26 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: 40; IDS-process: 44)" --author="Adame <>"'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "3c5a38ad96d0acf5e2822bbcd655387b42352cb0", "", 60)
-            environment_for_test.adame.register_mock_process_query(40, "docker-compose")
-            environment_for_test.adame.register_mock_process_query(44, "snort")
 
             # act
+
             exit_code = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
+            environment_for_test.adame.verify_no_pending_mock_process_queries()
+            environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
 
             # assert
+
             assert exit_code == 0
+
+            environment_for_test.adame.register_mock_process_query(40, "docker-compose")
             assert environment_for_test.adame._private_container_is_running()
+            environment_for_test.adame.verify_no_pending_mock_process_queries()
+            environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
+
+            environment_for_test.adame.register_mock_process_query(44, "snort")
             assert environment_for_test.adame._private_intrusion_detection_is_running()
+            environment_for_test.adame.verify_no_pending_mock_process_queries()
+            environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
 
         finally:
             environment_for_test.dispose()
@@ -96,15 +111,18 @@ class MiscellaneousTests(unittest.TestCase):
         try:
 
             # arrange
+
             environment_for_test = EnvironmentForTest()
             environment_for_test.create()
             assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
             assert environment_for_test.adame._private_container_is_running()
 
             # act
+
             exit_code = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
 
             # assert
+
             assert exit_code == 0
             assert not environment_for_test.adame._private_container_is_running()
 
@@ -115,12 +133,15 @@ class MiscellaneousTests(unittest.TestCase):
         try:
 
             # arrange
+
             environment_for_test = EnvironmentForTest()
 
             # act
+
             exit_code = environment_for_test.adame.diagnosis(environment_for_test.adame_configuration_file)
 
             # assert
+
             assert exit_code == 0
 
         finally:
@@ -130,13 +151,16 @@ class MiscellaneousTests(unittest.TestCase):
         try:
 
             # arrange
+
             environment_for_test = EnvironmentForTest()
             environment_for_test.adame.adame_configuration_file = None
 
             # act
+
             exit_code = environment_for_test.adame.diagnosis(None)
 
             # assert
+
             assert exit_code == 0
 
         finally:
