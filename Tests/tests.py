@@ -69,7 +69,6 @@ class MiscellaneousTests(unittest.TestCase):
         finally:
             environment_for_test.dispose()
 
-
     def test_command_start(self):
         try:
 
@@ -88,13 +87,13 @@ class MiscellaneousTests(unittest.TestCase):
 
             # act
 
-            exit_code = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
-            environment_for_test.adame.verify_no_pending_mock_process_queries()
-            environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
+            exitcode = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
 
             # assert
 
-            assert exit_code == 0
+            assert exitcode == 0
+            environment_for_test.adame.verify_no_pending_mock_process_queries()
+            environment_for_test.adame._private_sc.verify_no_pending_mock_program_calls()
 
             environment_for_test.adame.register_mock_process_query(40, "docker-compose")
             assert environment_for_test.adame._private_container_is_running()
@@ -124,7 +123,7 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: 40; IDS-process: 44)" --author="Adame <>"'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "3c5a38ad96d0acf5e2822bbcd655387b42352cb0", "", 60)
-            assert environment_for_test.adame.start(environment_for_test.adame_configuration_file)==0
+            assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
 
             environment_for_test.adame.register_mock_process_query(40, "docker-compose")
             assert environment_for_test.adame._private_container_is_running()
@@ -148,11 +147,11 @@ class MiscellaneousTests(unittest.TestCase):
 
             # act
 
-            exit_code = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
+            exitcode = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
 
             # assert
 
-            assert exit_code == 0
+            assert exitcode == 0
             assert not environment_for_test.adame._private_container_is_running()
 
         finally:
@@ -167,11 +166,11 @@ class MiscellaneousTests(unittest.TestCase):
 
             # act
 
-            exit_code = environment_for_test.adame.diagnosis(environment_for_test.adame_configuration_file)
+            exitcode = environment_for_test.adame.diagnosis(environment_for_test.adame_configuration_file)
 
             # assert
 
-            assert exit_code == 0
+            assert exitcode == 0
 
         finally:
             environment_for_test.dispose()
@@ -186,11 +185,11 @@ class MiscellaneousTests(unittest.TestCase):
 
             # act
 
-            exit_code = environment_for_test.adame.diagnosis(None)
+            exitcode = environment_for_test.adame.diagnosis(None)
 
             # assert
 
-            assert exit_code == 0
+            assert exitcode == 0
 
         finally:
             environment_for_test.dispose()

@@ -8,7 +8,7 @@ from datetime import datetime
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_name
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry
 
 product_name = "Adame"
 version = "0.2.19"
@@ -81,9 +81,10 @@ class AdameCore(object):
     def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
         self._private_check_for_elevated_privileges()
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
-        return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
+        self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
+        return 0
 
-    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = "") -> int:
+    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = "") -> None:
         if name is None:
             raise Exception("Argument 'name' is not defined")
         else:
@@ -133,29 +134,25 @@ class AdameCore(object):
             self._private_start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
         self._private_commit(f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
-        return 0
 
     # </create-command>
 
     # <start-command>
 
-    def start(self, configurationfile: str):
+    def start(self, configurationfile: str)->int:
         self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Start environment", self._private_start)
-
-    def _private_start(self) -> int:
-        if(self._private_container_is_running()):
-            self._private_log_information("Container and other tools not started since the container is already running", True, True, False)
-        else:
-            process_id_of_container = self._private_start_container()
-            process_id_of_ids = self._private_ensure_ids_is_running()
-            self._private_log_running_state(process_id_of_container, process_id_of_ids, "Started")
+        self._private_execute_task("Start environment", self._private_start)
         return 0
+
+    def _private_start(self) -> None:
+        process_id_of_ids = self._private_ensure_ids_is_running()
+        process_id_of_container = self._private_ensure_container_is_running()
+        self._private_log_running_state(process_id_of_container, process_id_of_ids, "Started")
 
     # </start-command>
 
@@ -168,16 +165,13 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Stop environment", self._private_stop)
-
-    def _private_stop(self) -> int:
-        if(self._private_container_is_running()):
-            self._private_stop_container()
-            self._private_ensure_ids_is_not_running()
-            self._private_log_running_state(None, None, "Stopped")
-        else:
-            self._private_log_information("Container and other tools not stopped since the container is not running", True, True, False)
+        self._private_execute_task("Stop environment", self._private_stop)
         return 0
+
+    def _private_stop(self) -> None:
+        self._private_ensure_container_is_not_running()
+        self._private_ensure_ids_is_not_running()
+        self._private_log_running_state(None, None, "Stopped")
 
     # </stop>
 
@@ -190,14 +184,14 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Apply configuration", self._private_applyconfiguration)
+        self._private_execute_task("Apply configuration", self._private_applyconfiguration)
+        return 0
 
-    def _private_applyconfiguration(self) -> int:
+    def _private_applyconfiguration(self) -> None:
         self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
         self._private_commit("Reapplied configuration")
-        return 0
 
     # </applyconfiguration-command>
 
@@ -210,13 +204,13 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("StartAdvanced", self._private_startadvanced)
+        self._private_execute_task("StartAdvanced", self._private_startadvanced)
+        return 0
 
-    def _private_startadvanced(self) -> int:
+    def _private_startadvanced(self) -> None:
         self._private_stopadvanced()
         self._private_applyconfiguration()
         self._private_start()
-        return 0
 
     # </startadvanced-command>
 
@@ -229,12 +223,12 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("StopAdvanced", self._private_stopadvanced)
+        self._private_execute_task("StopAdvanced", self._private_stopadvanced)
+        return 0
 
-    def _private_stopadvanced(self) -> int:
+    def _private_stopadvanced(self) -> None:
         self._private_stop()
         self._private_commit("Saved changes")
-        return 0
 
     # </stopadvanced-command>
 
@@ -247,11 +241,11 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        return self._private_execute_task("Check integrity", self._private_checkintegrity)
-
-    def _private_checkintegrity(self) -> int:
-        self._private_check_integrity_of_repository(7)
+        self._private_execute_task("Check integrity", self._private_checkintegrity)
         return 0
+
+    def _private_checkintegrity(self) -> None:
+        self._private_check_integrity_of_repository(7)
 
     # </checkintegrity-command>
 
@@ -263,15 +257,15 @@ class AdameCore(object):
         if configurationfile is not None:
             if self._private_load_configuration(configurationfile) != 0:
                 return 1
-        return self._private_execute_task("Diagnosis", self._private_diagnosis)
+        self._private_execute_task("Diagnosis", self._private_diagnosis)
+        return 0
 
-    def _private_diagnosis(self) -> int:
+    def _private_diagnosis(self) -> None:
         if not self._private_adame_general_diagonisis():
             return 1
         if self._private_configuration is not None:
             if not self._private_adame_repository_diagonisis():
                 return 1
-        return 0
 
     # </checkintegrity-command>
 
@@ -289,7 +283,7 @@ class AdameCore(object):
         r.command = command
         self._private_mock_process_queries.append(r)
 
-    def verify_no_pending_mock_process_queries(self):
+    def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
         if(len(self._private_mock_process_queries) > 0):
             raise AssertionError("The following mock-process-queries were not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in self._private_mock_process_queries]))
@@ -298,9 +292,16 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    class _private_mock_process_query:
-        process_id: str
-        command: str
+    def _private_ensure_container_is_running(self) -> int:
+        # TODO optimize this function so that the container does not have to be stopped for this function
+        if(self._private_container_is_running()):
+            self._private_stop_container()
+        process_id = self._private_start_container()
+        return process_id
+
+    def _private_ensure_container_is_not_running(self) -> None:
+        if(self._private_container_is_running()):
+            self._private_stop_container()
 
     def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
@@ -319,10 +320,14 @@ class AdameCore(object):
             return False
         if(self._private_check_whether_required_permissions_for_adame_are_available()):
             return False
+        # Add other checks if required
         return True
 
-    def _private_adame_repository_diagonisis(self):
-        self._private_check_whether_required_files_for_adamerepository_are_available()
+    def _private_adame_repository_diagonisis(self) -> bool:
+        if not self._private_check_whether_required_files_for_adamerepository_are_available():
+            return False
+        # Add other checks if required
+        return True
 
     def _private_check_whether_required_permissions_for_adame_are_available(self) -> bool:
         pass  # TODO implement function
@@ -345,8 +350,8 @@ class AdameCore(object):
                     result = False
             return result
 
-    def _private_check_whether_required_files_for_adamerepository_are_available(self) -> None:
-        pass  # TODO implement function
+    def _private_check_whether_required_files_for_adamerepository_are_available(self) -> bool:
+        return True  # TODO implement function
 
     def _private_check_configurationfile_argument(self, configurationfile: str) -> None:
         if configurationfile is None:
@@ -357,10 +362,12 @@ class AdameCore(object):
     def _private_check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None) -> None:
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
-        # until = datetime.today()
-        # since = until - datetime.timedelta(days=amount_of_days_of_history_to_check)
-        # commit_hashs_to_check_in_given_interval = self._private_get_commit_ids_between_dates(until, since)
-        # TODO Implement this function. This function should print a warning is the last commit in this repository was not signed with the key defined in the config or if any commit in the last amount_of_days_of_history_to_check days (configurable) days was not signed with the key defined in the config because this seems to be an unexpected/unwanted change.
+        until = datetime.now()
+        since = until - datetime.timedelta(days=amount_of_days_of_history_to_check)
+        commit_hashs_to_check_in_given_interval = self._private_sc.get_commit_ids_between_dates(self._private_repository_folder, until, since)
+        for commithash in commit_hashs_to_check_in_given_interval:
+            if not self._private_sc.commit_is_signed_by_key(self._private_repository_folder, commithash, self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner]):
+                self._private_log_warning(f"The app-repository '{self._private_repository_folder}' contains the unsigned commit {commithash}", False, True, True)
 
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self) -> None:
         """This function regenerates the content of the file Networktraffic.Generated.rules.
@@ -378,6 +385,7 @@ This function is idempotent."""
     def _private_ensure_ids_is_running(self) -> int:
         """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly.
 This function is idempotent."""
+        # TODO optimize this function so that the ids does not have to be stopped for this function
         if(self._private_ids_is_running()):
             self._private_stop_ids()
         process_id = self._private_start_ids()
@@ -574,19 +582,19 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
-    def _private_stop_container(self):
+    def _private_stop_container(self) -> None:
         self._private_start_program_synchronously("docker-compose", "down --remove-orphans", self._private_configuration_folder)
         self._private_log_information("Container was stopped", False, True, True)
 
-    def _private_start_container(self):
+    def _private_start_container(self) -> int:
         process_id = self._private_start_program_asynchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         self._private_log_information("Container was started", False, True, True)
         return process_id
 
-    def _private_container_is_running(self):
+    def _private_container_is_running(self) -> bool:
         return self._private_is_running_safe(self._private_get_stored_running_processes()[0], "docker-compose")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
-    def _private_is_running_safe(self, index: int, cmdprefix: str):
+    def _private_is_running_safe(self, index: int, cmdprefix: str) -> bool:
         if(index is None):
             return False
         else:
@@ -666,6 +674,11 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_tool_exists_in_path(self, name: str) -> bool:
         return find_executable(name) is not None
 
+    class _private_mock_process_query:
+        "This class is for test-purposes only"
+        process_id: str
+        command: str
+
     def _private_execute_task(self, name: str, function) -> int:
         try:
             self._private_log_information(f"Started task '{name}'")
@@ -674,12 +687,11 @@ The license of this repository is defined in the file 'License.txt'.
             return exit_code
         except Exception as exception:
             self._private_log_exception(f"Exception occurred in task '{name}'", exception)
-            traceback.print_exc()
             return 2
         finally:
             self._private_log_information(f"Finished task '{name}'")
 
-    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False):
+    def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
     def _private_log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
@@ -700,11 +712,10 @@ The license of this repository is defined in the file 'License.txt'.
             d = datetime.utcnow()
         else:
             d = datetime.now()
-        logentry = f"[{datetime_to_string_for_logfile_name(d)}] [{loglevel}] {message}"
+        logentry = f"[{datetime_to_string_for_logfile_entry(d)}] [{loglevel}] {message}"
         if(write_to_console):
             if(loglevel == "Error"):
                 write_message_to_stderr(logentry)
-                write_message_to_stdout(logentry)  # TODO remove this line
             else:
                 write_message_to_stdout(logentry)
         if(write_to_logfile and self._private_log_file_for_adame_overhead is not None):
