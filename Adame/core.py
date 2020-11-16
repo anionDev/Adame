@@ -146,7 +146,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        self._private_execute_task("Start environment", self._private_start)
+        self._private_execute_task("Start", self._private_start)
         return 0
 
     def _private_start(self) -> None:
@@ -165,7 +165,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        self._private_execute_task("Stop environment", self._private_stop)
+        self._private_execute_task("Stop", self._private_stop)
         return 0
 
     def _private_stop(self) -> None:
@@ -184,7 +184,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        self._private_execute_task("Apply configuration", self._private_applyconfiguration)
+        self._private_execute_task("ApplyConfiguration", self._private_applyconfiguration)
         return 0
 
     def _private_applyconfiguration(self) -> None:
@@ -241,7 +241,7 @@ class AdameCore(object):
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if self._private_load_configuration(configurationfile) != 0:
             return 1
-        self._private_execute_task("Check integrity", self._private_checkintegrity)
+        self._private_execute_task("CheckIntegrity", self._private_checkintegrity)
         return 0
 
     def _private_checkintegrity(self) -> None:
@@ -351,7 +351,8 @@ class AdameCore(object):
             return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self) -> bool:
-        return True  # TODO implement function
+        # Add other checks if required
+        return True
 
     def _private_check_configurationfile_argument(self, configurationfile: str) -> None:
         if configurationfile is None:
