@@ -25,7 +25,7 @@ class EnvironmentForTest:
         self.adame._private_sc.mock_program_calls = False
         assert self.adame.create("myapplication", self.folder, "httpd:latest", "owner") == 0
         assert not self.adame._private_container_is_running()
-        self.adame._private_sc.mock_program_calls = True
+        self.adame.set_test_mode(True)
         self.adame.verify_no_pending_mock_process_queries()
         self.adame._private_sc.verify_no_pending_mock_program_calls()
 
