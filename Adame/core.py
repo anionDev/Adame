@@ -1,6 +1,7 @@
 import os
 import configparser
 import socket
+import time
 import traceback
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
@@ -64,6 +65,7 @@ class AdameCore(object):
     verbose: bool = False
     encoding: str = "utf-8"
     format_datetimes_to_utc: bool = True
+    check_defer_time_for_checking_that_program_is_running_in_seconds:int=2
 
     _private_test_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
@@ -649,10 +651,13 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
         if self.verbose:
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
-        result = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
+        pid = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
+        time.sleep(self.check_defer_time_for_checking_that_program_is_running_in_seconds)
+        if not self._private_process_is_running(pid, program):
+            raise Exception(f"Process '{workingdirectory}>{program} {argument}' (process-id {pid}) exited unexpectedly")
         if self.verbose:
-            self._private_log_information(f"Started program has processid {result}")
-        return result
+            self._private_log_information(f"Started program has processid {str(pid)}")
+        return pid
 
     def _private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None) -> list:
         result = self._private_start_program_synchronously(program, argument, workingdirectory)
@@ -660,14 +665,14 @@ The license of this repository is defined in the file 'License.txt'.
             raise Exception(f"'{workingdirectory}> {program} {argument}' had exitcode {str(result[0])}")
         return result
 
-    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None) -> list:
+    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero:bool=True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
         if self.verbose:
             verbose_argument = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
             verbose_argument = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, False, True, False)
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None,expect_exitcode_zero, True, False)
         if self.verbose:
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
@@ -751,9 +756,10 @@ Another focus of Adame is IT-forensics and IT-security: Adame generates a basic 
 Required commandline-commands:
 -docker
 -docker-compose
--snort
 -git
 -gpg
+-snort
+-sudo
 
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
