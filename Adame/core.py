@@ -647,10 +647,9 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
         if self.verbose:
-            verbose = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         result = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
-        if(verbose):
+        if self.verbose:
             self._private_log_information(f"Started program has processid {result}")
         return result
 
@@ -668,7 +667,7 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             verbose_argument = 1
         result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, False, True, False)
-        if(self.verbose):
+        if self.verbose:
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
             self._private_log_information(result[1])
