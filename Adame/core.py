@@ -827,3 +827,6 @@ Required commandline-commands:
         return 0
 
 # </miscellaneous>
+
+if __name__ == '__main__':
+    adame_cli()
