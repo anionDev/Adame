@@ -273,8 +273,8 @@ class AdameCore(object):
 
     def set_test_mode(self, test_mode_enabled: bool) -> None:
         "This function is for test-purposes only"
-        self._private_sc.mock_program_calls = True
         self._private_test_mode = test_mode_enabled
+        self._private_sc.mock_program_calls = self._private_test_mode
 
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
