@@ -664,7 +664,7 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             verbose = 1
         result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose, False, None, 3600, False, None, False, True, False)
-        if(verbose):
+        if(self.verbose):
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
             self._private_log_information(result[1])
@@ -740,18 +740,21 @@ def get_adame_version() -> str:
 def adame_cli() -> int:
     arger = argparse.ArgumentParser(description=f"""{versioned_product_name}
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
-One focus of Adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with Adame it is very easy move the application with all its data and configurations to another computer.
-Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
+One focus of Adame is to store the state of an application: Adame stores all data of the application in a git-repository. So with Adame it is very easy move the application with all its data and configurations to another computer.
+Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
+
 
 Required commandline-commands:
--docker (with elevated privileges)
--docker-compose (with elevated privileges)
--snort (with elevated privileges)
+-docker
+-docker-compose
+-snort
 -git
 -gpg
+
+Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
 
-    arger.add_argument("--verbose", action="store_true", required=False)
+    arger.add_argument("--verbose", action="store_true", required=False, default=False)
 
     subparsers = arger.add_subparsers(dest="command")
 

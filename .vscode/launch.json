@@ -7,7 +7,9 @@
             "request": "launch",
             "program": "Adame/core.py",
             "console": "integratedTerminal",
-            "args": ["--help"]
+            "args": [
+                "--help",
+            ],
         }
     ]
 }
