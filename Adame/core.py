@@ -294,17 +294,6 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_ensure_container_is_running(self) -> int:
-        # TODO optimize this function so that the container does not have to be stopped for this function
-        if(self._private_container_is_running()):
-            self._private_stop_container()
-        process_id = self._private_start_container()
-        return process_id
-
-    def _private_ensure_container_is_not_running(self) -> None:
-        if(self._private_container_is_running()):
-            self._private_stop_container()
-
     def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
             raise Exception("Adame requries elevated privileges to get executed")
@@ -385,12 +374,22 @@ This function is idempotent."""
 This function is idempotent."""
         # TODO Implement this function.
 
+
+    def _private_ensure_container_is_running(self) -> int:
+        # TODO optimize this function so that the container does not have to be stopped for this function
+        self._private_ensure_container_is_not_running()
+        process_id = self._private_start_container()
+        return process_id
+
+    def _private_ensure_container_is_not_running(self) -> None:
+        if(self._private_container_is_running()):
+            self._private_stop_container()
+
     def _private_ensure_ids_is_running(self) -> int:
         """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly.
 This function is idempotent."""
         # TODO optimize this function so that the ids does not have to be stopped for this function
-        if(self._private_ids_is_running()):
-            self._private_stop_ids()
+        self._private_ensure_ids_is_not_running()
         process_id = self._private_start_ids()
         self._private_test_ids()
         return process_id
@@ -757,46 +756,46 @@ Required commandline-commands:
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
 
-    arger.add_argument("--verbose", action="store_true", required=False, default=False)
+    arger.add_argument("-v","--verbose", action="store_true", required=False, default=False)
 
     subparsers = arger.add_subparsers(dest="command")
 
     create_command_name = "create"
     create_parser = subparsers.add_parser(create_command_name)
-    create_parser.add_argument("--name", required=True)
-    create_parser.add_argument("--folder", required=True)
-    create_parser.add_argument("--image", required=True)
-    create_parser.add_argument("--owner", required=True)
-    create_parser.add_argument("--gpgkey_of_owner", required=False)
-    create_parser.add_argument("--remote_address", required=False)
+    create_parser.add_argument("-n", "--name", required=True)
+    create_parser.add_argument("-f", "--folder", required=True)
+    create_parser.add_argument("-i", "--image", required=True)
+    create_parser.add_argument("-o", "--owner", required=True)
+    create_parser.add_argument("-g", "--gpgkey_of_owner", required=False)
+    create_parser.add_argument("-r", "--remote_address", required=False)
 
     start_command_name = "start"
     start_parser = subparsers.add_parser(start_command_name)
-    start_parser.add_argument("--configurationfile", required=True)
+    start_parser.add_argument("-c", "--configurationfile", required=True)
 
     stop_command_name = "stop"
     stop_parser = subparsers.add_parser(stop_command_name)
-    stop_parser.add_argument("--configurationfile", required=True)
+    stop_parser.add_argument("-c", "--configurationfile", required=True)
 
     apply_configuration_command_name = "applyconfiguration"
     apply_configuration_parser = subparsers.add_parser(apply_configuration_command_name)
-    apply_configuration_parser.add_argument("--configurationfile", required=True)
+    apply_configuration_parser.add_argument("-c", "--configurationfile", required=True)
 
     startadvanced_command_name = "startadvanced"
     startadvanced_parser = subparsers.add_parser(startadvanced_command_name)
-    startadvanced_parser.add_argument("--configurationfile", required=True)
+    startadvanced_parser.add_argument("-c", "--configurationfile", required=True)
 
     stopadvanced_command_name = "stopadvanced"
     stopadvanced_parser = subparsers.add_parser(stopadvanced_command_name)
-    stopadvanced_parser.add_argument("--configurationfile", required=True)
+    stopadvanced_parser.add_argument("-c", "--configurationfile", required=True)
 
     checkintegrity_command_name = "checkintegrity"
     checkintegrity_parser = subparsers.add_parser(checkintegrity_command_name)
-    checkintegrity_parser.add_argument("--configurationfile", required=True)
+    checkintegrity_parser.add_argument("-c", "--configurationfile", required=True)
 
     diagnosis_command_name = "diagnosis"
     diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
-    diagnosis_parser.add_argument("--configurationfile", required=False)
+    diagnosis_parser.add_argument("-c", "--configurationfile", required=False)
 
     options = arger.parse_args()
 
