@@ -30,11 +30,17 @@ class AdameCore(object):
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
     _private_configuration_section_general_key_remotename: str = "remotename"
     _private_configuration_section_general_key_remotebranch: str = "remotebranch"
+    _private_securityconfiguration_section_general: str = "general"
+    _private_securityconfiguration_section_general_key_idsname: str = "idsname"
+    _private_securityconfiguration_section_general_key_enabledids: string = "enableids"
+    _private_securityconfiguration_section_snort: str = "general"
+    _private_securityconfiguration_section_snort_key_global_configuration_file: str = "idsname"
     _private_configuration_folder: str
     _private_configuration_file: str  # Represents "{_private_configuration_folder}/Adame.configuration"
     _private_security_related_configuration_folder: str
     _private_repository_folder: str
     _private_configuration: ConfigParser
+    _private_securityconfiguration:ConfigParser
     _private_log_folder: str = None  # Represents "{_private_repository_folder}/Logs"
     _private_log_folder_for_internal_overhead: str = None  # Represents "{_private_log_folder}/Overhead"
     _private_log_folder_for_application: str = None  # Represents "{_private_log_folder}/Application"
@@ -129,8 +135,10 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, self._private_get_networktrafficcustomrules_file_content())
         self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
-        self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
+        self._private_create_file_in_repository(self._private_propertiesconfiguration_file,"")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
+
+        self._private_establish_ids_default_configuration()
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
@@ -296,6 +304,11 @@ class AdameCore(object):
 
     # <helper-functions>
 
+    def _private_establish_ids_default_configuration(self)->None:
+        self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids]="true"
+        self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname]="snort"
+        self._private_securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_global_configuration_file]="/etc/snort/snort.conf"
+
     def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
             raise Exception("Adame requries elevated privileges to get executed")
@@ -409,7 +422,7 @@ This function is idempotent."""
         return result
 
     def _private_stop_ids(self) -> None:
-        self._private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero("kill", str(self._private_get_stored_running_processes()[1]))
+        self._private_start_program_synchronously("kill", str(self._private_get_stored_running_processes()[1]))
 
     def _private_test_ids(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
@@ -440,6 +453,7 @@ IDS-process:{processid_of_ids_as_string}
     def _private_get_logfilepattern_file_content(self):
         return f"""{self._private_log_folder}/**
 """
+
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str) -> int:
         self._private_configuration_file = configuration_file
@@ -489,6 +503,8 @@ IDS-process:{processid_of_ids_as_string}
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
             self._private_logfilepatterns_file = os.path.join(self._private_security_related_configuration_folder, "LogfilePatterns.txt")
             self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Properties.configuration")
+            self._private_securityconfiguration=self._private_set_propertiesconfiguration_file_content()
+
 
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")
             self._private_log_folder_for_application = os.path.join(self._private_log_folder, "Application")
@@ -558,6 +574,16 @@ Only the owner of this repository is allowed to change the license of this repos
     def _private_get_gitignore_file_content(self) -> str:
         return """Logs/**
 """
+
+
+    def _private_set_propertiesconfiguration_file_content(self):
+        securityconfiguration = ConfigParser()
+        securityconfiguration.add_section(self._private_propertiesconfiguration_file)
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = ""
+
+        with open(self._private_propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
+            securityconfiguration.write(configfile)
+        return securityconfiguration
 
     def _private_get_readme_file_content(self, configuration: ConfigParser, image: str) -> str:
 
@@ -654,6 +680,8 @@ The license of this repository is defined in the file 'License.txt'.
             self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
             self._private_sc.git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
             self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}", False, True, True)
+        else:
+            self._private_log_warning("Either no remote-address is defined or the remote-address for the backup of the app-repository is not available.")
 
     def _private_name_to_docker_allowed_name(self, name: str) -> str:
         name = name.lower()
@@ -669,12 +697,6 @@ The license of this repository is defined in the file 'License.txt'.
         if self.verbose:
             self._private_log_information(f"Started program has processid {pid}")
         return pid
-
-    def _private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None) -> list:
-        result = self._private_start_program_synchronously(program, argument, workingdirectory)
-        if(result[0] != 0):
-            raise Exception(f"'{workingdirectory}> {program} {argument}' had exitcode {str(result[0])}")
-        return result
 
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero:bool=True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
