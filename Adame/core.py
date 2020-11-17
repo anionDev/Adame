@@ -9,7 +9,7 @@ from datetime import datetime
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
 
 product_name = "Adame"
 version = "0.2.25"
@@ -619,25 +619,28 @@ The license of this repository is defined in the file 'License.txt'.
                 raise LookupError("Tried to query process-list but no mock-queries are available anymore")
             else:
                 r: AdameCore._private_mock_process_query = self._private_mock_process_queries[0]
-                result = self._private_check(r.process_id, r.command, process_id, command_start)
+                result = self._private_process_is_running_helper(r.process_id, r.command, process_id, command_start)
                 if result:
                     self._private_mock_process_queries.pop(0)
                 return result
         else:
             for process in psutil.process_iter():
                 try:
-                    if(self._private_check(process.pid, " ".join(process.cmdline()), process_id, command_start)):
+                    if(self._private_process_is_running_helper(process.pid, " ".join(process.cmdline()), process_id, command_start)):
                         return True
                 except psutil.AccessDenied:
                     pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
             return False
 
-    def _private_check(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
+    def _private_process_is_running_helper(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
         if actual_pid == expected_pid:
             if actual_command.startswith(expected_command):
                 return True
             else:
-                self._private_log_warning(f"The process with id {str(expected_pid)} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
+                if(string_is_none_or_whitespace(actual_command)):
+                    self._private_log_warning(f"It seems that the process with id {expected_pid} was not executed", False, True, False)
+                else:
+                    self._private_log_warning(f"The process with id {expected_pid} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
         return False
 
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
@@ -664,7 +667,7 @@ The license of this repository is defined in the file 'License.txt'.
         if not self._private_process_is_running(pid, program):
             raise Exception(f"Process '{workingdirectory}>{program} {argument}' (process-id {pid}) exited unexpectedly")
         if self.verbose:
-            self._private_log_information(f"Started program has processid {str(pid)}")
+            self._private_log_information(f"Started program has processid {pid}")
         return pid
 
     def _private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None) -> list:
@@ -700,13 +703,13 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_execute_task(self, name: str, function) -> int:
         exitcode = 0
         try:
-            self._private_log_information(f"Started task '{name}'")
+            self._private_log_information(f"Started task {name}")
             function()
         except Exception as exception:
             exitcode = 2
-            self._private_log_exception(f"Exception occurred in task '{name}'", exception)
+            self._private_log_exception(f"Exception occurred in task {name}", exception)
         finally:
-            self._private_log_information(f"Finished task '{name}'. Task resulted in exitcode {str(exitcode)}")
+            self._private_log_information(f"Finished task {name}. Task resulted in exitcode {exitcode}")
         return exitcode
 
     def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
