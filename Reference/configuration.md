@@ -51,7 +51,7 @@ This file contains the patterns to specify/identify the log-files of the applica
 ### Properties.configuration
 
 Typically located in `./TODO`.
-This file contains TODO.
+This file contains the configuration for the used IDS and log-forwarder.
 
 ### docker-compose.yml
 

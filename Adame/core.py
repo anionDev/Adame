@@ -1,6 +1,7 @@
 import os
 import configparser
 import socket
+import time
 import traceback
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
@@ -11,7 +12,7 @@ import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry
 
 product_name = "Adame"
-version = "0.2.24"
+version = "0.2.25"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -64,6 +65,7 @@ class AdameCore(object):
     verbose: bool = False
     encoding: str = "utf-8"
     format_datetimes_to_utc: bool = True
+    check_defer_time_for_checking_that_program_is_running_in_seconds:int=2
 
     _private_test_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
@@ -126,7 +128,7 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, self._private_get_networktrafficcustomrules_file_content())
-        self._private_create_file_in_repository(self._private_logfilepatterns_file, "")
+        self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
 
@@ -435,6 +437,10 @@ This function is idempotent."""
 IDS-process:{processid_of_ids_as_string}
 """
 
+    def _private_get_logfilepattern_file_content(self):
+        return f"""{self._private_log_folder}/**
+"""
+
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str) -> int:
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
@@ -516,7 +522,11 @@ IDS-process:{processid_of_ids_as_string}
 """
 
     def _private_get_testrule(self) -> str:
-        return f'log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for internal functionality test'
+        return f"""# Custom rules:
+
+# Internal rules:
+log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
+"""
 
     def _private_get_dockercompose_file_content(self, image: str) -> str:
         name_as_docker_allowed_name = self._private_get_container_name()
@@ -649,10 +659,13 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
         if self.verbose:
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
-        result = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
+        pid = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
+        time.sleep(self.check_defer_time_for_checking_that_program_is_running_in_seconds)
+        if not self._private_process_is_running(pid, program):
+            raise Exception(f"Process '{workingdirectory}>{program} {argument}' (process-id {pid}) exited unexpectedly")
         if self.verbose:
-            self._private_log_information(f"Started program has processid {result}")
-        return result
+            self._private_log_information(f"Started program has processid {str(pid)}")
+        return pid
 
     def _private_start_program_synchronously_and_raise_exception_if_exit_code_is_not_zero(self, program: str, argument: str, workingdirectory: str = None) -> list:
         result = self._private_start_program_synchronously(program, argument, workingdirectory)
@@ -660,14 +673,14 @@ The license of this repository is defined in the file 'License.txt'.
             raise Exception(f"'{workingdirectory}> {program} {argument}' had exitcode {str(result[0])}")
         return result
 
-    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None) -> list:
+    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero:bool=True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
         if self.verbose:
             verbose_argument = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
             verbose_argument = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, False, True, False)
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None,expect_exitcode_zero, True, False)
         if self.verbose:
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
@@ -685,16 +698,16 @@ The license of this repository is defined in the file 'License.txt'.
         command: str
 
     def _private_execute_task(self, name: str, function) -> int:
+        exitcode = 0
         try:
             self._private_log_information(f"Started task '{name}'")
-            exit_code = function()
-            self._private_log_information(f"Task '{name}' resulted in exitcode {str(exit_code)}", True, True, True)
-            return exit_code
+            function()
         except Exception as exception:
+            exitcode = 2
             self._private_log_exception(f"Exception occurred in task '{name}'", exception)
-            return 2
         finally:
-            self._private_log_information(f"Finished task '{name}'")
+            self._private_log_information(f"Finished task '{name}'. Task resulted in exitcode {str(exitcode)}")
+        return exitcode
 
     def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
@@ -751,9 +764,10 @@ Another focus of Adame is IT-forensics and IT-security: Adame generates a basic 
 Required commandline-commands:
 -docker
 -docker-compose
--snort
 -git
 -gpg
+-snort
+-sudo
 
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
