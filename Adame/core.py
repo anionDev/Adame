@@ -32,7 +32,7 @@ class AdameCore(object):
     _private_configuration_section_general_key_remotebranch: str = "remotebranch"
     _private_securityconfiguration_section_general: str = "general"
     _private_securityconfiguration_section_general_key_idsname: str = "idsname"
-    _private_securityconfiguration_section_general_key_enabledids: string = "enableids"
+    _private_securityconfiguration_section_general_key_enabledids: str = "enableids"
     _private_securityconfiguration_section_snort: str = "general"
     _private_securityconfiguration_section_snort_key_global_configuration_file: str = "idsname"
     _private_configuration_folder: str
@@ -163,7 +163,10 @@ class AdameCore(object):
 
     def _private_start(self) -> None:
         process_id_of_ids = self._private_ensure_ids_is_running()
-        process_id_of_container = self._private_ensure_container_is_running()
+        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration,self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
+            process_id_of_container = self._private_ensure_container_is_running()
+        else:
+            process_id_of_container=None
         self._private_log_running_state(process_id_of_container, process_id_of_ids, "Started")
 
     # </start-command>
@@ -182,7 +185,8 @@ class AdameCore(object):
 
     def _private_stop(self) -> None:
         self._private_ensure_container_is_not_running()
-        self._private_ensure_ids_is_not_running()
+        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration,self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
+            self._private_ensure_ids_is_not_running()
         self._private_log_running_state(None, None, "Stopped")
 
     # </stop>
@@ -347,13 +351,17 @@ class AdameCore(object):
                 "gpg",
                 "docker",
                 "docker-compose",
+            ]
+            recommended_tools = [
                 "snort",
             ]
             result = True
             for tool in tools:
                 if not self._private_tool_exists_in_path(tool):
-                    write_exception_to_stderr(f"'{tool}' is not available")
-                    result = False
+                    write_exception_to_stderr(f"Tool '{tool}' is not available")
+            for tool in recommended_tools:
+                if not self._private_tool_exists_in_path(tool):
+                    self._private_log_warning(f"Recommended tool '{tool}' is not available")
             return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self) -> bool:
@@ -415,11 +423,13 @@ This function is idempotent."""
             self._private_stop_ids()
 
     def _private_ids_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "snort")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], self._private_securityconfiguration.get(self._private_securityconfiguration_section_general_key_idsname,self._private_securityconfiguration_section_snort_key_global_configuration_file))  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
     def _private_start_ids(self) -> int:
-        result = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"', "")
-        return result
+        pid=None
+        if(self._private_securityconfiguration.get(self._private_securityconfiguration_section_general_key_idsname,self._private_securityconfiguration_section_snort_key_global_configuration_file)=="snort"):
+            pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"', "")
+        return pid
 
     def _private_stop_ids(self) -> None:
         self._private_start_program_synchronously("kill", str(self._private_get_stored_running_processes()[1]))
@@ -785,14 +795,15 @@ Adame (Automatic Docker Application Management Engine) is a tool which manages (
 One focus of Adame is to store the state of an application: Adame stores all data of the application in a git-repository. So with Adame it is very easy move the application with all its data and configurations to another computer.
 Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
 
-
 Required commandline-commands:
 -docker
 -docker-compose
 -git
+-sudo
+
+Recommended commandline-commands:
 -gpg
 -snort
--sudo
 
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
