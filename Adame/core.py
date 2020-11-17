@@ -685,16 +685,16 @@ The license of this repository is defined in the file 'License.txt'.
         command: str
 
     def _private_execute_task(self, name: str, function) -> int:
+        exitcode = 0
         try:
             self._private_log_information(f"Started task '{name}'")
-            exit_code = function()
-            self._private_log_information(f"Task '{name}' resulted in exitcode {str(exit_code)}", True, True, True)
-            return exit_code
+            function()
         except Exception as exception:
+            exitcode = 2
             self._private_log_exception(f"Exception occurred in task '{name}'", exception)
-            return 2
         finally:
-            self._private_log_information(f"Finished task '{name}'")
+            self._private_log_information(f"Finished task '{name}'. Task resulted in exitcode {str(exitcode)}")
+        return exitcode
 
     def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
