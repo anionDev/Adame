@@ -38,9 +38,14 @@ class EnvironmentForTest:
 class MiscellaneousTests(unittest.TestCase):
 
     def test_adamecore_constructor_does_not_throw_any_exception(self):
+        """UnitTest
+Tests that the constructor does not throw any exception"""
+
         AdameCore()
 
-    def test_command_create_test_environment(self):
+    def test_command_create(self):
+        """UnitTest
+Tests that the create-command works as expected"""
 
         try:
 
@@ -70,6 +75,9 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.dispose()
 
     def test_command_start(self):
+        """UnitTest
+Tests that the start-command works as expected"""
+
         try:
 
             # arrange
@@ -109,6 +117,9 @@ class MiscellaneousTests(unittest.TestCase):
             environment_for_test.dispose()
 
     def test_command_stop(self):
+        """UnitTest
+Tests that the stop-command works as expected"""
+
         try:
 
             # arrange
@@ -157,39 +168,12 @@ class MiscellaneousTests(unittest.TestCase):
         finally:
             environment_for_test.dispose()
 
-    def test_command_diagnosis_with_configurationfile(self):
-        try:
 
-            # arrange
+    def test_process_is_running(self):
+        """RegressionTest
+Ensures that adame._private_process_is_running does not throw an exception when adame._private_test_mode is false."""
 
-            environment_for_test = EnvironmentForTest()
-
-            # act
-
-            exitcode = environment_for_test.adame.diagnosis(environment_for_test.adame_configuration_file)
-
-            # assert
-
-            assert exitcode == 0
-
-        finally:
-            environment_for_test.dispose()
-
-    def test_command_diagnosis_without_configurationfile(self):
-        try:
-
-            # arrange
-
-            environment_for_test = EnvironmentForTest()
-            environment_for_test.adame.adame_configuration_file = None
-
-            # act
-
-            exitcode = environment_for_test.adame.diagnosis(None)
-
-            # assert
-
-            assert exitcode == 0
-
-        finally:
-            environment_for_test.dispose()
+        adame = AdameCore()
+        adame.verbose=True
+        adame.set_test_mode(False)
+        assert not adame._private_process_is_running(42, "test")
