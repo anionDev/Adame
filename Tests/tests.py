@@ -3,7 +3,7 @@ import tempfile
 import uuid
 import os
 import re
-from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists
+from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists, get_direct_files_of_folder, get_direct_folders_of_folder, file_is_empty
 from Adame.core import AdameCore
 
 
@@ -59,17 +59,72 @@ Tests that the create-command works as expected"""
 
             # assert
 
-            assert os.path.isfile(os.path.join(environment_for_test.folder, ".gitignore"))
-            assert os.path.isfile(os.path.join(environment_for_test.folder, "ReadMe.md"))
-            assert os.path.isfile(os.path.join(environment_for_test.folder, "License.txt"))
-            assert os.path.isdir(os.path.join(environment_for_test.folder, ".git"))
-            assert os.path.isdir(os.path.join(environment_for_test.folder, "Configuration"))
-            assert os.path.isdir(os.path.join(environment_for_test.folder, f"Logs{os.path.sep}Overhead"))
-            assert os.path.isdir(os.path.join(environment_for_test.folder, f"Logs{os.path.sep}Application"))
-            assert os.path.isdir(os.path.join(environment_for_test.folder, f"Logs{os.path.sep}IDS"))
-            assert os.path.join(environment_for_test.folder, "Configuration", "Adame.configuration") == environment_for_test.adame_configuration_file
-            assert os.path.isfile(os.path.join(environment_for_test.folder, "Configuration", "Adame.configuration"))
-            assert os.path.isfile(os.path.join(environment_for_test.folder, "Configuration", "docker-compose.yml"))
+            repository_folder=environment_for_test.folder
+            assert os.path.isdir(repository_folder)
+            assert len(get_direct_folders_of_folder(repository_folder))==3 # ".git", "Configuration", "Logs"
+            assert len(get_direct_files_of_folder(repository_folder))==3
+
+            assert os.path.isfile(os.path.join(repository_folder, ".gitignore"))
+            assert os.path.isfile(os.path.join(repository_folder, "ReadMe.md"))
+            assert os.path.isfile(os.path.join(repository_folder, "License.txt"))
+            assert os.path.isdir(os.path.join(repository_folder, ".git"))
+
+            log_folder=os.path.join(repository_folder, "Logs")
+            assert os.path.isdir(log_folder)
+            assert len(get_direct_folders_of_folder(log_folder))==3 # "Overhead", "Application", "IDS"
+            assert len(get_direct_files_of_folder(log_folder))==0
+
+            log_overhead_folder=os.path.join(log_folder, "Overhead")
+            assert os.path.isdir(log_overhead_folder)
+            assert len(get_direct_folders_of_folder(log_overhead_folder))==0
+            overheadlogfiles=get_direct_files_of_folder(log_overhead_folder)
+            assert len(overheadlogfiles)==1
+            assert not file_is_empty(overheadlogfiles[0])
+
+            log_application_folder=os.path.join(log_folder, "Application")
+            assert os.path.isdir(log_application_folder)
+            assert len(get_direct_folders_of_folder(log_application_folder))==0
+            assert len(get_direct_files_of_folder(log_application_folder))==0
+
+            log_ids_folder=os.path.join(log_folder, "IDS")
+            assert os.path.isdir(log_ids_folder)
+            assert len(get_direct_folders_of_folder(log_ids_folder))==0
+            assert len(get_direct_files_of_folder(log_ids_folder))==0
+
+            configuration_folder=os.path.join(environment_for_test.folder,  "Configuration")
+            assert os.path.isdir(configuration_folder)
+            assert len(get_direct_folders_of_folder(configuration_folder))==1 # "Security"
+            assert len(get_direct_files_of_folder(configuration_folder))==3
+            adameconfigurationfile=os.path.join(configuration_folder, "Adame.configuration")
+            assert os.path.isfile(adameconfigurationfile)
+            assert not file_is_empty(adameconfigurationfile)
+            dockercomposefile=os.path.join(configuration_folder, "docker-compose.yml")
+            assert os.path.isfile(dockercomposefile)
+            assert not file_is_empty(dockercomposefile)
+            runninginformationfile=os.path.join(configuration_folder, "Runninginformation.txt")
+            assert os.path.isfile(runninginformationfile)
+            assert not file_is_empty(runninginformationfile)
+            assert os.path.join(configuration_folder, "Adame.configuration") == environment_for_test.adame_configuration_file
+
+            security_folder=os.path.join(configuration_folder, "Security")
+            assert os.path.isdir(security_folder)
+            assert len(get_direct_folders_of_folder(security_folder))==0
+            assert len(get_direct_files_of_folder(security_folder))==5
+            applicationprovidedscurityinformationfile=os.path.join(security_folder, "ApplicationProvidedSecurityInformation.xml")
+            assert os.path.isfile(applicationprovidedscurityinformationfile)
+            assert file_is_empty(applicationprovidedscurityinformationfile)
+            logfilepatternfile=os.path.join(security_folder, "LogfilePatterns.txt")
+            assert os.path.isfile(logfilepatternfile)
+            assert not file_is_empty(logfilepatternfile)
+            networktrafficcustomrules=os.path.join(security_folder,"Networktraffic.Custom.rules")
+            assert os.path.isfile(networktrafficcustomrules)
+            assert not file_is_empty(networktrafficcustomrules)
+            networktrafficgeneratedrules=os.path.join(security_folder,"Networktraffic.Generated.rules")
+            assert os.path.isfile(networktrafficgeneratedrules)
+            assert file_is_empty(networktrafficgeneratedrules)
+            propertiesconfigurationfile=os.path.join(security_folder,"Properties.configuration")
+            assert os.path.isfile(propertiesconfigurationfile)
+            assert file_is_empty(propertiesconfigurationfile)
 
         finally:
             environment_for_test.dispose()

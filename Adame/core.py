@@ -128,7 +128,7 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, self._private_get_networktrafficcustomrules_file_content())
-        self._private_create_file_in_repository(self._private_logfilepatterns_file, "")
+        self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
 
@@ -437,6 +437,10 @@ This function is idempotent."""
 IDS-process:{processid_of_ids_as_string}
 """
 
+    def _private_get_logfilepattern_file_content(self):
+        return f"""{self._private_log_folder}/**
+"""
+
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str) -> int:
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
@@ -518,7 +522,11 @@ IDS-process:{processid_of_ids_as_string}
 """
 
     def _private_get_testrule(self) -> str:
-        return f'log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for internal functionality test'
+        return f"""# Custom rules:
+
+# Internal rules:
+log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
+"""
 
     def _private_get_dockercompose_file_content(self, image: str) -> str:
         name_as_docker_allowed_name = self._private_get_container_name()
