@@ -11,7 +11,7 @@ import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry
 
 product_name = "Adame"
-version = "0.2.21"
+version = "0.2.22"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -27,6 +27,8 @@ class AdameCore(object):
     _private_configuration_section_general_key_owner: str = "owner"
     _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
+    _private_configuration_section_general_key_remotename:str="remotename"
+    _private_configuration_section_general_key_remotebranch:str="remotebranch"
     _private_configuration_folder: str
     _private_configuration_file: str  # Represents "{_private_configuration_folder}/Adame.configuration"
     _private_security_related_configuration_folder: str
@@ -447,6 +449,8 @@ IDS-process:{processid_of_ids_as_string}
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress] = remote_address
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_remotename] = "Backup"
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_remotebranch] = "master"
 
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
             local_configparser.write(configfile)
@@ -628,8 +632,8 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
-        remote_name = "Backup"
-        branch_name = "master"
+        remote_name =self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotename]
+        branch_name = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
         self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
         if self._private_remote_address_is_available:
@@ -664,7 +668,7 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             verbose = 1
         result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose, False, None, 3600, False, None, False, True, False)
-        if(verbose):
+        if(self.verbose):
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
             self._private_log_information(result[1])
@@ -740,18 +744,21 @@ def get_adame_version() -> str:
 def adame_cli() -> int:
     arger = argparse.ArgumentParser(description=f"""{versioned_product_name}
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
-One focus of Adame is to store the state of an application: Adame stores all data of the application in git-repositories. So with Adame it is very easy move the application with all its data and configurations to another computer.
-Another focus of Adame is it-forensics and it-security: Adame generates a basic snort-configuration for each application to detect/log/bloock networktraffic from the docker-container of the application which is obvious harmful.
+One focus of Adame is to store the state of an application: Adame stores all data of the application in a git-repository. So with Adame it is very easy move the application with all its data and configurations to another computer.
+Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
+
 
 Required commandline-commands:
--docker (with elevated privileges)
--docker-compose (with elevated privileges)
--snort (with elevated privileges)
+-docker
+-docker-compose
+-snort
 -git
 -gpg
+
+Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
 
-    arger.add_argument("--verbose", action="store_true", required=False)
+    arger.add_argument("--verbose", action="store_true", required=False, default=False)
 
     subparsers = arger.add_subparsers(dest="command")
 
@@ -827,3 +834,6 @@ Required commandline-commands:
         return 0
 
 # </miscellaneous>
+
+if __name__ == '__main__':
+    adame_cli()
