@@ -616,7 +616,7 @@ The license of this repository is defined in the file 'License.txt'.
                 return result
         else:
             for process in psutil.process_iter():
-                if(self._private_check(process.pid(), " ".join(process.cmdline()), process_id, command_start)):
+                if(self._private_check(process.pid, " ".join(process.cmdline()), process_id, command_start)):
                     return True
             return False
 
