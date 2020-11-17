@@ -663,11 +663,11 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None) -> list:
         workingdirectory = str_none_safe(workingdirectory)
         if self.verbose:
-            verbose = 2
+            verbose_argument = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
-            verbose = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose, False, None, 3600, False, None, False, True, False)
+            verbose_argument = 1
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, False, True, False)
         if(self.verbose):
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
