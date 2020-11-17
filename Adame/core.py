@@ -27,6 +27,8 @@ class AdameCore(object):
     _private_configuration_section_general_key_owner: str = "owner"
     _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
+    _private_configuration_section_general_key_remotename:str="remotename"
+    _private_configuration_section_general_key_remotebranch:str="remotebranch"
     _private_configuration_folder: str
     _private_configuration_file: str  # Represents "{_private_configuration_folder}/Adame.configuration"
     _private_security_related_configuration_folder: str
@@ -447,6 +449,8 @@ IDS-process:{processid_of_ids_as_string}
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_remoteaddress] = remote_address
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_remotename] = "Backup"
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_remotebranch] = "master"
 
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
             local_configparser.write(configfile)
@@ -628,8 +632,8 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
-        remote_name = "Backup"
-        branch_name = "master"
+        remote_name =self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotename]
+        branch_name = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
         self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
         if self._private_remote_address_is_available:
