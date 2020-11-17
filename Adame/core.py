@@ -27,8 +27,8 @@ class AdameCore(object):
     _private_configuration_section_general_key_owner: str = "owner"
     _private_configuration_section_general_key_gpgkeyofowner: str = "gpgkeyofowner"
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
-    _private_configuration_section_general_key_remotename:str="remotename"
-    _private_configuration_section_general_key_remotebranch:str="remotebranch"
+    _private_configuration_section_general_key_remotename: str = "remotename"
+    _private_configuration_section_general_key_remotebranch: str = "remotebranch"
     _private_configuration_folder: str
     _private_configuration_file: str  # Represents "{_private_configuration_folder}/Adame.configuration"
     _private_security_related_configuration_folder: str
@@ -141,7 +141,7 @@ class AdameCore(object):
 
     # <start-command>
 
-    def start(self, configurationfile: str)->int:
+    def start(self, configurationfile: str) -> int:
         self._private_check_for_elevated_privileges()
         self._private_check_configurationfile_argument(configurationfile)
 
@@ -373,7 +373,6 @@ This function is idempotent."""
         """This function recreate the SIEM-system-connection.
 This function is idempotent."""
         # TODO Implement this function.
-
 
     def _private_ensure_container_is_running(self) -> int:
         # TODO optimize this function so that the container does not have to be stopped for this function
@@ -616,8 +615,11 @@ The license of this repository is defined in the file 'License.txt'.
                 return result
         else:
             for process in psutil.process_iter():
-                if(self._private_check(process.pid, " ".join(process.cmdline()), process_id, command_start)):
-                    return True
+                try:
+                    if(self._private_check(process.pid, " ".join(process.cmdline()), process_id, command_start)):
+                        return True
+                except psutil.AccessDenied:
+                    pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
             return False
 
     def _private_check(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
@@ -631,7 +633,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
-        remote_name =self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotename]
+        remote_name = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_remoteaddress)
         self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
@@ -756,7 +758,7 @@ Required commandline-commands:
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
 
-    arger.add_argument("-v","--verbose", action="store_true", required=False, default=False)
+    arger.add_argument("-v", "--verbose", action="store_true", required=False, default=False)
 
     subparsers = arger.add_subparsers(dest="command")
 
@@ -832,6 +834,7 @@ Adame must be executed with elevated privileges. This is required to run command
         return 0
 
 # </miscellaneous>
+
 
 if __name__ == '__main__':
     adame_cli()
