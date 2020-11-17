@@ -11,7 +11,7 @@ import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry
 
 product_name = "Adame"
-version = "0.2.22"
+version = "0.2.23"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -647,10 +647,9 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
         if self.verbose:
-            verbose = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         result = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
-        if(verbose):
+        if self.verbose:
             self._private_log_information(f"Started program has processid {result}")
         return result
 
@@ -663,12 +662,12 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None) -> list:
         workingdirectory = str_none_safe(workingdirectory)
         if self.verbose:
-            verbose = 2
+            verbose_argument = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
-            verbose = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose, False, None, 3600, False, None, False, True, False)
-        if(self.verbose):
+            verbose_argument = 1
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, False, True, False)
+        if self.verbose:
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
             self._private_log_information(result[1])
