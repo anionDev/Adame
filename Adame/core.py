@@ -282,7 +282,9 @@ class AdameCore(object):
         r = AdameCore._private_process()
         r.process_id = process_id
         r.command = command
-        self._private_mock_process_queries.append(r)
+        l=list()
+        l.append(r)
+        self._private_mock_process_queries.append(l)
 
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
@@ -665,7 +667,10 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_get_running_processes(self) -> list:
         if self._private_test_mode:
-            return self._private_mock_process_queries
+            if len(self._private_mock_process_queries) == 0:
+                raise LookupError("Tried to query process-list but no mock-queries are available anymore")
+            else:
+                return self._private_mock_process_queries.pop(0)
         else:
             result=list()
             for item in psutil.process_iter():
@@ -680,7 +685,7 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_process_is_running(self, process_id: int, command: str) -> bool:
         for process in self._private_get_running_processes():
-                if(self._private_process_is_running_helper(process.pid, " ".join(process.command), process_id, command)):
+                if(self._private_process_is_running_helper(process.process_id, process.command, process_id, command)):
                     return True
         return False
 
