@@ -88,11 +88,10 @@ class AdameCore(object):
 
     # <create-command>
 
-    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None):
+    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None) -> int:
         self._private_check_for_elevated_privileges()
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
-        self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
-        return 0
+        return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
 
     def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = "") -> None:
         if name is None:
@@ -124,7 +123,6 @@ class AdameCore(object):
 
         self._private_create_adame_configuration_file(configuration_file, name, owner)
 
-
         ensure_directory_exists(self._private_security_related_configuration_folder)
 
         self._private_create_file_in_repository(self._private_readme_file, self._private_get_readme_file_content(self._private_configuration, image))
@@ -138,7 +136,8 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
 
-        self._private_securityconfiguration = self._private_create_securityconfiguration_file(gpgkey_of_owner, remote_address)
+        self._private_create_securityconfiguration_file(gpgkey_of_owner, remote_address)
+        self._private_load_securityconfiguration()
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
@@ -156,10 +155,8 @@ class AdameCore(object):
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        if self._private_load_configuration(configurationfile) != 0:
-            return 1
-        self._private_execute_task("Start", self._private_start)
-        return 0
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("Start", self._private_start)
 
     def _private_start(self) -> None:
         if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
@@ -178,10 +175,8 @@ class AdameCore(object):
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        if self._private_load_configuration(configurationfile) != 0:
-            return 1
-        self._private_execute_task("Stop", self._private_stop)
-        return 0
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("Stop", self._private_stop)
 
     def _private_stop(self) -> None:
         self._private_ensure_container_is_not_running()
@@ -198,10 +193,8 @@ class AdameCore(object):
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        if self._private_load_configuration(configurationfile) != 0:
-            return 1
-        self._private_execute_task("ApplyConfiguration", self._private_applyconfiguration)
-        return 0
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("ApplyConfiguration", self._private_applyconfiguration)
 
     def _private_applyconfiguration(self) -> None:
         self._private_check_integrity_of_repository()
@@ -218,10 +211,8 @@ class AdameCore(object):
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        if self._private_load_configuration(configurationfile) != 0:
-            return 1
-        self._private_execute_task("StartAdvanced", self._private_startadvanced)
-        return 0
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("StartAdvanced", self._private_startadvanced)
 
     def _private_startadvanced(self) -> None:
         self._private_stopadvanced()
@@ -237,10 +228,8 @@ class AdameCore(object):
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        if self._private_load_configuration(configurationfile) != 0:
-            return 1
-        self._private_execute_task("StopAdvanced", self._private_stopadvanced)
-        return 0
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("StopAdvanced", self._private_stopadvanced)
 
     def _private_stopadvanced(self) -> None:
         self._private_stop()
@@ -255,10 +244,8 @@ class AdameCore(object):
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
-        if self._private_load_configuration(configurationfile) != 0:
-            return 1
-        self._private_execute_task("CheckIntegrity", self._private_checkintegrity)
-        return 0
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("CheckIntegrity", self._private_checkintegrity)
 
     def _private_checkintegrity(self) -> None:
         self._private_check_integrity_of_repository(7)
@@ -271,17 +258,15 @@ class AdameCore(object):
         self._private_check_for_elevated_privileges()
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if configurationfile is not None:
-            if self._private_load_configuration(configurationfile) != 0:
-                return 1
-        self._private_execute_task("Diagnosis", self._private_diagnosis)
-        return 0
+            self._private_load_configuration(configurationfile)
+        return self._private_execute_task("Diagnosis", self._private_diagnosis)
 
     def _private_diagnosis(self) -> None:
         if not self._private_adame_general_diagonisis():
-            return 1
+            raise Exception("General diagnosis found discrepancies")
         if self._private_configuration is not None:
             if not self._private_adame_repository_diagonisis():
-                return 1
+                raise Exception(f"General diagnosis found discrepancies in repository '{self._private_repository_folder}'")
 
     # </checkintegrity-command>
 
@@ -460,7 +445,7 @@ IDS-process:{processid_of_ids_as_string}
         return f"""{self._private_log_folder}/**
 """
 
-    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> int:
+    def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
         local_configparser = ConfigParser()
@@ -475,7 +460,7 @@ IDS-process:{processid_of_ids_as_string}
             local_configparser.write(configfile)
         self._private_log_information(f"Created file '{self._private_configuration_file}'", True)
 
-        return self._private_load_configuration(self._private_configuration_file)
+        self._private_load_configuration(self._private_configuration_file,False)
 
     def _private_verbose_log_start_by_configuration_file(self, configurationfile: str) -> None:
         self._private_log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
@@ -483,12 +468,15 @@ IDS-process:{processid_of_ids_as_string}
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str) -> None:
         self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
-    def _private_load_configuration(self, configurationfile: str) -> int:
+    def _private_load_configuration(self, configurationfile: str, load_securityconfiguration:bool=True) -> None:
         try:
             configurationfile = resolve_relative_path_from_current_working_directory(configurationfile)
+            if not os.path.isfile(configurationfile):
+                raise Exception(F"'{configurationfile}' does not exist")
             self._private_configuration_file = configurationfile
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
+
             self._private_configuration = configuration
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             self._private_configuration_folder = os.path.join(self._private_repository_folder, "Configuration")
@@ -515,6 +503,21 @@ IDS-process:{processid_of_ids_as_string}
             self._private_log_file_for_adame_overhead = get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
             ensure_file_exists(self._private_log_file_for_adame_overhead)
 
+            if load_securityconfiguration:
+                self._private_load_securityconfiguration()
+
+        except Exception as exception:
+            self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
+            raise
+
+    def _private_load_securityconfiguration(self) -> None:
+        try:
+            securityconfiguration = configparser.ConfigParser()
+            if not os.path.isfile( self._private_propertiesconfiguration_file):
+                raise Exception(F"'{self._private_propertiesconfiguration_file}' does not exist")
+            securityconfiguration.read(self._private_propertiesconfiguration_file)
+            self._private_securityconfiguration = securityconfiguration
+
             self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
             self._private_remote_address_is_available = string_has_nonwhitespace_content(self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress])
 
@@ -523,11 +526,9 @@ IDS-process:{processid_of_ids_as_string}
             if(not self._private_remote_address_is_available):
                 self._private_log_information("Warning: Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
 
-            return 0
-
         except Exception as exception:
-            self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
-            return 1
+            self._private_log_exception(f"Error while loading configurationfile '{self._private_propertiesconfiguration_file}'.", exception)
+            raise
 
     def _private_get_container_name(self) -> str:
         return self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
@@ -582,7 +583,7 @@ Only the owner of this repository is allowed to change the license of this repos
 
         with open(self._private_propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
             securityconfiguration.write(configfile)
-        return securityconfiguration
+
 
     def _private_add_default_ids_configuration_to_securityconfiguration(self, securityconfiguration: ConfigParser, gpgkey_of_owner: str, remote_address: str) -> None:
 
@@ -682,9 +683,9 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
-        remote_name = self._private_configuration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
-        branch_name = self._private_configuration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
-        remote_address = self._private_configuration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
+        remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
+        branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
+        remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
         self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
         if self._private_remote_address_is_available:
             self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
@@ -732,13 +733,13 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_execute_task(self, name: str, function) -> int:
         exitcode = 0
         try:
-            self._private_log_information(f"Started task {name}")
+            self._private_log_information(f"Started task '{name}'")
             function()
         except Exception as exception:
-            exitcode = 2
-            self._private_log_exception(f"Exception occurred in task {name}", exception)
+            exitcode = 1
+            self._private_log_exception(f"Exception occurred in task '{name}'", exception)
         finally:
-            self._private_log_information(f"Finished task {name}. Task resulted in exitcode {exitcode}")
+            self._private_log_information(f"Finished task '{name}'. Task resulted in exitcode {exitcode}")
         return exitcode
 
     def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
