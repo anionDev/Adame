@@ -12,7 +12,7 @@ import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
 
 product_name = "Adame"
-version = "0.2.25"
+version = "0.2.26"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
