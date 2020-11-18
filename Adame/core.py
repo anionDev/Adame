@@ -643,26 +643,26 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_container_is_running(self) -> bool:
         return self._private_is_running_safe(self._private_get_stored_running_processes()[0], "docker-compose")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
-    def _private_is_running_safe(self, index: int, cmdprefix: str) -> bool:
+    def _private_is_running_safe(self, index: int, command: str) -> bool:
         if(index is None):
             return False
         else:
-            return self._private_process_is_running(index, cmdprefix)
+            return self._private_process_is_running(index, command)
 
-    def _private_process_is_running(self, process_id: int, command_start: str) -> bool:
+    def _private_process_is_running(self, process_id: int, command: str) -> bool:
         if self._private_test_mode:
             if len(self._private_mock_process_queries) == 0:
                 raise LookupError("Tried to query process-list but no mock-queries are available anymore")
             else:
                 r: AdameCore._private_mock_process_query = self._private_mock_process_queries[0]
-                result = self._private_process_is_running_helper(r.process_id, r.command, process_id, command_start)
+                result = self._private_process_is_running_helper(r.process_id, r.command, process_id, command)
                 if result:
                     self._private_mock_process_queries.pop(0)
                 return result
         else:
             for process in psutil.process_iter():
                 try:
-                    if(self._private_process_is_running_helper(process.pid, " ".join(process.cmdline()), process_id, command_start)):
+                    if(self._private_process_is_running_helper(process.pid, " ".join(process.cmdline()), process_id, command)):
                         return True
                 except psutil.AccessDenied:
                     pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
@@ -670,7 +670,7 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_process_is_running_helper(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
         if actual_pid == expected_pid:
-            if actual_command.startswith(expected_command):
+            if expected_command in actual_command: # TODO improve this check
                 return True
             else:
                 if(string_is_none_or_whitespace(actual_command)):
@@ -698,30 +698,27 @@ The license of this repository is defined in the file 'License.txt'.
         return name
 
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
-        if self.verbose:
-            self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
+        self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}'",True)
         pid = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
         time.sleep(self.check_defer_time_for_checking_that_program_is_running_in_seconds)
         if not self._private_process_is_running(pid, program):
             raise Exception(f"Process '{workingdirectory}>{program} {argument}' (process-id {pid}) exited unexpectedly")
-        if self.verbose:
-            self._private_log_information(f"Started program has processid {pid}")
+        self._private_log_information(f"Started program has processid {pid}",True)
         return pid
 
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
+        self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}'",True)
         if self.verbose:
             verbose_argument = 2
-            self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
             verbose_argument = 1
         result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, expect_exitcode_zero, True, False)
-        if self.verbose:
-            self._private_log_information(f"Programm resulted in exitcode {result[0]}")
-            self._private_log_information("Stdout:")
-            self._private_log_information(result[1])
-            self._private_log_information("Stderr:")
-            self._private_log_information(result[2])
+        self._private_log_information(f"Program resulted in exitcode {result[0]}",True)
+        self._private_log_information("Stdout:",True)
+        self._private_log_information(result[1],True)
+        self._private_log_information("Stderr:",True)
+        self._private_log_information(result[2],True)
         return result
 
     def _private_tool_exists_in_path(self, name: str) -> bool:
