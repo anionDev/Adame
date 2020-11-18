@@ -33,33 +33,33 @@ class AdameCore(object):
     _private_securityconfiguration_section_general: str = "general"
     _private_securityconfiguration_section_general_key_idsname: str = "idsname"
     _private_securityconfiguration_section_general_key_enabledids: str = "enableids"
-    _private_securityconfiguration_section_snort: str = "general"
-    _private_securityconfiguration_section_snort_key_global_configuration_file: str = "idsname"
-    _private_configuration_folder: str
-    _private_configuration_file: str  # Represents "{_private_configuration_folder}/Adame.configuration"
-    _private_security_related_configuration_folder: str
-    _private_repository_folder: str
-    _private_configuration: ConfigParser
-    _private_securityconfiguration:ConfigParser
+    _private_securityconfiguration_section_snort: str = "snort"
+    _private_securityconfiguration_section_snort_key_globalconfigurationfile: str = "globalconfigurationfile"
+    _private_configuration_folder: str = None
+    _private_configuration_file: str = None  # Represents "{_private_configuration_folder}/Adame.configuration"
+    _private_security_related_configuration_folder: str = None
+    _private_repository_folder: str = None
+    _private_configuration: ConfigParser = None
+    _private_securityconfiguration: ConfigParser = None
     _private_log_folder: str = None  # Represents "{_private_repository_folder}/Logs"
     _private_log_folder_for_internal_overhead: str = None  # Represents "{_private_log_folder}/Overhead"
     _private_log_folder_for_application: str = None  # Represents "{_private_log_folder}/Application"
     _private_log_folder_for_ids: str = None  # Represents "{_private_log_folder}/IDS"
-    _private_log_file_for_adame_overhead: str
+    _private_log_file_for_adame_overhead: str = None
 
-    _private_readme_file: str
-    _private_license_file: str
-    _private_gitignore_file: str
-    _private_dockercompose_file: str
-    _private_running_information_file: str
-    _private_applicationprovidedsecurityinformation_file: str
-    _private_networktrafficgeneratedrules_file: str
-    _private_networktrafficcustomrules_file: str
-    _private_logfilepatterns_file: str
-    _private_propertiesconfiguration_file: str
+    _private_readme_file: str = None
+    _private_license_file: str = None
+    _private_gitignore_file: str = None
+    _private_dockercompose_file: str = None
+    _private_running_information_file: str = None
+    _private_applicationprovidedsecurityinformation_file: str = None
+    _private_networktrafficgeneratedrules_file: str = None
+    _private_networktrafficcustomrules_file: str = None
+    _private_logfilepatterns_file: str = None
+    _private_propertiesconfiguration_file: str = None
 
-    _private_gpgkey_of_owner_is_available: bool
-    _private_remote_address_is_available: bool
+    _private_gpgkey_of_owner_is_available: bool = False
+    _private_remote_address_is_available: bool = False
 
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
@@ -71,7 +71,7 @@ class AdameCore(object):
     verbose: bool = False
     encoding: str = "utf-8"
     format_datetimes_to_utc: bool = True
-    check_defer_time_for_checking_that_program_is_running_in_seconds:int=2
+    check_defer_time_for_checking_that_program_is_running_in_seconds: int = 2
 
     _private_test_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
@@ -135,10 +135,10 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, self._private_get_networktrafficcustomrules_file_content())
         self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
-        self._private_create_file_in_repository(self._private_propertiesconfiguration_file,"")
+        self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
 
-        self._private_establish_ids_default_configuration()
+        self._private_securityconfiguration = self._private_create_securityconfiguration_file()
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
@@ -162,11 +162,11 @@ class AdameCore(object):
         return 0
 
     def _private_start(self) -> None:
-        process_id_of_ids = self._private_ensure_ids_is_running()
-        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration,self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
-            process_id_of_container = self._private_ensure_container_is_running()
+        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
+            process_id_of_ids = self._private_ensure_ids_is_running()
         else:
-            process_id_of_container=None
+            process_id_of_ids = None
+        process_id_of_container = self._private_ensure_container_is_running()
         self._private_log_running_state(process_id_of_container, process_id_of_ids, "Started")
 
     # </start-command>
@@ -185,7 +185,7 @@ class AdameCore(object):
 
     def _private_stop(self) -> None:
         self._private_ensure_container_is_not_running()
-        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration,self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
+        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
             self._private_ensure_ids_is_not_running()
         self._private_log_running_state(None, None, "Stopped")
 
@@ -308,10 +308,6 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_establish_ids_default_configuration(self)->None:
-        self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids]="true"
-        self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname]="snort"
-        self._private_securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_global_configuration_file]="/etc/snort/snort.conf"
 
     def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
@@ -423,11 +419,12 @@ This function is idempotent."""
             self._private_stop_ids()
 
     def _private_ids_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], self._private_securityconfiguration.get(self._private_securityconfiguration_section_general_key_idsname,self._private_securityconfiguration_section_snort_key_global_configuration_file))  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname))  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
 
     def _private_start_ids(self) -> int:
-        pid=None
-        if(self._private_securityconfiguration.get(self._private_securityconfiguration_section_general_key_idsname,self._private_securityconfiguration_section_snort_key_global_configuration_file)=="snort"):
+        pid = None
+        ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
+        if(ids == "snort"):
             pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"', "")
         return pid
 
@@ -463,7 +460,6 @@ IDS-process:{processid_of_ids_as_string}
     def _private_get_logfilepattern_file_content(self):
         return f"""{self._private_log_folder}/**
 """
-
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str, gpgkey_of_owner: str, remote_address: str) -> int:
         self._private_configuration_file = configuration_file
@@ -506,15 +502,13 @@ IDS-process:{processid_of_ids_as_string}
             self._private_readme_file = os.path.join(self._private_repository_folder, "ReadMe.md")
             self._private_license_file = os.path.join(self._private_repository_folder, "License.txt")
             self._private_gitignore_file = os.path.join(self._private_repository_folder, ".gitignore")
-            self._private_running_information_file = os.path.join(self._private_configuration_folder, "Runninginformation.txt")
+            self._private_running_information_file = os.path.join(self._private_configuration_folder, "RunningInformation.txt")
             self._private_dockercompose_file = os.path.join(self._private_configuration_folder, "docker-compose.yml")
             self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
             self._private_logfilepatterns_file = os.path.join(self._private_security_related_configuration_folder, "LogfilePatterns.txt")
-            self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Properties.configuration")
-            self._private_securityconfiguration=self._private_set_propertiesconfiguration_file_content()
-
+            self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Security.configuration")
 
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")
             self._private_log_folder_for_application = os.path.join(self._private_log_folder, "Application")
@@ -585,15 +579,21 @@ Only the owner of this repository is allowed to change the license of this repos
         return """Logs/**
 """
 
-
-    def _private_set_propertiesconfiguration_file_content(self):
+    def _private_create_securityconfiguration_file(self):
         securityconfiguration = ConfigParser()
-        securityconfiguration.add_section(self._private_propertiesconfiguration_file)
-        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = ""
+        securityconfiguration.add_section(self._private_securityconfiguration_section_general)
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "false"
+        self._private_add_default_ids_configuration_to_securityconfiguration(securityconfiguration)
 
         with open(self._private_propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
             securityconfiguration.write(configfile)
         return securityconfiguration
+
+    def _private_add_default_ids_configuration_to_securityconfiguration(self,securityconfiguration:ConfigParser)->None:
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "true"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = "snort"
+        securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
+        securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
 
     def _private_get_readme_file_content(self, configuration: ConfigParser, image: str) -> str:
 
@@ -708,14 +708,14 @@ The license of this repository is defined in the file 'License.txt'.
             self._private_log_information(f"Started program has processid {pid}")
         return pid
 
-    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero:bool=True) -> list:
+    def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
         if self.verbose:
             verbose_argument = 2
             self._private_log_information(f"Start programm '{workingdirectory}>{program} {argument}'")
         else:
             verbose_argument = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None,expect_exitcode_zero, True, False)
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, expect_exitcode_zero, True, False)
         if self.verbose:
             self._private_log_information(f"Programm resulted in exitcode {result[0]}")
             self._private_log_information("Stdout:")
