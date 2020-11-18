@@ -460,7 +460,7 @@ IDS-process:{processid_of_ids_as_string}
             local_configparser.write(configfile)
         self._private_log_information(f"Created file '{self._private_configuration_file}'", True)
 
-        self._private_load_configuration(self._private_configuration_file,False)
+        self._private_load_configuration(self._private_configuration_file, False)
 
     def _private_verbose_log_start_by_configuration_file(self, configurationfile: str) -> None:
         self._private_log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
@@ -468,7 +468,7 @@ IDS-process:{processid_of_ids_as_string}
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str) -> None:
         self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
-    def _private_load_configuration(self, configurationfile: str, load_securityconfiguration:bool=True) -> None:
+    def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
         try:
             configurationfile = resolve_relative_path_from_current_working_directory(configurationfile)
             if not os.path.isfile(configurationfile):
@@ -513,7 +513,7 @@ IDS-process:{processid_of_ids_as_string}
     def _private_load_securityconfiguration(self) -> None:
         try:
             securityconfiguration = configparser.ConfigParser()
-            if not os.path.isfile( self._private_propertiesconfiguration_file):
+            if not os.path.isfile(self._private_propertiesconfiguration_file):
                 raise Exception(F"'{self._private_propertiesconfiguration_file}' does not exist")
             securityconfiguration.read(self._private_propertiesconfiguration_file)
             self._private_securityconfiguration = securityconfiguration
@@ -583,7 +583,6 @@ Only the owner of this repository is allowed to change the license of this repos
 
         with open(self._private_propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
             securityconfiguration.write(configfile)
-
 
     def _private_add_default_ids_configuration_to_securityconfiguration(self, securityconfiguration: ConfigParser, gpgkey_of_owner: str, remote_address: str) -> None:
 
