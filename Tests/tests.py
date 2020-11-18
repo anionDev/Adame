@@ -101,7 +101,7 @@ Tests that the create-command works as expected"""
             dockercomposefile=os.path.join(configuration_folder, "docker-compose.yml")
             assert os.path.isfile(dockercomposefile)
             assert not file_is_empty(dockercomposefile)
-            runninginformationfile=os.path.join(configuration_folder, "Runninginformation.txt")
+            runninginformationfile=os.path.join(configuration_folder, "RunningInformation.txt")
             assert os.path.isfile(runninginformationfile)
             assert not file_is_empty(runninginformationfile)
             assert os.path.join(configuration_folder, "Adame.configuration") == environment_for_test.adame_configuration_file
@@ -122,9 +122,9 @@ Tests that the create-command works as expected"""
             networktrafficgeneratedrules=os.path.join(security_folder,"Networktraffic.Generated.rules")
             assert os.path.isfile(networktrafficgeneratedrules)
             assert file_is_empty(networktrafficgeneratedrules)
-            propertiesconfigurationfile=os.path.join(security_folder,"Properties.configuration")
-            assert os.path.isfile(propertiesconfigurationfile)
-            assert file_is_empty(propertiesconfigurationfile)
+            securityconfigurationfile=os.path.join(security_folder,"Security.configuration")
+            assert os.path.isfile(securityconfigurationfile)
+            assert not file_is_empty(securityconfigurationfile)
 
         finally:
             environment_for_test.dispose()
