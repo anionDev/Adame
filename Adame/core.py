@@ -677,7 +677,7 @@ The license of this repository is defined in the file 'License.txt'.
                 try:
                     process = AdameCore._private_process()
                     process.process_id = item.pid
-                    process.command = item.cmdline()
+                    process.command = " ".join(item.cmdline())
                     result.append(process)
                 except psutil.AccessDenied:
                     pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
@@ -689,7 +689,7 @@ The license of this repository is defined in the file 'License.txt'.
                 return True
         return False
 
-    def _private_process_is_running_helper(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
+    def _private_process_is_running_helper(self, actual_pid:int, actual_command:str, expected_pid:int, expected_command:str) -> bool:
         if actual_pid == expected_pid:
             if expected_command in actual_command:  # TODO improve this check
                 return True
