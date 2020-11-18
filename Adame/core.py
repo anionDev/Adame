@@ -9,10 +9,10 @@ from datetime import datetime
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
 
 product_name = "Adame"
-version = "0.2.31"
+version = "0.3.0"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -131,7 +131,7 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_dockercompose_file, self._private_get_dockercompose_file_content(image))
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
-        self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, self._private_get_networktrafficcustomrules_file_content())
+        self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
         self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
@@ -311,8 +311,6 @@ class AdameCore(object):
     def _private_adame_general_diagonisis(self) -> bool:
         if(not self._private_check_whether_required_tools_for_adame_are_available()):
             return False
-        if(self._private_check_whether_required_permissions_for_adame_are_available()):
-            return False
         # Add other checks if required
         return True
 
@@ -322,9 +320,6 @@ class AdameCore(object):
         # Add other checks if required
         return True
 
-    def _private_check_whether_required_permissions_for_adame_are_available(self) -> bool:
-        pass  # TODO implement function
-
     def _private_check_whether_required_tools_for_adame_are_available(self) -> bool:
         if self._private_test_mode:
             return True
@@ -332,7 +327,6 @@ class AdameCore(object):
             tools = [
                 "git",
                 "gpg",
-                "docker",
                 "docker-compose",
             ]
             recommended_tools = [
@@ -341,13 +335,14 @@ class AdameCore(object):
             result = True
             for tool in tools:
                 if not self._private_tool_exists_in_path(tool):
-                    write_exception_to_stderr(f"Tool '{tool}' is not available")
+                    write_message_to_stderr(f"Tool '{tool}' is not available")
             for tool in recommended_tools:
                 if not self._private_tool_exists_in_path(tool):
                     self._private_log_warning(f"Recommended tool '{tool}' is not available")
             return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self) -> bool:
+        # TODO improve: add checks for files like RunningInformation.txt etc.
         # Add other checks if required
         return True
 
@@ -370,44 +365,53 @@ This function is idempotent."""
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self) -> None:
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
-        # TODO This function must
-        # - process ApplicationProvidedSecurityInformation.xml
-        # - add f"include {self.securityconfiguration[_private_securityconfiguration_section_snort][_private_securityconfiguration_section_snort_key_globalconfigurationfile]}"
-        # - add a testrule for _private_test_ids()
-        # - add the rules from Networktraffic.Custom.rules
+        customrules = read_text_from_file(self._private_networktrafficcustomrules_file, self.encoding)
+        applicationprovidedrules = "# (not implemented yet)"  # TODO improve: implement usage of application-provided security-information
+        file_content = f"""# Rules file for Snort generated by Adame.
+# Do not modify this file. Changes will be overwritten.
+
+# Global configuration
+include {self._private_securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile]}
+
+# Internal rules:
+log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
+
+# Application-provided rules:
+{applicationprovidedrules}
+
+# Custom created rules:
+{customrules}"""
+        write_text_to_file(self._private_networktrafficgeneratedrules_file, file_content, self.encoding)
 
     def _private_recreate_siem_connection(self) -> None:
-        """This function recreate the SIEM-system-connection.
-This function is idempotent."""
-        # TODO Implement this function.
+        """This function recreate the SIEM-system-connection."""
+        # TODO Implement
+        # (if required "service rsyslog restart" may be useful)
 
     def _private_ensure_container_is_running(self) -> int:
-        # TODO optimize this function so that the container does not have to be stopped for this function
+        # TODO improve: optimize this function so that the container does not have to be stopped for this function
         self._private_ensure_container_is_not_running()
-        process_id = self._private_start_container()
-        return process_id
+        return self._private_start_container()
 
     def _private_ensure_container_is_not_running(self) -> None:
         if(self._private_container_is_running()):
             self._private_stop_container()
 
     def _private_ensure_ids_is_running(self) -> int:
-        """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly.
-This function is idempotent."""
-        # TODO optimize this function so that the ids does not have to be stopped for this function
+        """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly."""
+        # TODO improve: optimize this function so that the ids does not have to be stopped for this function
         self._private_ensure_ids_is_not_running()
         process_id = self._private_start_ids()
         self._private_test_ids()
         return process_id
 
     def _private_ensure_ids_is_not_running(self) -> None:
-        """This function ensures that the intrusion-detection-system (ids) is not running anymore.
-This function is idempotent."""
+        """This function ensures that the intrusion-detection-system (ids) is not running anymore."""
         if(self._private_ids_is_running()):
             self._private_stop_ids()
 
     def _private_ids_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname))  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname))  # TODO improve: add more arguments to command-argument to specify the exptected command better
 
     def _private_start_ids(self) -> int:
         pid = None
@@ -428,12 +432,12 @@ This function is idempotent."""
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
-            for p in self._private_get_running_processes():  # TODO this is only workaround since killing snort is not trivial
-                if("snort" in p.command and self._private_repository_folder in p.command):
-                    self._private_start_program_synchronously("kill", f"-9 {p.process_id}")
+            for process in self._private_get_running_processes():
+                if("snort" in process.command and self._private_repository_folder in process.command):
+                    self._private_start_program_synchronously("kill", f"-9 {process.process_id}")
 
     def _private_test_ids(self):
-        pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
+        pass  # TODO improve: test if a specific test-rule will be applied by sending a package to the docker-container which should be result in a log-folder
 
     def _private_get_stored_running_processes(self) -> tuple:
         lines = read_text_from_file(self._private_running_information_file).splitlines()
@@ -549,17 +553,6 @@ IDS-process:{processid_of_ids_as_string}
 
     def _private_get_container_name(self) -> str:
         return self._private_name_to_docker_allowed_name(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_name))
-
-    def _private_get_networktrafficcustomrules_file_content(self) -> str:
-        return f"""{self._private_get_testrule()}
-"""
-
-    def _private_get_testrule(self) -> str:
-        return f"""# Custom rules:
-
-# Internal rules:
-#log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
-"""
 
     def _private_get_dockercompose_file_content(self, image: str) -> str:
         name_as_docker_allowed_name = self._private_get_container_name()
@@ -690,9 +683,9 @@ The license of this repository is defined in the file 'License.txt'.
                 return True
         return False
 
-    def _private_process_is_running_helper(self, actual_pid:int, actual_command:str, expected_pid:int, expected_command:str) -> bool:
+    def _private_process_is_running_helper(self, actual_pid: int, actual_command: str, expected_pid: int, expected_command: str) -> bool:
         if actual_pid == expected_pid:
-            if expected_command in actual_command:  # TODO improve this check
+            if expected_command in actual_command:
                 return True
             else:
                 if(string_is_none_or_whitespace(actual_command)):
@@ -781,10 +774,10 @@ The license of this repository is defined in the file 'License.txt'.
         if is_verbose_log_entry and not self.verbose:
             return
         if(self.format_datetimes_to_utc):
-            d = datetime.utcnow()
+            date_as_string = datetime.utcnow()
         else:
-            d = datetime.now()
-        logentry = f"[{datetime_to_string_for_logfile_entry(d)}] [{loglevel}] {message}"
+            date_as_string = datetime.now()
+        logentry = f"[{datetime_to_string_for_logfile_entry(date_as_string)}] [{loglevel}] {message}"
         if(write_to_console):
             if(loglevel == "Error"):
                 write_message_to_stderr(logentry)
@@ -815,7 +808,6 @@ One focus of Adame is to store the state of an application: Adame stores all dat
 Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
 
 Required commandline-commands:
--docker
 -docker-compose
 -git
 -sudo

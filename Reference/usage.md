@@ -53,6 +53,16 @@ This command saves the current state of the Docker-container. This command assum
 
 This command ensures that the current configuration of the Adame-managed environment will be applied (e. g. new rules for the intrusion detection system).
 
+### diagnosis
+
+#### Syntax
+
+`Adame diagnosis --configurationfile Adame.configuration`
+
+#### Description
+
+The purpose of this command is to help and give information when something is not working correctly as expected.
+
 ### startadvanced
 
 #### Syntax
