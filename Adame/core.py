@@ -369,6 +369,7 @@ This function is idempotent."""
 This function is idempotent."""
         # TODO This function must
         # - process ApplicationProvidedSecurityInformation.xml
+        # - add f"include {self.securityconfiguration[_private_securityconfiguration_section_snort][_private_securityconfiguration_section_snort_key_globalconfigurationfile]}"
         # - add a testrule for _private_test_ids()
         # - add the rules from Networktraffic.Custom.rules
 
@@ -413,7 +414,8 @@ This function is idempotent."""
         return pid
 
     def _private_stop_ids(self) -> None:
-        self._private_start_program_synchronously("kill", str(self._private_get_stored_running_processes()[1]))
+        self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
+
 
     def _private_test_ids(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system

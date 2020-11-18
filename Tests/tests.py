@@ -211,7 +211,7 @@ Tests that the stop-command works as expected"""
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "4d6a38ad96d0acf5e2822bbcd655387b42352cc1", "", 60)
 
             environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("down --remove-orphans"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 68)
-            environment_for_test.adame._private_sc.register_mock_program_call("kill",  re.escape("44"), "", 0, "", "", 72)
+            environment_for_test.adame._private_sc.register_mock_program_call("kill",  re.escape("-9 44"), "", 0, "", "", 72)
 
             environment_for_test.adame.register_mock_process_query(40, "docker-compose")
             environment_for_test.adame.register_mock_process_query(44, "snort")
