@@ -545,7 +545,7 @@ IDS-process:{processid_of_ids_as_string}
         return f"""# Custom rules:
 
 # Internal rules:
-log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
+#log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
 """
 
     def _private_get_dockercompose_file_content(self, image: str) -> str:
