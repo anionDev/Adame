@@ -12,7 +12,7 @@ import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
 
 product_name = "Adame"
-version = "0.2.30"
+version = "0.2.31"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -289,7 +289,8 @@ class AdameCore(object):
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
         if(len(self._private_mock_process_queries) > 0):
-            raise AssertionError("The following mock-process-queries were not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in self._private_mock_process_queries]))
+            for mock_query_result in self._private_mock_process_queries:
+                raise AssertionError("The following mock-process-query was not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
 
     # </other-functions>
 
@@ -657,7 +658,7 @@ The license of this repository is defined in the file 'License.txt'.
         return process_id
 
     def _private_container_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[0], "docker-compose")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_get_stored_running_processes()[0] is not None
 
     def _private_is_running_safe(self, index: int, command: str) -> bool:
         if(index is None):
