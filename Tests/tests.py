@@ -118,7 +118,7 @@ Tests that the create-command works as expected"""
             assert not file_is_empty(logfilepatternfile)
             networktrafficcustomrules = os.path.join(security_folder, "Networktraffic.Custom.rules")
             assert os.path.isfile(networktrafficcustomrules)
-            assert not file_is_empty(networktrafficcustomrules)
+            assert file_is_empty(networktrafficcustomrules)
             networktrafficgeneratedrules = os.path.join(security_folder, "Networktraffic.Generated.rules")
             assert os.path.isfile(networktrafficgeneratedrules)
             assert file_is_empty(networktrafficgeneratedrules)
