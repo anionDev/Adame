@@ -289,7 +289,8 @@ class AdameCore(object):
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
         if(len(self._private_mock_process_queries) > 0):
-            raise AssertionError("The following mock-process-queries were not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in self._private_mock_process_queries]))
+            for mock_query_result in self._private_mock_process_queries:
+                raise AssertionError("The following mock-process-query was not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
 
     # </other-functions>
 
@@ -657,7 +658,7 @@ The license of this repository is defined in the file 'License.txt'.
         return process_id
 
     def _private_container_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[0], "docker-compose")  # TODO add more arguments to cmdprefix-argument to spefify the exptected cmdprefix better
+        return self._private_get_stored_running_processes()[0] is not None
 
     def _private_is_running_safe(self, index: int, command: str) -> bool:
         if(index is None):
