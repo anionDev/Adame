@@ -279,7 +279,7 @@ class AdameCore(object):
 
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
-        r = AdameCore._private_mock_process_query()
+        r = AdameCore._private_process()
         r.process_id = process_id
         r.command = command
         self._private_mock_process_queries.append(r)
@@ -414,8 +414,12 @@ This function is idempotent."""
         return pid
 
     def _private_stop_ids(self) -> None:
-        self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
-
+        ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
+        if(ids == "snort"):
+            self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
+            # for p in self._private_get_running_processes(): # TODO this is only workaround since killing snort is not trivial
+            #   if("snort" in p[1] and self._private_repository_folder in p[1]):
+            #       self._private_start_program_synchronously("kill", f"-9 {p[0]}")
 
     def _private_test_ids(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
@@ -651,24 +655,26 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             return self._private_process_is_running(index, command)
 
-    def _private_process_is_running(self, process_id: int, command: str) -> bool:
+    def _private_get_running_processes(self) -> list:
         if self._private_test_mode:
-            if len(self._private_mock_process_queries) == 0:
-                raise LookupError("Tried to query process-list but no mock-queries are available anymore")
-            else:
-                r: AdameCore._private_mock_process_query = self._private_mock_process_queries[0]
-                result = self._private_process_is_running_helper(r.process_id, r.command, process_id, command)
-                if result:
-                    self._private_mock_process_queries.pop(0)
-                return result
+            return self._private_mock_process_queries
         else:
-            for process in psutil.process_iter():
+            result=list()
+            for item in psutil.process_iter():
                 try:
-                    if(self._private_process_is_running_helper(process.pid, " ".join(process.cmdline()), process_id, command)):
-                        return True
+                    process=AdameCore._private_process()
+                    process.process_id=item.pid
+                    process.command=item.cmdline()
+                    result.append(process)
                 except psutil.AccessDenied:
                     pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
-            return False
+            return result
+
+    def _private_process_is_running(self, process_id: int, command: str) -> bool:
+        for process in self._private_get_running_processes():
+                if(self._private_process_is_running_helper(process.pid, " ".join(process.command), process_id, command)):
+                    return True
+        return False
 
     def _private_process_is_running_helper(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
         if actual_pid == expected_pid:
@@ -726,7 +732,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_tool_exists_in_path(self, name: str) -> bool:
         return find_executable(name) is not None
 
-    class _private_mock_process_query:
+    class _private_process:
         "This class is for test-purposes only"
         process_id: str
         command: str
