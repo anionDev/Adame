@@ -282,7 +282,7 @@ class AdameCore(object):
         r = AdameCore._private_process()
         r.process_id = process_id
         r.command = command
-        l=list()
+        l = list()
         l.append(r)
         self._private_mock_process_queries.append(l)
 
@@ -413,13 +413,13 @@ This function is idempotent."""
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             if self.format_datetimes_to_utc:
-                utc_argument=" -U"
+                utc_argument = " -U"
             else:
-                utc_argument=""
+                utc_argument = ""
             if self.verbose:
-                verbose_argument=" -v"
+                verbose_argument = " -v"
             else:
-                verbose_argument=""
+                verbose_argument = ""
             pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y', "")
         return pid
 
@@ -427,9 +427,9 @@ This function is idempotent."""
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
-            # for p in self._private_get_running_processes(): # TODO this is only workaround since killing snort is not trivial
-            #   if("snort" in p[1] and self._private_repository_folder in p[1]):
-            #       self._private_start_program_synchronously("kill", f"-9 {p[0]}")
+            for p in self._private_get_running_processes():  # TODO this is only workaround since killing snort is not trivial
+                if("snort" in p.command and self._private_repository_folder in p.command):
+                    self._private_start_program_synchronously("kill", f"-9 {p.process_id}")
 
     def _private_test_ids(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
@@ -672,12 +672,12 @@ The license of this repository is defined in the file 'License.txt'.
             else:
                 return self._private_mock_process_queries.pop(0)
         else:
-            result=list()
+            result = list()
             for item in psutil.process_iter():
                 try:
-                    process=AdameCore._private_process()
-                    process.process_id=item.pid
-                    process.command=item.cmdline()
+                    process = AdameCore._private_process()
+                    process.process_id = item.pid
+                    process.command = item.cmdline()
                     result.append(process)
                 except psutil.AccessDenied:
                     pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
@@ -685,8 +685,8 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_process_is_running(self, process_id: int, command: str) -> bool:
         for process in self._private_get_running_processes():
-                if(self._private_process_is_running_helper(process.process_id, process.command, process_id, command)):
-                    return True
+            if(self._private_process_is_running_helper(process.process_id, process.command, process_id, command)):
+                return True
         return False
 
     def _private_process_is_running_helper(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:

@@ -215,7 +215,8 @@ Tests that the stop-command works as expected"""
 
             environment_for_test.adame.register_mock_process_query(40, "docker-compose")
             environment_for_test.adame.register_mock_process_query(44, "snort")
-
+            environment_for_test.adame.register_mock_process_query(45, f"snort {environment_for_test.adame._private_repository_folder}")
+            environment_for_test.adame._private_sc.register_mock_program_call("kill",  re.escape("-9 45"), "", 0, "", "", 76)
             # act
 
             exitcode = environment_for_test.adame.stop(environment_for_test.adame_configuration_file)
