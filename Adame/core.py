@@ -12,7 +12,7 @@ import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_exception_to_stderr, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
 
 product_name = "Adame"
-version = "0.2.28"
+version = "0.2.29"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -279,10 +279,12 @@ class AdameCore(object):
 
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
-        r = AdameCore._private_mock_process_query()
+        r = AdameCore._private_process()
         r.process_id = process_id
         r.command = command
-        self._private_mock_process_queries.append(r)
+        l = list()
+        l.append(r)
+        self._private_mock_process_queries.append(l)
 
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
@@ -369,6 +371,7 @@ This function is idempotent."""
 This function is idempotent."""
         # TODO This function must
         # - process ApplicationProvidedSecurityInformation.xml
+        # - add f"include {self.securityconfiguration[_private_securityconfiguration_section_snort][_private_securityconfiguration_section_snort_key_globalconfigurationfile]}"
         # - add a testrule for _private_test_ids()
         # - add the rules from Networktraffic.Custom.rules
 
@@ -409,11 +412,24 @@ This function is idempotent."""
         pid = None
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
-            pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"', "")
+            if self.format_datetimes_to_utc:
+                utc_argument = " -U"
+            else:
+                utc_argument = ""
+            if self.verbose:
+                verbose_argument = " -v"
+            else:
+                verbose_argument = ""
+            pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y', "")
         return pid
 
     def _private_stop_ids(self) -> None:
-        self._private_start_program_synchronously("kill", str(self._private_get_stored_running_processes()[1]))
+        ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
+        if(ids == "snort"):
+            self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
+            for p in self._private_get_running_processes():  # TODO this is only workaround since killing snort is not trivial
+                if("snort" in p.command and self._private_repository_folder in p.command):
+                    self._private_start_program_synchronously("kill", f"-9 {p.process_id}")
 
     def _private_test_ids(self):
         pass  # TODO test if a specific test-rule will be applied by sending a package to the docker-container which should be detected by the instruction-detection-system
@@ -649,24 +665,29 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             return self._private_process_is_running(index, command)
 
-    def _private_process_is_running(self, process_id: int, command: str) -> bool:
+    def _private_get_running_processes(self) -> list:
         if self._private_test_mode:
             if len(self._private_mock_process_queries) == 0:
                 raise LookupError("Tried to query process-list but no mock-queries are available anymore")
             else:
-                r: AdameCore._private_mock_process_query = self._private_mock_process_queries[0]
-                result = self._private_process_is_running_helper(r.process_id, r.command, process_id, command)
-                if result:
-                    self._private_mock_process_queries.pop(0)
-                return result
+                return self._private_mock_process_queries.pop(0)
         else:
-            for process in psutil.process_iter():
+            result = list()
+            for item in psutil.process_iter():
                 try:
-                    if(self._private_process_is_running_helper(process.pid, " ".join(process.cmdline()), process_id, command)):
-                        return True
+                    process = AdameCore._private_process()
+                    process.process_id = item.pid
+                    process.command = item.cmdline()
+                    result.append(process)
                 except psutil.AccessDenied:
                     pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
-            return False
+            return result
+
+    def _private_process_is_running(self, process_id: int, command: str) -> bool:
+        for process in self._private_get_running_processes():
+            if(self._private_process_is_running_helper(process.process_id, process.command, process_id, command)):
+                return True
+        return False
 
     def _private_process_is_running_helper(self, actual_pid, actual_command, expected_pid, expected_command) -> bool:
         if actual_pid == expected_pid:
@@ -724,7 +745,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_tool_exists_in_path(self, name: str) -> bool:
         return find_executable(name) is not None
 
-    class _private_mock_process_query:
+    class _private_process:
         "This class is for test-purposes only"
         process_id: str
         command: str
