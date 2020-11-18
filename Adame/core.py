@@ -410,7 +410,15 @@ This function is idempotent."""
         pid = None
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
-            pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"', "")
+            if self.format_datetimes_to_utc:
+                utc_argument=" -U"
+            else:
+                utc_argument=""
+            if self.verbose:
+                verbose_argument=" -v"
+            else:
+                verbose_argument=""
+            pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y', "")
         return pid
 
     def _private_stop_ids(self) -> None:
