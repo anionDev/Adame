@@ -5,7 +5,7 @@ import time
 import traceback
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
-from datetime import datetime
+from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
@@ -197,7 +197,6 @@ class AdameCore(object):
         return self._private_execute_task("ApplyConfiguration", self._private_applyconfiguration)
 
     def _private_applyconfiguration(self) -> None:
-        self._private_check_integrity_of_repository()
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
         self._private_recreate_siem_connection()
         self._private_commit("Reapplied configuration")
@@ -356,7 +355,7 @@ class AdameCore(object):
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
         until = datetime.now()
-        since = until - datetime.timedelta(days=amount_of_days_of_history_to_check)
+        since = until - timedelta(days=amount_of_days_of_history_to_check)
         commit_hashs_to_check_in_given_interval = self._private_sc.get_commit_ids_between_dates(self._private_repository_folder, until, since)
         for commithash in commit_hashs_to_check_in_given_interval:
             if not self._private_sc.commit_is_signed_by_key(self._private_repository_folder, commithash, self._private_configuration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner]):
@@ -696,11 +695,11 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
-        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes)
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, True)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
-        self._private_log_information(f"Created commit {commit_id} ('{message}') in repository '{repository}'", False, True, True)
+        self._private_log_information(f"Created commit {commit_id} in repository '{repository}' (commit-message: '{message}')", False, True, True)
         if self._private_remote_address_is_available:
             self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
             self._private_sc.git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
@@ -713,7 +712,7 @@ The license of this repository is defined in the file 'License.txt'.
         return name
 
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
-        self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}'", True)
+        self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}' asynchronously", True)
         pid = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
         time.sleep(self.check_defer_time_for_checking_that_program_is_running_in_seconds)
         if not self._private_process_is_running(pid, program):
@@ -723,7 +722,7 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
-        self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}'", True)
+        self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         if self.verbose:
             verbose_argument = 2
         else:
