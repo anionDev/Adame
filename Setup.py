@@ -31,6 +31,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
+        "netifaces>=0.10.9",
         "psutil>=5.7.3",
         "ScriptCollection>=2.0.9",
     ],

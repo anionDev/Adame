@@ -28,7 +28,7 @@ The [gitignore](https://git-scm.com/docs/gitignore)-file contains information ab
 ## ApplicationProvidedSecurityInformation.xml
 
 Typically located in `./Configuration/Security`.
-This file can contain some security-related information which can be used by Adame to improve the security of the applicationenvironment.
+This file can contain some security-related information which can be used by Adame to improve the security of the application-environment.
 
 ## Networktraffic.Generated.rules
 
