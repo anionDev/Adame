@@ -63,6 +63,7 @@ class AdameCore(object):
 
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
+    _private_testrule_sid: str = "8979665"
 
     # </constants>
 
@@ -373,7 +374,7 @@ This function is idempotent."""
 include {self._private_securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile]}
 
 # Internal rules:
-log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
+log tcp any any -> 127.0.0.1 any (sid: {self._private_testrule_sid};content: "{self._private_testrule_trigger_content}"; msg: "{self._private_testrule_log_content}"; react: block, msg;) # Test-rule for functionality test
 
 # Application-provided rules:
 {applicationprovidedrules}
@@ -424,7 +425,8 @@ log tcp any any -> 127.0.0.1 (content: "{self._private_testrule_trigger_content}
                 verbose_argument = " -v"
             else:
                 verbose_argument = ""
-            pid = self._private_start_program_asynchronously("snort", f'-c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y', "")
+            networkinterface="eth0" # TODO make this value editable
+            pid = self._private_start_program_asynchronously("snort", f'-i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y', "")
         return pid
 
     def _private_stop_ids(self) -> None:
