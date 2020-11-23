@@ -5,6 +5,7 @@
 The behavior of all commands (except `create`) is idempotent.
 
 Caution:
+
 - The commands are not intended to be executed in an unattended script since it is recommended to enable gpg-signing which contains the user-interaction of the pinentry-dialog.
 - Adame requires elevated privileges for executing commands like snort or docker-compose.
 
@@ -78,7 +79,7 @@ Example:
 An application is running. Now we configure the environment to use a new version and add a rule for the intrusion detection system. Then this command combines some of the other commands of Adame: It
 
 - ensures the container is currently not running
-- reapllies the configuration defined in the environment
+- re-applies the configuration defined in the environment
 - saves the current state
 - ensures that the application will be started again
 
