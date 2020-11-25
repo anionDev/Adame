@@ -47,7 +47,7 @@ pip install "netifaces>=0.10.9"
 pip install "psutil>=5.7.3"
 pip install "pylint>=2.6.0"
 pip install "pytest>=6.1.2"
-pip install "ScriptCollection>=2.0.9"
+pip install "ScriptCollection>=2.0.10"
 pip install "wheel>=0.35.1"
 ```
 
@@ -71,4 +71,4 @@ To install an Adame simply execute `pip install Adame-1.0.0-py3-none-any.whl`.
 
 ## License
 
-See `License.txt` for information about the license of Adame.
+See `License.txt` for license-information.
