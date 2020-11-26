@@ -2,7 +2,7 @@ import os
 from setuptools import setup
 
 productname = "Adame"
-version = "0.4.2"
+version = "0.4.3"
 
 
 folder_of_current_file = os.path.dirname(os.path.realpath(__file__))
@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "netifaces>=0.10.9",
         "psutil>=5.7.3",
-        "ScriptCollection>=2.0.10",
+        "ScriptCollection>=2.0.11",
     ],
     entry_points={
         'console_scripts': [

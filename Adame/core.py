@@ -14,9 +14,10 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "0.4.2"
+version = "0.4.3"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
+
 
 class AdameCore(object):
 
@@ -67,6 +68,7 @@ class AdameCore(object):
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
     _private_testrule_sid: str = "8979665"
+    _private_localipaddress_placeholder: str = "__localipaddress__"
 
     # </constants>
 
@@ -75,7 +77,7 @@ class AdameCore(object):
     verbose: bool = False
     encoding: str = "utf-8"
     format_datetimes_to_utc: bool = True
-    check_defer_time_for_checking_that_program_is_running_in_seconds: int = 2
+    check_defer_time_for_checking_that_program_is_running_in_seconds: int = 4
 
     _private_test_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
@@ -282,12 +284,12 @@ class AdameCore(object):
 
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
-        r = AdameCore._private_process()
-        r.process_id = process_id
-        r.command = command
-        l = list()
-        l.append(r)
-        self._private_mock_process_queries.append(l)
+        process = AdameCore._private_process()
+        process.process_id = process_id
+        process.command = command
+        resultlist = list()
+        resultlist.append(process)
+        self._private_mock_process_queries.append(resultlist)
 
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
@@ -324,25 +326,26 @@ class AdameCore(object):
         return True
 
     def _private_check_whether_required_tools_for_adame_are_available(self) -> bool:
-        if self._private_test_mode:
-            return True
-        else:
-            tools = [
-                "git",
-                "gpg",
-                "docker-compose",
-            ]
-            recommended_tools = [
-                "snort",
-            ]
-            result = True
-            for tool in tools:
-                if not self._private_tool_exists_in_path(tool):
-                    write_message_to_stderr(f"Tool '{tool}' is not available")
-            for tool in recommended_tools:
-                if not self._private_tool_exists_in_path(tool):
-                    self._private_log_warning(f"Recommended tool '{tool}' is not available")
+        result = True
+        if not self._private_test_mode:
             return result
+        tools = [
+            "git",
+            "gpg",
+            "docker-compose",
+        ]
+        recommended_tools = [
+            "snort",
+        ]
+        for tool in tools:
+            if not self._private_tool_exists_in_path(tool):
+                write_message_to_stderr(f"Tool '{tool}' is not available")
+                result = False
+        for tool in recommended_tools:
+            if not self._private_tool_exists_in_path(tool):
+                self._private_log_warning(f"Recommended tool '{tool}' is not available")
+                result = False
+        return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self) -> bool:
         # TODO improve: add checks for files like RunningInformation.txt etc.
@@ -365,10 +368,10 @@ This function is idempotent."""
             if not self._private_sc.commit_is_signed_by_key(self._private_repository_folder, commithash, self._private_configuration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner]):
                 self._private_log_warning(f"The app-repository '{self._private_repository_folder}' contains the unsigned commit {commithash}", False, True, True)
 
-    def get_entire_testrule_trigger_content(self):
+    def get_entire_testrule_trigger_content(self)->str:
         return f"testrule_content_{self._private_testrule_trigger_content}_{self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid]}"
 
-    def get_entire_testrule_trigger_answer(self):
+    def get_entire_testrule_trigger_answer(self)->str:
         return f"testrule_answer_{self._private_testrule_log_content}_{self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid]}"
 
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self) -> None:
@@ -383,18 +386,18 @@ This function is idempotent."""
 # --- Global configuration ---
 # TODO include {self._private_securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile]}
 
-# --- Internal rules: ---
+# --- Internal rules ---
 
 # Test-rule for functionality test:
-alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; content: "{self.get_entire_testrule_trigger_content()}"; msg: "{self.get_entire_testrule_trigger_answer()}"; react: msg;)
+alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self._private_testrule_sid}; content: "{self.get_entire_testrule_trigger_content()}"; msg: "{self.get_entire_testrule_trigger_answer()}";)
 
-# --- Application-provided rules: ---
+# --- Application-provided rules ---
 {applicationprovidedrules}
 
-# --- Custom created rules: ---
+# --- Custom created rules ---
 {customrules}
 """
-        file_content = file_content.replace("__localipaddress__", local_ip_address)  # replacement to allow to use this variable in the customrules.
+        file_content = file_content.replace(self._private_localipaddress_placeholder, local_ip_address)  # replacement to allow to use this variable in the customrules.
         write_text_to_file(self._private_networktrafficgeneratedrules_file, file_content, self.encoding)
 
     def _private_recreate_siem_connection(self) -> None:
@@ -425,7 +428,9 @@ alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; 
             self._private_stop_ids()
 
     def _private_ids_is_running(self) -> bool:
-        return self._private_is_running_safe(self._private_get_stored_running_processes()[1], self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname))  # TODO improve: add more arguments to command-argument to specify the exptected command better
+        ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
+        if(ids == "snort"):
+            return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "sudo")  # TODO improve: add more arguments to command-argument to specify the exptected command better
 
     def _private_start_ids(self) -> int:
         pid = None
@@ -439,19 +444,20 @@ alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; 
                 verbose_argument = " -v"
             else:
                 verbose_argument = ""
-            networkinterface =self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
-            pid = self._private_start_program_asynchronously("snort", f'-i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
+            networkinterface = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
+            # TODO problem here: snort terminates after a few seconds and so t is logging no requests. when running the same command (prefixed with "sudo ") manually logs content. maybe additionally chmod'ing appropriate folders is requried
+            pid = self._private_start_program_asynchronously("sudo", f'snort -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
         return pid
 
     def _private_stop_ids(self) -> None:
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
-            self._private_start_program_synchronously("kill", f"-9 {self._private_get_stored_running_processes()[1]}")
+            self._private_start_program_synchronously("kill", f"-TERM {self._private_get_stored_running_processes()[1]}")
             for process in self._private_get_running_processes():
                 if("snort" in process.command and self._private_repository_folder in process.command):
-                    self._private_start_program_synchronously("kill", f"-9 {process.process_id}")
+                    self._private_start_program_synchronously("kill", f"-TERM {process.process_id}")
 
-    def _private_test_ids(self):
+    def _private_test_ids(self)->None:
         pass  # TODO improve: test if a specific test-rule will be applied by sending a package to the docker-container which should be result in a log-folder
 
     def _private_get_stored_running_processes(self) -> tuple:
@@ -477,7 +483,7 @@ alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; 
 IDS-process:{processid_of_ids_as_string}
 """
 
-    def _private_get_logfilepattern_file_content(self):
+    def _private_get_logfilepattern_file_content(self)->str:
         return f"""{self._private_log_folder}/**
 """
 
@@ -492,7 +498,7 @@ IDS-process:{processid_of_ids_as_string}
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_name] = name
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid] = str(uuid.uuid4())
-        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]="eth0"
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface] = "eth0"
 
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
             local_configparser.write(configfile)
@@ -602,7 +608,7 @@ Only the owner of this repository is allowed to change the license of this repos
         return """Logs/**
 """
 
-    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: str, remote_address: str):
+    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: str, remote_address: str)->None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self._private_securityconfiguration_section_general)
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "false"
@@ -724,7 +730,7 @@ The license of this repository is defined in the file 'License.txt'.
         if self._private_remote_address_is_available:
             self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
             self._private_sc.git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
-            self._private_log_information(f"Pushed repository '{repository}' to remote {remote_address}", False, True, True)
+            self._private_log_information(f"Pushed repository '{repository}' to remote remote_name ('{remote_address}')", False, True, True)
         else:
             self._private_log_warning("Either no remote-address is defined or the remote-address for the backup of the app-repository is not available.")
 
