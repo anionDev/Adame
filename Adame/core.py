@@ -77,7 +77,7 @@ class AdameCore(object):
     verbose: bool = False
     encoding: str = "utf-8"
     format_datetimes_to_utc: bool = True
-    check_defer_time_for_checking_that_program_is_running_in_seconds: int = 4
+    check_defer_time_for_checking_that_program_is_running_in_seconds: int = 2
 
     _private_test_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
@@ -430,7 +430,7 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
     def _private_ids_is_running(self) -> bool:
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
-            return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "sudo")  # TODO improve: add more arguments to command-argument to specify the exptected command better
+            return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "snort")  # TODO improve: add more arguments to command-argument to specify the exptected command better
 
     def _private_start_ids(self) -> int:
         pid = None
@@ -446,7 +446,7 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
                 verbose_argument = ""
             networkinterface = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
             # TODO problem here: snort terminates after a few seconds and so t is logging no requests. when running the same command (prefixed with "sudo ") manually logs content. maybe additionally chmod'ing appropriate folders is requried
-            pid = self._private_start_program_asynchronously("sudo", f'snort -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
+            pid = self._private_start_program_asynchronously("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
         return pid
 
     def _private_stop_ids(self) -> None:
