@@ -386,7 +386,7 @@ This function is idempotent."""
 # --- Internal rules: ---
 
 # Test-rule for functionality test:
-alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; content: "{self.get_entire_testrule_trigger_content()}"; msg: "{self.get_entire_testrule_trigger_answer()}"; react: msg;)
+alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; content: "{self.get_entire_testrule_trigger_content()}"; msg: "{self.get_entire_testrule_trigger_answer()}";)
 
 # --- Application-provided rules: ---
 {applicationprovidedrules}
@@ -440,7 +440,7 @@ alert tcp any any -> {local_ip_address} any (sid: {self._private_testrule_sid}; 
             else:
                 verbose_argument = ""
             networkinterface =self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
-            pid = self._private_start_program_asynchronously("snort", f'-i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
+            pid = self._private_start_program_asynchronously("snort", f'-i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "") # TODO problem here: snort terminates after a few seconds and so t is logging no requests. when running the same command (prefixed with "sudo ") manually logs content. maybe additionally chmod'ing appropriate folders is requried
         return pid
 
     def _private_stop_ids(self) -> None:
