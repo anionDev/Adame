@@ -13,7 +13,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "0.4.5"
+version = "0.4.6"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -666,7 +666,7 @@ The license of this repository is defined in the file 'License.txt'.
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self) -> int:
-        process_id = self._private_start_program_synchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
+        process_id = self._private_start_program_asynchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         self._private_log_information("Container was started", False, True, True)
         return process_id
 
