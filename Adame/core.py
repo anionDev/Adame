@@ -666,7 +666,7 @@ The license of this repository is defined in the file 'License.txt'.
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self) -> int:
-        process_id = self._private_start_program_synchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
+        process_id = self._private_start_program_asynchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         self._private_log_information("Container was started", False, True, True)
         return process_id
 
