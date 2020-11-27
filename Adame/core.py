@@ -293,7 +293,7 @@ class AdameCore(object):
         "This function is for test-purposes only"
         if(len(self._private_mock_process_queries) > 0):
             for mock_query_result in self._private_mock_process_queries:
-                raise AssertionError("The following mock-process-query was not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
+                raise AssertionError("The following mock-process-queries were not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
 
     # </other-functions>
 
@@ -443,7 +443,6 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
             else:
                 verbose_argument = ""
             networkinterface = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
-            # TODO problem here: snort terminates after a few seconds and so t is logging no requests. when running the same command (prefixed with "sudo ") manually logs content. maybe additionally chmod'ing appropriate folders is requried
             pid = self._private_start_program_asynchronously("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
         return pid
 
@@ -667,7 +666,7 @@ The license of this repository is defined in the file 'License.txt'.
         self._private_log_information("Container was stopped", False, True, True)
 
     def _private_start_container(self) -> int:
-        process_id = self._private_start_program_asynchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        process_id = self._private_start_program_synchronously("docker-compose", "up --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
         self._private_log_information("Container was started", False, True, True)
         return process_id
 

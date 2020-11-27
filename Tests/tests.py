@@ -145,10 +145,8 @@ Tests that the start-command works as expected"""
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 48)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
-            environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: 40; IDS-process: 44)" --author="Adame <>"'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
+            environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: 40; IDS-process: 44)" --author="Adame <>" --allow-empty'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "3c5a38ad96d0acf5e2822bbcd655387b42352cb0", "", 60)
-            environment_for_test.adame.register_mock_process_query(44, "snort")
-            environment_for_test.adame.register_mock_process_query(40, "docker-compose")
 
             # act
 
@@ -188,10 +186,8 @@ Tests that the stop-command works as expected"""
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 48)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
-            environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: 40; IDS-process: 44)" --author="Adame <>"'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
+            environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: 40; IDS-process: 44)" --author="Adame <>" --allow-empty'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "3c5a38ad96d0acf5e2822bbcd655387b42352cb0", "", 60)
-            environment_for_test.adame.register_mock_process_query(44, "snort")
-            environment_for_test.adame.register_mock_process_query(40, "docker-compose")
             assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
 
             assert environment_for_test.adame._private_container_is_running()
@@ -205,7 +201,7 @@ Tests that the stop-command works as expected"""
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 48)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 52)
-            environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Stopped container (Container-process: ; IDS-process: )" --author="Adame <>"'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
+            environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Stopped container (Container-process: ; IDS-process: )" --author="Adame <>" --allow-empty'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "4d6a38ad96d0acf5e2822bbcd655387b42352cc1", "", 60)
 
             environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("down --remove-orphans"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 68)
