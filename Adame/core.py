@@ -143,6 +143,8 @@ class AdameCore(object):
         self._private_create_securityconfiguration_file(gpgkey_of_owner, remote_address)
         self._private_load_securityconfiguration()
 
+        self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO shrink 777 as far as possible
+
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
             self._private_start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder)
@@ -448,7 +450,7 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
             else:
                 verbose_argument = ""
             networkinterface = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
-            success=self._private_run_system_command("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
+            success = self._private_run_system_command("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
         if success:
             self._private_log_information("IDS was started", False, True, True)
         else:
@@ -462,7 +464,7 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
             for process in self._private_get_running_processes():
                 if(process.command.startswith("snort") and self._private_repository_folder in process.command):
                     result = self._private_start_program_synchronously("kill", f"-TERM {process.process_id}")[0]
-                    if not result:
+                    if result != 0:
                         result = self._private_start_program_synchronously("kill", f"-9 {process.process_id}")[0]
         result = 0
         success = result == 0
@@ -478,17 +480,17 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
     def _private_run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
         if self._private_test_mode:
-            self._private_start_program_synchronously(program, argument,working_directory)# mocks defined in self._private_sc will be used here when running the unit-tests
+            self._private_start_program_synchronously(program, argument, working_directory)  # mocks defined in self._private_sc will be used here when running the unit-tests
         else:
             original_cwd = os.getcwd()
             if(string_is_none_or_whitespace(working_directory)):
                 working_directory = original_cwd
             os.chdir(working_directory)
             try:
-                os.system(program+" "+argument)
+                os.system(f"{program} {argument}")
             finally:
                 os.chdir(original_cwd)
-        return True# TODO find a possibility to really check that this program is running now
+        return True  # TODO find a possibility to really check that this program is running now
 
     def _private_get_stored_running_processes(self) -> tuple:
         # TODO not just reading this from a file: do a real check
@@ -575,7 +577,6 @@ IDS-process:{ids_is_running_as_string}
 
             self._private_log_folder_for_ids = os.path.join(self._private_log_folder, "IDS")
             ensure_directory_exists(self._private_log_folder_for_ids)
-            self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO shrink 777 as far as possible
 
             self._private_log_folder_for_internal_overhead = os.path.join(self._private_log_folder, "Overhead")
             ensure_directory_exists(self._private_log_folder_for_internal_overhead)
@@ -709,7 +710,7 @@ The license of this repository is defined in the file 'License.txt'.
         return success
 
     def _private_start_container(self) -> bool:
-        success=self._private_run_system_command("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        success = self._private_run_system_command("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         if success:
             self._private_log_information("Container was started", False, True, True)
         else:
