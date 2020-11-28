@@ -9,11 +9,11 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean
 import netifaces
 
 product_name = "Adame"
-version = "0.4.7"
+version = "0.5.0"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -138,10 +138,12 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
         self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
-        self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(None, None))
+        self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
 
         self._private_create_securityconfiguration_file(gpgkey_of_owner, remote_address)
         self._private_load_securityconfiguration()
+
+        self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO shrink 777 as far as possible
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
@@ -164,11 +166,11 @@ class AdameCore(object):
 
     def _private_start(self) -> None:
         if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
-            process_id_of_ids = self._private_ensure_ids_is_running()
+            ids_is_running = self._private_ensure_ids_is_running()
         else:
-            process_id_of_ids = None
-        process_id_of_container = self._private_ensure_container_is_running()
-        self._private_log_running_state(process_id_of_container, process_id_of_ids, "Started")
+            ids_is_running = False
+        container_is_running = self._private_ensure_container_is_running()
+        self._private_log_running_state(container_is_running, ids_is_running, "Started")
 
     # </start-command>
 
@@ -183,10 +185,11 @@ class AdameCore(object):
         return self._private_execute_task("Stop", self._private_stop)
 
     def _private_stop(self) -> None:
-        self._private_ensure_container_is_not_running()
+        container_is_running = not self._private_ensure_container_is_not_running()
+        ids_is_running = False
         if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
-            self._private_ensure_ids_is_not_running()
-        self._private_log_running_state(None, None, "Stopped")
+            ids_is_running = not self._private_ensure_ids_is_not_running()
+        self._private_log_running_state(container_is_running, ids_is_running, "Stopped")
 
     # </stop>
 
@@ -303,13 +306,11 @@ class AdameCore(object):
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
             raise Exception("Adame requries elevated privileges to get executed")
 
-    def _private_log_running_state(self, process_id_of_container: int, process_id_of_ids: int, action: str) -> None:
-        process_id_of_container_as_string = str_none_safe(process_id_of_container)
-        process_id_of_ids_as_string = str_none_safe(process_id_of_ids)
-        write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(process_id_of_container_as_string, process_id_of_ids_as_string))
+    def _private_log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
+        write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(container_is_running, ids_is_running))
         self._private_sc.git_unstage_all_changes(self._private_repository_folder)
         self._private_sc.git_stage_file(self._private_repository_folder, self._private_running_information_file)
-        self._private_commit(f"{action} container (Container-process: {process_id_of_container_as_string}; IDS-process: {process_id_of_ids_as_string})", False)
+        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", False)
 
     def _private_adame_general_diagonisis(self) -> bool:
         if(not self._private_check_whether_required_tools_for_adame_are_available()):
@@ -366,10 +367,10 @@ This function is idempotent."""
             if not self._private_sc.commit_is_signed_by_key(self._private_repository_folder, commithash, self._private_configuration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner]):
                 self._private_log_warning(f"The app-repository '{self._private_repository_folder}' contains the unsigned commit {commithash}", False, True, True)
 
-    def get_entire_testrule_trigger_content(self)->str:
+    def get_entire_testrule_trigger_content(self) -> str:
         return f"testrule_content_{self._private_testrule_trigger_content}_{self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid]}"
 
-    def get_entire_testrule_trigger_answer(self)->str:
+    def get_entire_testrule_trigger_answer(self) -> str:
         return f"testrule_answer_{self._private_testrule_log_content}_{self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid]}"
 
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self) -> None:
@@ -403,35 +404,41 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
         # TODO Implement
         # (if required "service rsyslog restart" may be useful)
 
-    def _private_ensure_container_is_running(self) -> int:
+    def _private_ensure_container_is_running(self) -> bool:
         # TODO improve: optimize this function so that the container does not have to be stopped for this function
         self._private_ensure_container_is_not_running()
-        return self._private_start_container()
+        result = self._private_start_container()
+        return result
 
-    def _private_ensure_container_is_not_running(self) -> None:
+    def _private_ensure_container_is_not_running(self) -> bool:
         if(self._private_container_is_running()):
-            self._private_stop_container()
+            return self._private_stop_container()
+        return True
 
-    def _private_ensure_ids_is_running(self) -> int:
+    def _private_ensure_ids_is_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly."""
         # TODO improve: optimize this function so that the ids does not have to be stopped for this function
         self._private_ensure_ids_is_not_running()
-        process_id = self._private_start_ids()
+        result = self._private_start_ids()
         self._private_test_ids()
-        return process_id
+        return result
 
-    def _private_ensure_ids_is_not_running(self) -> None:
+    def _private_ensure_ids_is_not_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is not running anymore."""
         if(self._private_ids_is_running()):
-            self._private_stop_ids()
+            return self._private_stop_ids()
+        return True
+
+    def _private_container_is_running(self) -> bool:
+        return self._private_get_stored_running_processes()[0]
 
     def _private_ids_is_running(self) -> bool:
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
-            return self._private_is_running_safe(self._private_get_stored_running_processes()[1], "snort")  # TODO improve: add more arguments to command-argument to specify the exptected command better
+            return self._private_get_stored_running_processes()[1]
 
-    def _private_start_ids(self) -> int:
-        pid = None
+    def _private_start_ids(self) -> bool:
+        success = True
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             if self.format_datetimes_to_utc:
@@ -443,44 +450,73 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
             else:
                 verbose_argument = ""
             networkinterface = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
-            pid = self._private_start_program_asynchronously("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii', "")
-        return pid
+            success = self._private_run_system_command("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
+        if success:
+            self._private_log_information("IDS was started", False, True, True)
+        else:
+            self._private_log_warning("IDS could not be started")
+        return success
 
-    def _private_stop_ids(self) -> None:
+    def _private_stop_ids(self) -> bool:
+        result = 0
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
-            self._private_start_program_synchronously("kill", f"-TERM {self._private_get_stored_running_processes()[1]}")
             for process in self._private_get_running_processes():
-                if("snort" in process.command and self._private_repository_folder in process.command):
-                    self._private_start_program_synchronously("kill", f"-TERM {process.process_id}")
+                if(process.command.startswith("snort") and self._private_repository_folder in process.command):
+                    result = self._private_start_program_synchronously("kill", f"-TERM {process.process_id}")[0]
+                    if result != 0:
+                        result = self._private_start_program_synchronously("kill", f"-9 {process.process_id}")[0]
+        result = 0
+        success = result == 0
+        if success:
+            self._private_log_information("IDS was stopped", False, True, True)
+        else:
+            self._private_log_warning("IDS could not be stopped")
+        return success
 
-    def _private_test_ids(self)->None:
+    def _private_test_ids(self) -> None:
         pass  # TODO improve: test if a specific test-rule will be applied by sending a package to the docker-container which should be result in a log-folder
 
+    def _private_run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
+        """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
+        if self._private_test_mode:
+            self._private_start_program_synchronously(program, argument, working_directory)  # mocks defined in self._private_sc will be used here when running the unit-tests
+        else:
+            original_cwd = os.getcwd()
+            if(string_is_none_or_whitespace(working_directory)):
+                working_directory = original_cwd
+            os.chdir(working_directory)
+            try:
+                os.system(f"{program} {argument}")
+            finally:
+                os.chdir(original_cwd)
+        return True  # TODO find a possibility to really check that this program is running now
+
     def _private_get_stored_running_processes(self) -> tuple:
+        # TODO not just reading this from a file: do a real check
         lines = read_text_from_file(self._private_running_information_file).splitlines()
-        processid_of_container_as_string = None
-        processid_of_ids_as_string = None
+        processid_of_container_as_string = False
+        processid_of_ids_as_string = False
         for line in lines:
             if ":" in line:
                 splitted = line.split(":")
                 value_as_string = splitted[1].strip()
                 if string_has_nonwhitespace_content(value_as_string):
-                    value = int(value_as_string)
+                    value = string_to_boolean(value_as_string)
                     if splitted[0] == "Container-process":
                         processid_of_container_as_string = value
                     if splitted[0] == "IDS-process":
                         processid_of_ids_as_string = value
         return (processid_of_container_as_string, processid_of_ids_as_string)
 
-    def _private_get_running_information_file_content(self, processid_of_container: int, processid_of_network_ids: int) -> str:
-        processid_of_container_as_string = str_none_safe(processid_of_container)
-        processid_of_ids_as_string = str_none_safe(processid_of_network_ids)
-        return f"""Container-process:{processid_of_container_as_string}
-IDS-process:{processid_of_ids_as_string}
+    def _private_get_running_information_file_content(self, container_is_running: bool, ids_is_running: int) -> str:
+        container_is_running_as_string = str(container_is_running)
+        ids_is_running_as_string = str(ids_is_running)
+        return f"""Container-process:{container_is_running_as_string}
+IDS-process:{ids_is_running_as_string}
 """
 
-    def _private_get_logfilepattern_file_content(self)->str:
+    def _private_get_logfilepattern_file_content(self) -> str:
         return f"""{self._private_log_folder}/**
 """
 
@@ -535,10 +571,13 @@ IDS-process:{processid_of_ids_as_string}
             self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Security.configuration")
 
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")
+
             self._private_log_folder_for_application = os.path.join(self._private_log_folder, "Application")
             ensure_directory_exists(self._private_log_folder_for_application)
+
             self._private_log_folder_for_ids = os.path.join(self._private_log_folder, "IDS")
             ensure_directory_exists(self._private_log_folder_for_ids)
+
             self._private_log_folder_for_internal_overhead = os.path.join(self._private_log_folder, "Overhead")
             ensure_directory_exists(self._private_log_folder_for_internal_overhead)
             self._private_log_file_for_adame_overhead = get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
@@ -605,7 +644,7 @@ Only the owner of this repository is allowed to change the license of this repos
         return """Logs/**
 """
 
-    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: str, remote_address: str)->None:
+    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: str, remote_address: str) -> None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self._private_securityconfiguration_section_general)
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "false"
@@ -662,16 +701,21 @@ The license of this repository is defined in the file 'License.txt'.
 """
 
     def _private_stop_container(self) -> None:
-        self._private_start_program_synchronously("docker-compose", "down --remove-orphans", self._private_configuration_folder)
-        self._private_log_information("Container was stopped", False, True, True)
+        result = self._private_start_program_synchronously("docker-compose", "down --remove-orphans", self._private_configuration_folder)[0]
+        success = result == 0
+        if success:
+            self._private_log_information("Container was stopped", False, True, True)
+        else:
+            self._private_log_warning("Container could not be stopped")
+        return success
 
-    def _private_start_container(self) -> int:
-        process_id = self._private_start_program_synchronously("docker-compose", "up -d --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)[3]
-        self._private_log_information("Container was started", False, True, True)
-        return process_id
-
-    def _private_container_is_running(self) -> bool:
-        return self._private_get_stored_running_processes()[0] is not None
+    def _private_start_container(self) -> bool:
+        success = self._private_run_system_command("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        if success:
+            self._private_log_information("Container was started", False, True, True)
+        else:
+            self._private_log_warning("Container could not be started")
+        return success
 
     def _private_is_running_safe(self, index: int, command: str) -> bool:
         if(index is None):
@@ -831,6 +875,7 @@ Required commandline-commands:
 -docker-compose
 -git
 -sudo
+-chmod
 
 Recommended commandline-commands:
 -gpg
