@@ -388,7 +388,7 @@ This function is idempotent."""
 # --- Internal rules ---
 
 # Test-rule for functionality test:
-alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self._private_testrule_sid}; content: "{self.get_entire_testrule_trigger_content()}"; msg: "{self.get_entire_testrule_trigger_answer()}";)
+# TODO alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self._private_testrule_sid}; content: "{self.get_entire_testrule_trigger_content()}"; msg: "{self.get_entire_testrule_trigger_answer()}";)
 
 # --- Application-provided rules ---
 {applicationprovidedrules}
@@ -479,6 +479,10 @@ alert tcp any any -> {self._private_localipaddress_placeholder} any (sid: {self.
 
     def _private_run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
+        if(working_directory is None):
+            working_directory=os.getcwd()
+        working_directory=resolve_relative_path_from_current_working_directory(working_directory)
+        self._private_log_information(f"Start '{working_directory}>{program} {argument}'",True,True,True)
         if self._private_test_mode:
             self._private_start_program_synchronously(program, argument, working_directory)  # mocks defined in self._private_sc will be used here when running the unit-tests
         else:
