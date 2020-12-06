@@ -58,7 +58,6 @@ class AdameCore(object):
     _private_applicationprovidedsecurityinformation_file: str = None
     _private_networktrafficgeneratedrules_file: str = None
     _private_networktrafficcustomrules_file: str = None
-    _private_logfilepatterns_file: str = None
     _private_propertiesconfiguration_file: str = None
 
     _private_gpgkey_of_owner_is_available: bool = False
@@ -136,7 +135,6 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
-        self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
 
@@ -520,10 +518,6 @@ This function is idempotent."""
 IDS-process:{ids_is_running_as_string}
 """
 
-    def _private_get_logfilepattern_file_content(self) -> str:
-        return f"""{self._private_log_folder}/**
-"""
-
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
@@ -571,7 +565,6 @@ IDS-process:{ids_is_running_as_string}
             self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
-            self._private_logfilepatterns_file = os.path.join(self._private_security_related_configuration_folder, "LogfilePatterns.txt")
             self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Security.configuration")
 
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")

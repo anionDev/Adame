@@ -109,13 +109,10 @@ Tests that the create-command works as expected"""
             security_folder = os.path.join(configuration_folder, "Security")
             assert os.path.isdir(security_folder)
             assert len(get_direct_folders_of_folder(security_folder)) == 0
-            assert len(get_direct_files_of_folder(security_folder)) == 5
+            assert len(get_direct_files_of_folder(security_folder)) == 4
             applicationprovidedscurityinformationfile = os.path.join(security_folder, "ApplicationProvidedSecurityInformation.xml")
             assert os.path.isfile(applicationprovidedscurityinformationfile)
             assert file_is_empty(applicationprovidedscurityinformationfile)
-            logfilepatternfile = os.path.join(security_folder, "LogfilePatterns.txt")
-            assert os.path.isfile(logfilepatternfile)
-            assert not file_is_empty(logfilepatternfile)
             networktrafficcustomrules = os.path.join(security_folder, "Networktraffic.Custom.rules")
             assert os.path.isfile(networktrafficcustomrules)
             assert file_is_empty(networktrafficcustomrules)
