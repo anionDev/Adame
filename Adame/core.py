@@ -9,11 +9,11 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
 
 product_name = "Adame"
-version = "0.5.1"
+version = "0.6.0"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -34,6 +34,9 @@ class AdameCore(object):
     _private_configuration_section_general_key_remotename: str = "remotename"
     _private_configuration_section_general_key_remotebranch: str = "remotebranch"
     _private_securityconfiguration_section_general: str = "general"
+    _private_securityconfiguration_section_general_key_siemaddress: str = "siemaddress"
+    _private_securityconfiguration_section_general_key_siemfolder: str = "siemfolder"
+    _private_securityconfiguration_section_general_key_siemuser: str = "siemuser"
     _private_securityconfiguration_section_general_key_idsname: str = "idsname"
     _private_securityconfiguration_section_general_key_enabledids: str = "enableids"
     _private_securityconfiguration_section_snort: str = "snort"
@@ -58,7 +61,6 @@ class AdameCore(object):
     _private_applicationprovidedsecurityinformation_file: str = None
     _private_networktrafficgeneratedrules_file: str = None
     _private_networktrafficcustomrules_file: str = None
-    _private_logfilepatterns_file: str = None
     _private_propertiesconfiguration_file: str = None
 
     _private_gpgkey_of_owner_is_available: bool = False
@@ -136,14 +138,13 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
-        self._private_create_file_in_repository(self._private_logfilepatterns_file, self._private_get_logfilepattern_file_content())
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
 
         self._private_create_securityconfiguration_file(gpgkey_of_owner, remote_address)
         self._private_load_securityconfiguration()
 
-        self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO shrink 777 as far as possible
+        self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO Improve: Shrink 777 as far as possible
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
@@ -205,7 +206,8 @@ class AdameCore(object):
 
     def _private_applyconfiguration(self) -> None:
         self._private_regenerate_networktrafficgeneratedrules_filecontent()
-        self._private_recreate_siem_connection()
+        if not self._private_check_siem_is_reachable():
+            self._private_log_warning("The SIEM-connection is missing", False, True, True)
         self._private_commit("Reapplied configuration")
 
     # </applyconfiguration-command>
@@ -240,6 +242,7 @@ class AdameCore(object):
     def _private_stopadvanced(self) -> None:
         self._private_stop()
         self._private_commit("Saved changes")
+        self._private_exportlogs()
 
     # </stopadvanced-command>
 
@@ -257,6 +260,40 @@ class AdameCore(object):
         self._private_check_integrity_of_repository(7)
 
     # </checkintegrity-command>
+
+    # <exportlogs-command>
+
+    def exportlogs(self, configurationfile: str) -> int:
+        self._private_check_for_elevated_privileges()
+        self._private_check_configurationfile_argument(configurationfile)
+
+        self._private_verbose_log_start_by_configuration_file(configurationfile)
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("ExportLogs", self._private_exportlogs)
+
+    def _private_exportlogs(self) -> None:
+        if(not self._private_tool_exists_in_path("rsync")):
+            self._private_log_warning("rsync is not available", False, True, True)
+            return
+
+        if(not self._private_check_siem_is_reachable()):
+            self._private_log_warning("The log-files can not be exported to a missing SIEM-connection", False, True, True)
+            return
+
+        siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        siemfolder=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder]
+        siemuser=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser]
+        log_files=get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
+        sublogfolder=get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+        for log_file in log_files:
+            exitcode=self._private_start_program_synchronously("rsync", f"-zv -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}", "", False)[0]
+            if(exitcode==0):
+                self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
+                os.remove(log_file)
+            else:
+                self._private_log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
+
+    # </exportlogs-command>
 
     # <diagnosis-command>
 
@@ -329,11 +366,14 @@ class AdameCore(object):
         if not self._private_test_mode:
             return result
         tools = [
-            "git",
-            "gpg",
+            "chmod",
             "docker-compose",
+            "git",
         ]
         recommended_tools = [
+            "gpg",
+            "rsync",
+            "ssh",
             "snort",
         ]
         for tool in tools:
@@ -347,7 +387,7 @@ class AdameCore(object):
         return result
 
     def _private_check_whether_required_files_for_adamerepository_are_available(self) -> bool:
-        # TODO improve: add checks for files like RunningInformation.txt etc.
+        # TODO Improve: Add checks for files like RunningInformation.txt etc.
         # Add other checks if required
         return True
 
@@ -377,7 +417,7 @@ This function is idempotent."""
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
         customrules = read_text_from_file(self._private_networktrafficcustomrules_file, self.encoding)
-        applicationprovidedrules = "# (not implemented yet)"  # TODO improve: implement usage of application-provided security-information
+        applicationprovidedrules = "# (not implemented yet)"  # TODO Improve: Implement usage of application-provided security-information
         local_ip_address = self._private_get_local_ip_address()
         file_content = f"""# Rules file for Snort generated by Adame.
 # Do not modify this file. Changes will be overwritten.
@@ -399,13 +439,13 @@ This function is idempotent."""
         file_content = file_content.replace(self._private_localipaddress_placeholder, local_ip_address)  # replacement to allow to use this variable in the customrules.
         write_text_to_file(self._private_networktrafficgeneratedrules_file, file_content, self.encoding)
 
-    def _private_recreate_siem_connection(self) -> None:
-        """This function recreate the SIEM-system-connection."""
-        # TODO Implement
-        # (if required "service rsyslog restart" may be useful)
+    def _private_check_siem_is_reachable(self) -> bool:
+        """This function checks wether the SIEM is available."""
+        # siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        return True # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
     def _private_ensure_container_is_running(self) -> bool:
-        # TODO improve: optimize this function so that the container does not have to be stopped for this function
+        # TODO Improve: Optimize this function so that the container does not have to be stopped for this function
         self._private_ensure_container_is_not_running()
         result = self._private_start_container()
         return result
@@ -417,7 +457,7 @@ This function is idempotent."""
 
     def _private_ensure_ids_is_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly."""
-        # TODO improve: optimize this function so that the ids does not have to be stopped for this function
+        # TODO Improve: Optimize this function so that the ids does not have to be stopped for this function
         self._private_ensure_ids_is_not_running()
         result = self._private_start_ids()
         self._private_test_ids()
@@ -475,7 +515,7 @@ This function is idempotent."""
         return success
 
     def _private_test_ids(self) -> None:
-        pass  # TODO improve: test if a specific test-rule will be applied by sending a package to the docker-container which should be result in a log-folder
+        pass  # TODO Improve: Test if a specific test-rule will be applied by sending a package to the docker-container which should be result in a log-folder
 
     def _private_run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
@@ -494,10 +534,10 @@ This function is idempotent."""
                 os.system(f"{program} {argument}")
             finally:
                 os.chdir(original_cwd)
-        return True  # TODO find a possibility to really check that this program is running now
+        return True  # TODO Improve: Find a possibility to really check that this program is running now
 
     def _private_get_stored_running_processes(self) -> tuple:
-        # TODO not just reading this from a file: do a real check
+        # TODO Improve: Do a real check, not just reading this information from a file.
         lines = read_text_from_file(self._private_running_information_file).splitlines()
         processid_of_container_as_string = False
         processid_of_ids_as_string = False
@@ -518,10 +558,6 @@ This function is idempotent."""
         ids_is_running_as_string = str(ids_is_running)
         return f"""Container-process:{container_is_running_as_string}
 IDS-process:{ids_is_running_as_string}
-"""
-
-    def _private_get_logfilepattern_file_content(self) -> str:
-        return f"""{self._private_log_folder}/**
 """
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
@@ -571,7 +607,6 @@ IDS-process:{ids_is_running_as_string}
             self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
-            self._private_logfilepatterns_file = os.path.join(self._private_security_related_configuration_folder, "LogfilePatterns.txt")
             self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Security.configuration")
 
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")
@@ -665,6 +700,9 @@ Only the owner of this repository is allowed to change the license of this repos
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch] = "master"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = "snort"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress] = ""
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{socket.gethostname()}/{self._private_get_container_name()}"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser] = "username"
         securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
         securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
 
@@ -876,14 +914,15 @@ One focus of Adame is to store the state of an application: Adame stores all dat
 Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
 
 Required commandline-commands:
+-chmod
 -docker-compose
 -git
--sudo
--chmod
 
 Recommended commandline-commands:
--gpg
--snort
+-gpg (For checking the integrity of commits)
+-rsync (For exporting the log-files to a SIEM-server)
+-ssh (Required for rsync)
+-snort (For inspecting the network-traffic of the application)
 
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
 """, formatter_class=RawTextHelpFormatter)
@@ -925,6 +964,10 @@ Adame must be executed with elevated privileges. This is required to run command
     checkintegrity_parser = subparsers.add_parser(checkintegrity_command_name)
     checkintegrity_parser.add_argument("-c", "--configurationfile", required=True)
 
+    exportlogs_command_name = "exportlogs"
+    exportlogs_parser = subparsers.add_parser(exportlogs_command_name)
+    exportlogs_parser.add_argument("-c", "--configurationfile", required=True)
+
     diagnosis_command_name = "diagnosis"
     diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
     diagnosis_parser.add_argument("-c", "--configurationfile", required=False)
@@ -954,6 +997,9 @@ Adame must be executed with elevated privileges. This is required to run command
 
     elif options.command == checkintegrity_command_name:
         return core.checkintegrity(options.configurationfile)
+
+    elif options.command == exportlogs_command_name:
+        return core.exportlogs(options.configurationfile)
 
     elif options.command == diagnosis_command_name:
         return core.diagnosis(options.configurationfile)

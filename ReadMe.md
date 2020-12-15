@@ -27,6 +27,8 @@ Furthermore Adame requires that the following commandline-commands are available
 - `kill`
 - `pip` (on some systems `pip3`)
 - `python` (on some systems `python3`)
+- `rsync`
+- `ssh`
 - `snort`
 
 ## Development-requirements
@@ -47,7 +49,7 @@ pip install "netifaces>=0.10.9"
 pip install "psutil>=5.7.3"
 pip install "pylint>=2.6.0"
 pip install "pytest>=6.1.2"
-pip install "ScriptCollection>=2.0.12"
+pip install "ScriptCollection>=2.0.18"
 pip install "wheel>=0.35.1"
 ```
 
