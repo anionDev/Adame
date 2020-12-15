@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
 
 product_name = "Adame"
@@ -34,6 +34,9 @@ class AdameCore(object):
     _private_configuration_section_general_key_remotename: str = "remotename"
     _private_configuration_section_general_key_remotebranch: str = "remotebranch"
     _private_securityconfiguration_section_general: str = "general"
+    _private_securityconfiguration_section_general_key_siemaddress: str = "siemaddress"
+    _private_securityconfiguration_section_general_key_siemfolder: str = "siemfolder"
+    _private_securityconfiguration_section_general_key_siemuser: str = "siemuser"
     _private_securityconfiguration_section_general_key_idsname: str = "idsname"
     _private_securityconfiguration_section_general_key_enabledids: str = "enableids"
     _private_securityconfiguration_section_snort: str = "snort"
@@ -238,6 +241,7 @@ class AdameCore(object):
     def _private_stopadvanced(self) -> None:
         self._private_stop()
         self._private_commit("Saved changes")
+        self._private_exportlogs()
 
     # </stopadvanced-command>
 
@@ -255,6 +259,32 @@ class AdameCore(object):
         self._private_check_integrity_of_repository(7)
 
     # </checkintegrity-command>
+
+    # <exportlogs-command>
+
+    def exportlogs(self, configurationfile: str) -> int:
+        self._private_check_for_elevated_privileges()
+        self._private_check_configurationfile_argument(configurationfile)
+
+        self._private_verbose_log_start_by_configuration_file(configurationfile)
+        self._private_load_configuration(configurationfile)
+        return self._private_execute_task("ExportLogs", self._private_exportlogs)
+
+    def _private_exportlogs(self) -> None:
+        siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        siemfolder=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder]
+        siemuser=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser]
+        log_files=get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
+        sublogfolder=get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+        for log_file in log_files:
+            exitcode=self._private_start_program_synchronously("rsync", f"-zv {siemuser}:{siemaddress}:{siemfolder}/{sublogfolder} {log_file}", "", False)[0]
+            if(exitcode==0):
+                self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}",True)
+                os.remove(log_file)
+            else:
+                self._private_log_error(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}")
+
+    # </exportlogs-command>
 
     # <diagnosis-command>
 
@@ -658,6 +688,9 @@ Only the owner of this repository is allowed to change the license of this repos
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch] = "master"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = "snort"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress] = ""
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{socket.gethostname()}/{self._private_get_container_name()}"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser] = f"username"
         securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
         securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
 
@@ -918,6 +951,10 @@ Adame must be executed with elevated privileges. This is required to run command
     checkintegrity_parser = subparsers.add_parser(checkintegrity_command_name)
     checkintegrity_parser.add_argument("-c", "--configurationfile", required=True)
 
+    exportlogs_command_name = "exportlogs"
+    exportlogs_parser = subparsers.add_parser(exportlogs_command_name)
+    exportlogs_parser.add_argument("-c", "--configurationfile", required=True)
+
     diagnosis_command_name = "diagnosis"
     diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
     diagnosis_parser.add_argument("-c", "--configurationfile", required=False)
@@ -947,6 +984,9 @@ Adame must be executed with elevated privileges. This is required to run command
 
     elif options.command == checkintegrity_command_name:
         return core.checkintegrity(options.configurationfile)
+
+    elif options.command == exportlogs_command_name:
+        return core.exportlogs(options.configurationfile)
 
     elif options.command == diagnosis_command_name:
         return core.diagnosis(options.configurationfile)
