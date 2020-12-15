@@ -27,6 +27,8 @@ Furthermore Adame requires that the following commandline-commands are available
 - `kill`
 - `pip` (on some systems `pip3`)
 - `python` (on some systems `python3`)
+- `rsync`
+- `ssh`
 - `snort`
 
 ## Development-requirements

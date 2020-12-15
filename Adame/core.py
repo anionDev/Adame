@@ -286,7 +286,7 @@ class AdameCore(object):
         log_files=get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
         sublogfolder=get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
-            exitcode=self._private_start_program_synchronously("rsync", f"-zv {siemuser}:{siemaddress}:{siemfolder}/{sublogfolder} {log_file}", "", False)[0]
+            exitcode=self._private_start_program_synchronously("rsync", f"-zv -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}", "", False)[0]
             if(exitcode==0):
                 self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                 os.remove(log_file)
@@ -373,6 +373,7 @@ class AdameCore(object):
         recommended_tools = [
             "gpg",
             "rsync",
+            "ssh",
             "snort",
         ]
         for tool in tools:
@@ -920,6 +921,7 @@ Required commandline-commands:
 Recommended commandline-commands:
 -gpg (For checking the integrity of commits)
 -rsync (For exporting the log-files to a SIEM-server)
+-ssh (Required for rsync)
 -snort (For inspecting the network-traffic of the application)
 
 Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
