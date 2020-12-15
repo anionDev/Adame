@@ -49,7 +49,7 @@ pip install "netifaces>=0.10.9"
 pip install "psutil>=5.7.3"
 pip install "pylint>=2.6.0"
 pip install "pytest>=6.1.2"
-pip install "ScriptCollection>=2.0.15"
+pip install "ScriptCollection>=2.0.16"
 pip install "wheel>=0.35.1"
 ```
 
