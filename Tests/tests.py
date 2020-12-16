@@ -139,7 +139,7 @@ Tests that the start-command works as expected"""
 
             environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-D -i eth0 -c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
-            environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "",52)
+            environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 52)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "diff", re.escape(environment_for_test.adame._private_repository_folder), 0, "(some diff content)", "", 60)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Started container (Container-process: True; IDS-process: True)" --author="Adame <>" --allow-empty'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 64)

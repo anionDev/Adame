@@ -94,12 +94,12 @@ class AdameCore(object):
 
     # <create-command>
 
-    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None, remote_address: str = None) -> int:
+    def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None) -> int:
         self._private_check_for_elevated_privileges()
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
-        return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner, remote_address))
+        return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner))
 
-    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str, remote_address: str = "") -> None:
+    def _private_create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str) -> None:
         if name is None:
             raise Exception("Argument 'name' is not defined")
         else:
@@ -122,9 +122,6 @@ class AdameCore(object):
         if gpgkey_of_owner is None:
             gpgkey_of_owner = ""
 
-        if remote_address is None:
-            remote_address = ""
-
         configuration_file = resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
 
         self._private_create_adame_configuration_file(configuration_file, name, owner)
@@ -141,7 +138,7 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
 
-        self._private_create_securityconfiguration_file(gpgkey_of_owner, remote_address)
+        self._private_create_securityconfiguration_file(gpgkey_of_owner)
         self._private_load_securityconfiguration()
 
         self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO Improve: Shrink 777 as far as possible
@@ -277,17 +274,17 @@ class AdameCore(object):
             return
 
         if(not self._private_check_siem_is_reachable()):
-            self._private_log_warning("The log-files can not be exported to a missing SIEM-connection", False, True, True)
+            self._private_log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
             return
 
-        siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
-        siemfolder=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder]
-        siemuser=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser]
-        log_files=get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
-        sublogfolder=get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+        siemaddress = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        siemfolder = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder]
+        siemuser = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser]
+        log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
+        sublogfolder = get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
-            exitcode=self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
-            if(exitcode==0):
+            exitcode = self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
+            if(exitcode == 0):
                 self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                 os.remove(log_file)
             else:
@@ -442,7 +439,7 @@ This function is idempotent."""
     def _private_check_siem_is_reachable(self) -> bool:
         """This function checks wether the SIEM is available."""
         # siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
-        return True # TODO Improve: Return true if and only if siemaddress is available to receive log-files
+        return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
     def _private_ensure_container_is_running(self) -> bool:
         # TODO Improve: Optimize this function so that the container does not have to be stopped for this function
@@ -520,9 +517,9 @@ This function is idempotent."""
     def _private_run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
         if(working_directory is None):
-            working_directory=os.getcwd()
-        working_directory=resolve_relative_path_from_current_working_directory(working_directory)
-        self._private_log_information(f"Start '{working_directory}>{program} {argument}'",True,True,True)
+            working_directory = os.getcwd()
+        working_directory = resolve_relative_path_from_current_working_directory(working_directory)
+        self._private_log_information(f"Start '{working_directory}>{program} {argument}'", True, True, True)
         if self._private_test_mode:
             self._private_start_program_synchronously(program, argument, working_directory)  # mocks defined in self._private_sc will be used here when running the unit-tests
         else:
@@ -683,26 +680,26 @@ Only the owner of this repository is allowed to change the license of this repos
         return """Logs/**
 """
 
-    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: str, remote_address: str) -> None:
+    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: string_to_boolean) -> None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self._private_securityconfiguration_section_general)
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "false"
-        self._private_add_default_ids_configuration_to_securityconfiguration(securityconfiguration, gpgkey_of_owner, remote_address)
+        self._private_add_default_ids_configuration_to_securityconfiguration(securityconfiguration, gpgkey_of_owner)
 
         with open(self._private_propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
             securityconfiguration.write(configfile)
 
-    def _private_add_default_ids_configuration_to_securityconfiguration(self, securityconfiguration: ConfigParser, gpgkey_of_owner: str, remote_address: str) -> None:
+    def _private_add_default_ids_configuration_to_securityconfiguration(self, securityconfiguration: ConfigParser, gpgkey_of_owner: str) -> None:
 
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
-        securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress] = remote_address
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress] = ""
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename] = "Backup"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch] = "master"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress] = ""
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{socket.gethostname()}/{self._private_get_container_name()}"
-        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser] = "username"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser] = "username_on_siem_system"
         securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
         securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
 
@@ -938,7 +935,6 @@ Adame must be executed with elevated privileges. This is required to run command
     create_parser.add_argument("-i", "--image", required=True)
     create_parser.add_argument("-o", "--owner", required=True)
     create_parser.add_argument("-g", "--gpgkey_of_owner", required=False)
-    create_parser.add_argument("-r", "--remote_address", required=False)
 
     start_command_name = "start"
     start_parser = subparsers.add_parser(start_command_name)
@@ -978,7 +974,7 @@ Adame must be executed with elevated privileges. This is required to run command
     core.verbose = options.verbose
 
     if options.command == create_command_name:
-        return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner, options.remote_address)
+        return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
 
     elif options.command == start_command_name:
         return core.start(options.configurationfile)
