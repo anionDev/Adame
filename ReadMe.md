@@ -22,14 +22,16 @@ The reference can be found [here](Reference/index.md).
 Adame is intended to run on Linux-systems.
 Furthermore Adame requires that the following commandline-commands are available on your system:
 
-- `docker-compose`
-- `git`
-- `kill`
-- `pip` (on some systems `pip3`)
-- `python` (on some systems `python3`)
-- `rsync`
-- `ssh`
-- `snort`
+- `chmod` (For setting up some permissions on the generated files)
+- `docker-compose` (For starting and stopping Docker-container)
+- `git` (For integrity)
+- `gpg` (For checking the integrity of commits)
+- `kill` (For killing snort)
+- `pip` (On some systems `pip3`)
+- `python` (On some systems `python3`)
+- `rsync` (For exporting the log-files to a SIEM-server)
+- `ssh` (Required for rsync)
+- `snort` (For inspecting the network-traffic of the application)
 
 ## Development-requirements
 

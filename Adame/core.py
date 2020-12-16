@@ -911,12 +911,13 @@ One focus of Adame is to store the state of an application: Adame stores all dat
 Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
 
 Required commandline-commands:
--chmod
--docker-compose
--git
+-chmod (For setting up some permissions on the generated files)
+-docker-compose (For starting and stopping Docker-container)
+-git (For integrity)
 
 Recommended commandline-commands:
 -gpg (For checking the integrity of commits)
+-kill (For killing snort)
 -rsync (For exporting the log-files to a SIEM-server)
 -ssh (Required for rsync)
 -snort (For inspecting the network-traffic of the application)
