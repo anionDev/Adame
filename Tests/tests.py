@@ -12,8 +12,9 @@ class EnvironmentForTest:
     folder: str = None
     adame_configuration_file: str = None
 
-    def __init__(self):
-        folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
+    def __init__(self, folder=None):
+        if(folder is None):
+            folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
         ensure_directory_exists(folder)
         self.folder = folder
         self.adame = AdameCore()
@@ -21,9 +22,9 @@ class EnvironmentForTest:
         self.adame.set_test_mode(True)
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
 
-    def create(self):
+    def create(self, name = "myapplication", owner="owner"):
         self.adame._private_sc.mock_program_calls = False
-        assert self.adame.create("myapplication", self.folder, "httpd:latest", "owner") == 0
+        assert self.adame.create(name, self.folder, "httpd:latest", owner) == 0
         assert not self.adame._private_container_is_running()
         self.adame.set_test_mode(True)
         self.adame.verify_no_pending_mock_process_queries()
@@ -224,3 +225,14 @@ Ensures that adame._private_process_is_running does not throw an exception when 
         adame.verbose = True
         adame.set_test_mode(False)
         assert not adame._private_process_is_running(42, "test")
+
+    def test_create_demonstration_repository(self):
+        """DemonstrationTest
+Generates a simple adame-managed-repository as demonstration."""
+
+        tests_folder = f"{os.path.dirname(os.path.realpath(__file__))}{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository"
+        ensure_directory_does_not_exist(tests_folder)
+        environment_for_test = EnvironmentForTest(tests_folder)
+        environment_for_test.adame._private_demo_mode=True
+        environment_for_test.create("DemoApplication","DemoOwner")
+        ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")

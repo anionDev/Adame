@@ -1,0 +1,8 @@
+[general]
+formatversion = 0.6.3
+repositoryversion = 1.0.0
+name = DemoApplication
+owner = DemoOwner
+repositoryid = de30de30-de30-de30-de30-de30de30de30
+networkinterface = eth0
+
