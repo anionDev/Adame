@@ -1,8 +1,8 @@
 [general]
-formatversion = 0.6.1
+formatversion = 0.6.2
 repositoryversion = 1.0.0
 name = DemoApplication
 owner = DemoOwner
-repositoryid = 81a922c2-2984-4ee1-b0d6-6ae17fd327e5
+repositoryid = 77147f21-6690-4d11-891e-b49eccfab5ca
 networkinterface = eth0
 
