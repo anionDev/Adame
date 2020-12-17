@@ -233,5 +233,6 @@ Generates a simple adame-managed-repository as demonstration."""
         tests_folder = f"{os.path.dirname(os.path.realpath(__file__))}{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository"
         ensure_directory_does_not_exist(tests_folder)
         environment_for_test = EnvironmentForTest(tests_folder)
+        environment_for_test.adame._private_demo_mode=True
         environment_for_test.create("DemoApplication","DemoOwner")
         ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")

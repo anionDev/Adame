@@ -80,6 +80,7 @@ class AdameCore(object):
     format_datetimes_to_utc: bool = True
 
     _private_test_mode: bool = False
+    _private_demo_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
     _private_mock_process_queries: list = list()
 
@@ -148,7 +149,7 @@ class AdameCore(object):
             self._private_start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder)
             self._private_start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
 
-        self._private_commit(f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{socket.gethostname()}'")
+        self._private_commit(f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{self._private_get_hostname()}'")
 
     # </create-command>
 
@@ -567,7 +568,10 @@ IDS-process:{ids_is_running_as_string}
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryversion] = "1.0.0"
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_name] = name
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
-        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid] = str(uuid.uuid4())
+        if self._private_demo_mode:
+            local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid] = "de30de30-de30-de30-de30-de30de30de30"
+        else:
+            local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid] = str(uuid.uuid4())
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface] = "eth0"
 
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
@@ -690,7 +694,6 @@ Only the owner of this repository is allowed to change the license of this repos
             securityconfiguration.write(configfile)
 
     def _private_add_default_ids_configuration_to_securityconfiguration(self, securityconfiguration: ConfigParser, gpgkey_of_owner: str) -> None:
-
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress] = ""
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename] = "Backup"
@@ -698,10 +701,16 @@ Only the owner of this repository is allowed to change the license of this repos
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress] = ""
-        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{socket.gethostname()}/{self._private_get_container_name()}"
+        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self._private_get_hostname()}/{self._private_get_container_name()}"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser] = "username_on_siem_system"
         securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
         securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
+
+    def _private_get_hostname(self)->str:
+        if self._private_demo_mode:
+            return "Hostname"
+        else:
+            return socket.gethostname()
 
     def _private_get_readme_file_content(self, configuration: ConfigParser, image: str) -> str:
 

@@ -6,7 +6,7 @@ remotename = Backup
 remotebranch = master
 idsname = snort
 siemaddress = 
-siemfolder = /var/log/DevMachine/demoapplication
+siemfolder = /var/log/Hostname/demoapplication
 siemuser = username_on_siem_system
 
 [snort]
