@@ -2,7 +2,7 @@ import os
 from setuptools import setup
 
 productname = "Adame"
-version = "0.6.3"
+version = "0.6.4"
 
 
 folder_of_current_file = os.path.dirname(os.path.realpath(__file__))

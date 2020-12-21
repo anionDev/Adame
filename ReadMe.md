@@ -44,16 +44,8 @@ To develop Adame it is obviously required that the following commandline-command
 
 Commands like `docker-compose` or `snort` are technically not required for development since these commands will be mocked in the unit-tests.
 
-To install all required pip-packages simply execute the following commands:
+To install all requirements simply execute the script stored in `./Reference/Scripts/InstallDevelopmentDependencies.script`. Every command in this script is expected to terminate with the exitcode `0`
 
-```lang-bash
-pip install "netifaces>=0.10.9"
-pip install "psutil>=5.7.3"
-pip install "pylint>=2.6.0"
-pip install "pytest>=6.1.2"
-pip install "ScriptCollection>=2.0.18"
-pip install "wheel>=0.35.1"
-```
 
 ### IDE
 
@@ -65,9 +57,13 @@ The recommended addons for developing Adame with Visual Studio Code are:
 - [Spell Right](https://marketplace.visualstudio.com/items?itemName=ban.spellright)
 - [docs-markdown](https://marketplace.visualstudio.com/items?itemName=docsmsft.docs-markdown)
 
+### Run testcases
+
+To run the testcases simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exitcode `0`.
+
 ### Build
 
-To Create an installable whl-package simply execute `python Setup.py bdist_wheel --dist-dir .`.
+To create an installable whl-package simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exitcode `0`.
 
 ## Installation
 
