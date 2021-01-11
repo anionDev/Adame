@@ -2,7 +2,7 @@
 
 Adame: Automatic Docker Application Management Engine
 
-Adame is a tool to manage docker-applications.
+Adame (pronounced: ăˈ.dam) is a tool to manage docker-applications.
 
 ## Features
 
