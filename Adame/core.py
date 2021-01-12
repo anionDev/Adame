@@ -758,7 +758,7 @@ The license of this repository is defined in the file 'License.txt'.
         return success
 
     def _private_start_container(self) -> bool:
-        success = self._private_run_system_command("docker-compose", "up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        success = self._private_run_system_command("docker-compose", f"--project-name {self._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         if success:
             self._private_log_information("Container was started", False, True, True)
         else:
