@@ -70,7 +70,7 @@ class AdameCore(object):
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
     _private_testrule_sid: str = "8979665"
     _private_localipaddress_placeholder: str = "__localipaddress__"
-
+    private_gitkeep_filename=".gitkeep"
     # </constants>
 
     # <properties>
@@ -138,6 +138,10 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
+
+        self._private_create_file_in_repository(os.path.join( self._private_log_folder_for_application,self.private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_ids,self.private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_internal_overhead,self.private_gitkeep_filename), "")
 
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
         self._private_load_securityconfiguration()
@@ -681,7 +685,14 @@ Only the owner of this repository is allowed to change the license of this repos
 """
 
     def _private_get_gitignore_file_content(self) -> str:
-        return """Logs/**
+        return """Logs/Application/**
+!Logs/Application/.gitkeep
+
+Logs/IDS/**
+!Logs/IDS/.gitkeep
+
+Logs/Overhead/**
+!Logs/Overhead/.gitkeep
 """
 
     def _private_create_securityconfiguration_file(self, gpgkey_of_owner: string_to_boolean) -> None:
