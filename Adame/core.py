@@ -70,7 +70,7 @@ class AdameCore(object):
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
     _private_testrule_sid: str = "8979665"
     _private_localipaddress_placeholder: str = "__localipaddress__"
-    private_gitkeep_filename=".gitkeep"
+    private_gitkeep_filename = ".gitkeep"
     # </constants>
 
     # <properties>
@@ -139,9 +139,9 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
 
-        self._private_create_file_in_repository(os.path.join( self._private_log_folder_for_application,self.private_gitkeep_filename), "")
-        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_ids,self.private_gitkeep_filename), "")
-        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_internal_overhead,self.private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_application, self.private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_ids, self.private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_internal_overhead, self.private_gitkeep_filename), "")
 
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
         self._private_load_securityconfiguration()
@@ -288,12 +288,13 @@ class AdameCore(object):
         log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
         sublogfolder = get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
-            exitcode = self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
-            if(exitcode == 0):
-                self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
-                os.remove(log_file)
-            else:
-                self._private_log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
+            if os.path.basename(log_file)!=self.private_gitkeep_filename:
+                exitcode = self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
+                if(exitcode == 0):
+                    self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
+                    os.remove(log_file)
+                else:
+                    self._private_log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
 
     # </exportlogs-command>
 
@@ -717,7 +718,7 @@ Logs/Overhead/**
         securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
         securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
 
-    def _private_get_hostname(self)->str:
+    def _private_get_hostname(self) -> str:
         if self._private_demo_mode:
             return "Hostname"
         else:
