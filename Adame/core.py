@@ -3,6 +3,7 @@ import configparser
 import socket
 import traceback
 import uuid
+from pathlib import Path
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
@@ -62,9 +63,10 @@ class AdameCore(object):
     _private_networktrafficgeneratedrules_file: str = None
     _private_networktrafficcustomrules_file: str = None
     _private_propertiesconfiguration_file: str = None
-
-    _private_gpgkey_of_owner_is_available: bool = False
-    _private_remote_address_is_available: bool = False
+    _private_configurationfolder_name: str ="Configuration"
+    _private_gitconfigurationfile_name: str =".gitconfig"
+    _private_gitconfig_file: str = None
+    _private_metadatafile_name: str = "FileMetadata.csv"
 
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
@@ -83,6 +85,8 @@ class AdameCore(object):
     _private_demo_mode: bool = False
     _private_sc: ScriptCollection = ScriptCollection()
     _private_mock_process_queries: list = list()
+    _private_gpgkey_of_owner_is_available: bool = False
+    _private_remote_address_is_available: bool = False
 
     # </properties>
 
@@ -133,6 +137,8 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_license_file, self._private_get_license_file_content(self._private_configuration))
         self._private_create_file_in_repository(self._private_gitignore_file, self._private_get_gitignore_file_content())
         self._private_create_file_in_repository(self._private_dockercompose_file, self._private_get_dockercompose_file_content(image))
+        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content())
+        self._private_create_file_in_repository(self._private_metadata_file, "")
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
         self._private_create_file_in_repository(self._private_networktrafficcustomrules_file, "")
@@ -288,7 +294,7 @@ class AdameCore(object):
         log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
         sublogfolder = get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
-            if os.path.basename(log_file)!=self.private_gitkeep_filename:
+            if os.path.basename(log_file) != self.private_gitkeep_filename:
                 exitcode = self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
                 if(exitcode == 0):
                     self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
@@ -316,6 +322,22 @@ class AdameCore(object):
 
     # </checkintegrity-command>
 
+    # <checkout-command>
+
+    def checkout(self, configurationfile: str, branch: str) -> int:
+        self._private_check_for_elevated_privileges()
+        self._private_verbose_log_start_by_configuration_file(configurationfile)
+        if configurationfile is not None:
+            self._private_load_configuration(configurationfile)
+        return self._private_execute_task("Checkout", lambda: self._private_checkout(branch))
+
+    def _private_checkout(self, branch: str) -> None:
+        self._private_stopadvanced()
+        self._private_git_checkout(branch)
+        self._private_restore_metadata()
+
+    # </checkout-command>
+
     # <other-functions>
 
     def set_test_mode(self, test_mode_enabled: bool) -> None:
@@ -341,6 +363,35 @@ class AdameCore(object):
     # </other-functions>
 
     # <helper-functions>
+
+    def _private_discard_changes(self) -> None:
+        self._private_start_program_synchronously("git", "reset", self._private_repository_folder, True)
+        self._private_start_program_synchronously("git", "reset --hard HEAD", self._private_repository_folder, True)
+
+    def _private_git_checkout(self, branch: str) -> None:
+        self._private_discard_changes()
+        self._private_start_program_synchronously("git", f"checkout {branch}", self._private_repository_folder, True)
+        self._private_discard_changes()
+
+    def _private_save_metadata(self) -> None:
+        lines=list()
+        lines.append("File;User;Permission")
+        repository_path_length=len(self._private_repository_folder)
+        for file_or_folder in get_direct_files_of_folder(self._private_repository_folder):# TODO add folder
+            truncated_file=file_or_folder[repository_path_length:]
+            if(not self._private_file_is_git_ignored(self._private_repository_folder,truncated_file)):
+                path = Path(file_or_folder)
+                user=f"{path.owner()}:{path.group()}"
+                permissions="TODO"
+                lines.append(f"{truncated_file};{user};{permissions}")
+        with open(self._private_metadata_file, "w", encoding=self.encoding) as file_object:
+            file_object.write("\n".join(lines))
+
+    def _private_restore_metadata(self) -> None:
+        pass # TODO restore all available metadata from self._private_metadata_file
+
+    def _private_file_is_git_ignored(self, repository:str, file:str) -> bool:
+        pass # TODO
 
     def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
@@ -563,6 +614,12 @@ This function is idempotent."""
 IDS-process:{ids_is_running_as_string}
 """
 
+    def _private_get_gitconfig_file_content(self):
+        return """[core]
+    filemode = false
+    symlinks = true
+"""
+
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
         self._private_configuration_file = configuration_file
         ensure_directory_exists(os.path.dirname(self._private_configuration_file))
@@ -602,7 +659,7 @@ IDS-process:{ids_is_running_as_string}
 
             self._private_configuration = configuration
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
-            self._private_configuration_folder = os.path.join(self._private_repository_folder, "Configuration")
+            self._private_configuration_folder = os.path.join(self._private_repository_folder, self._private_configurationfolder_name)
             self._private_security_related_configuration_folder = os.path.join(self._private_configuration_folder, "Security")
 
             self._private_readme_file = os.path.join(self._private_repository_folder, "ReadMe.md")
@@ -610,6 +667,8 @@ IDS-process:{ids_is_running_as_string}
             self._private_gitignore_file = os.path.join(self._private_repository_folder, ".gitignore")
             self._private_running_information_file = os.path.join(self._private_configuration_folder, "RunningInformation.txt")
             self._private_dockercompose_file = os.path.join(self._private_configuration_folder, "docker-compose.yml")
+            self._private_gitconfig_file = os.path.join(self._private_configuration_folder,self._private_gitconfigurationfile_name)
+            self._private_metadata_file = os.path.join(self._private_configuration_folder,self._private_metadatafile_name)
             self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
@@ -631,6 +690,7 @@ IDS-process:{ids_is_running_as_string}
             if load_securityconfiguration:
                 self._private_load_securityconfiguration()
 
+            self._private_set_git_configuration()
         except Exception as exception:
             self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             raise
@@ -823,6 +883,7 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
+        self._private_save_metadata()
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, True)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
@@ -916,6 +977,9 @@ The license of this repository is defined in the file 'License.txt'.
             with open(self._private_log_file_for_adame_overhead, "a") as file:
                 file.write(prefix+logentry)
 
+    def _private_set_git_configuration(self):
+        self._private_start_program_synchronously("git", f"config --local include.path ../{self._private_configurationfolder_name}/{self._private_gitconfigurationfile_name}", self._private_repository_folder)
+
     # </helper-functions>
 
 # <miscellaneous>
@@ -932,7 +996,8 @@ One focus of Adame is to store the state of an application: Adame stores all dat
 Another focus of Adame is IT-forensics and IT-security: Adame generates a basic ids-configuration for each application to detect/log/block networktraffic from the docker-container of the application which is obvious harmful.
 
 Required commandline-commands:
--chmod (For setting up some permissions on the generated files)
+-chmod (For setting up permissions on the generated files)
+-chown (For setting up ownerships on the generated files)
 -docker-compose (For starting and stopping Docker-container)
 -git (For integrity)
 
@@ -990,6 +1055,11 @@ Adame must be executed with elevated privileges. This is required to run command
     diagnosis_parser = subparsers.add_parser(diagnosis_command_name)
     diagnosis_parser.add_argument("-c", "--configurationfile", required=False)
 
+    checkout_command_name = "checkout"
+    checkout_parser = subparsers.add_parser(checkout_command_name)
+    checkout_parser.add_argument("-c", "--configurationfile", required=True)
+    checkout_parser.add_argument("-b", "--branch", required=True)
+
     options = arger.parse_args()
 
     core = AdameCore()
@@ -1021,6 +1091,9 @@ Adame must be executed with elevated privileges. This is required to run command
 
     elif options.command == diagnosis_command_name:
         return core.diagnosis(options.configurationfile)
+
+    elif options.command == checkintegrity_command_name:
+        return core.checkout(options.configurationfile, options.branch)
 
     else:
         write_message_to_stdout(versioned_product_name)

@@ -22,7 +22,8 @@ The reference can be found [here](Reference/index.md).
 Adame is intended to run on Linux-systems.
 Furthermore Adame requires that the following commandline-commands are available on your system:
 
-- `chmod` (For setting up some permissions on the generated files)
+- `chmod` (For setting up permissions on the generated files)
+- `chown` (For setting up ownerships on the generated files)
 - `docker-compose` (For starting and stopping Docker-container)
 - `git` (For integrity)
 - `gpg` (For checking the integrity of commits)
