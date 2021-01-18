@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename, os_is_linux
 import netifaces
 
 product_name = "Adame"
@@ -100,7 +100,7 @@ class AdameCore(object):
     # <create-command>
 
     def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_verbose_log_start_by_create_command(name, folder, image, owner)
         return self._private_execute_task("Create", lambda: self._private_create(name, folder, image, owner, gpgkey_of_owner))
 
@@ -166,7 +166,7 @@ class AdameCore(object):
     # <start-command>
 
     def start(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -186,7 +186,7 @@ class AdameCore(object):
     # <stop-command>
 
     def stop(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -205,7 +205,7 @@ class AdameCore(object):
     # <applyconfiguration-command>
 
     def applyconfiguration(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -223,7 +223,7 @@ class AdameCore(object):
     # <startadvanced-command>
 
     def startadvanced(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -240,7 +240,7 @@ class AdameCore(object):
     # <stopadvanced-command>
 
     def stopadvanced(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -257,7 +257,7 @@ class AdameCore(object):
     # <checkintegrity-command>
 
     def checkintegrity(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -272,7 +272,7 @@ class AdameCore(object):
     # <exportlogs-command>
 
     def exportlogs(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_check_configurationfile_argument(configurationfile)
 
         self._private_verbose_log_start_by_configuration_file(configurationfile)
@@ -307,7 +307,7 @@ class AdameCore(object):
     # <diagnosis-command>
 
     def diagnosis(self, configurationfile: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if configurationfile is not None:
             self._private_load_configuration(configurationfile)
@@ -325,7 +325,7 @@ class AdameCore(object):
     # <checkout-command>
 
     def checkout(self, configurationfile: str, branch: str) -> int:
-        self._private_check_for_elevated_privileges()
+        self._private_check_whether_execution_is_possible()
         self._private_verbose_log_start_by_configuration_file(configurationfile)
         if configurationfile is not None:
             self._private_load_configuration(configurationfile)
@@ -366,13 +366,14 @@ class AdameCore(object):
 
     def _private_git_checkout(self, branch: str) -> None:
         self._private_start_program_synchronously("git", f"checkout {branch}", self._private_repository_folder, True)
-        self._private_sc.discard_all_changes(self._private_repository_folder)
 
     def _private_save_metadata(self) -> None:
-        self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self._private_use_file, self.encoding)
+        if os_is_linux():
+            self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self._private_use_file, self.encoding)
 
     def _private_restore_metadata(self) -> None:
-        self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
+        if os_is_linux():
+            self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
 
     def _private_use_file(self, file_or_folder: str) -> bool:
         if os.path.isdir(file_or_folder):
@@ -380,8 +381,12 @@ class AdameCore(object):
         if os.path.isfile(file_or_folder):
             return not self._private_sc.file_is_git_ignored(self._private_repository_folder, file_or_folder)
 
-    def _private_check_for_elevated_privileges(self) -> None:
-        if(not current_user_has_elevated_privileges() and not self._private_test_mode):
+    def _private_check_whether_execution_is_possible(self) -> None:
+        if self._private_test_mode:
+           return True
+        if not os_is_linux():
+            raise Exception("Adame is only available on linx-systems")
+        if(not current_user_has_elevated_privileges()):
             raise Exception("Adame requries elevated privileges to get executed")
 
     def _private_log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
