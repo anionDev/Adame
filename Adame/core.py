@@ -137,7 +137,6 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_license_file, self._private_get_license_file_content(self._private_configuration))
         self._private_create_file_in_repository(self._private_gitignore_file, self._private_get_gitignore_file_content())
         self._private_create_file_in_repository(self._private_dockercompose_file, self._private_get_dockercompose_file_content(image))
-        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content())
         self._private_create_file_in_repository(self._private_metadata_file, "")
         self._private_create_file_in_repository(self._private_applicationprovidedsecurityinformation_file, "")
         self._private_create_file_in_repository(self._private_networktrafficgeneratedrules_file, "")
@@ -150,14 +149,15 @@ class AdameCore(object):
         self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_internal_overhead, self.private_gitkeep_filename), "")
 
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
-        self._private_load_securityconfiguration()
 
-        self._private_start_program_synchronously("chmod", f'-R 666 "{self._private_log_folder_for_ids}"')
+        self._private_load_securityconfiguration()
+        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner,self._private_gpgkey_of_owner_is_available,gpgkey_of_owner))
+
+        if os_is_linux():
+            self._private_sc.set_file_permission(self._private_log_folder_for_ids,"666",True)
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
-        if self._private_gpgkey_of_owner_is_available:
-            self._private_start_program_synchronously("git", "config commit.gpgsign true", self._private_repository_folder)
-            self._private_start_program_synchronously("git", "config user.signingkey " + gpgkey_of_owner, self._private_repository_folder)
+        self._private_set_git_configuration()# TODO Improve: Call this function always before executing git commands (except creating a repository)
 
         self._private_commit(f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{self._private_get_hostname()}'")
 
@@ -383,7 +383,7 @@ class AdameCore(object):
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
-           return True
+            return True
         if not os_is_linux():
             raise Exception("Adame is only available on linx-systems")
         if(not current_user_has_elevated_privileges()):
@@ -603,10 +603,15 @@ This function is idempotent."""
 IDS-process:{ids_is_running_as_string}
 """
 
-    def _private_get_gitconfig_file_content(self):
-        return """[core]
+    def _private_get_gitconfig_file_content(self,username:str,gpgkey_of_owner_is_available:bool,gpgkey_of_owner:str):
+        return f"""[core]
     filemode = false
     symlinks = true
+[commit]
+    gpgsign = {str(gpgkey_of_owner_is_available).lower()}
+[user]
+    signingkey = {gpgkey_of_owner}
+    name = {username}
 """
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
@@ -679,7 +684,6 @@ IDS-process:{ids_is_running_as_string}
             if load_securityconfiguration:
                 self._private_load_securityconfiguration()
 
-            self._private_set_git_configuration()
         except Exception as exception:
             self._private_log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             raise
