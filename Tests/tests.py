@@ -79,18 +79,25 @@ Tests that the create-command works as expected"""
             assert os.path.isdir(log_overhead_folder)
             assert len(get_direct_folders_of_folder(log_overhead_folder)) == 0
             overheadlogfiles = get_direct_files_of_folder(log_overhead_folder)
-            assert len(overheadlogfiles) == 1
-            assert not file_is_empty(overheadlogfiles[0])
+            assert len(overheadlogfiles) == 2
+            gitkeep_file = overheadlogfiles[0]
+            assert gitkeep_file==os.path.join(log_overhead_folder, ".gitkeep")
+            assert file_is_empty(gitkeep_file)
+            assert not file_is_empty(overheadlogfiles[1])
 
             log_application_folder = os.path.join(log_folder, "Application")
             assert os.path.isdir(log_application_folder)
             assert len(get_direct_folders_of_folder(log_application_folder)) == 0
-            assert len(get_direct_files_of_folder(log_application_folder)) == 0
+            application_logfiles =get_direct_files_of_folder(log_application_folder)
+            assert len(application_logfiles) == 1 # ".gitkeep"
+            assert file_is_empty(application_logfiles[0])
 
             log_ids_folder = os.path.join(log_folder, "IDS")
             assert os.path.isdir(log_ids_folder)
             assert len(get_direct_folders_of_folder(log_ids_folder)) == 0
-            assert len(get_direct_files_of_folder(log_ids_folder)) == 0
+            ids_logfiles =get_direct_files_of_folder(log_ids_folder)
+            assert len(ids_logfiles) == 1 # ".gitkeep"
+            assert file_is_empty(ids_logfiles[0])
 
             configuration_folder = os.path.join(environment_for_test.folder,  "Configuration")
             assert os.path.isdir(configuration_folder)
