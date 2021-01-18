@@ -45,8 +45,7 @@ To develop Adame it is obviously required that the following commandline-command
 
 Commands like `docker-compose` or `snort` are technically not required for development since these commands will be mocked in the unit-tests.
 
-To install all requirements simply execute the script stored in `./Reference/Scripts/InstallDevelopmentDependencies.script`. Every command in this script is expected to terminate with the exitcode `0`
-
+To install all requirements simply execute the script stored in `./Reference/Scripts/InstallDevelopmentDependencies.script`. Every command in this script is expected to terminate with the exit-code `0`
 
 ### IDE
 
@@ -60,11 +59,11 @@ The recommended addons for developing Adame with Visual Studio Code are:
 
 ### Run testcases
 
-To run the testcases simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exitcode `0`.
+To run the testcases simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exit-code `0`.
 
 ### Build
 
-To create an installable whl-package simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exitcode `0`.
+To create an installable whl-package simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exit-code `0`.
 
 ## Installation
 

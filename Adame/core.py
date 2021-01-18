@@ -3,7 +3,6 @@ import configparser
 import socket
 import traceback
 import uuid
-from pathlib import Path
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
@@ -43,15 +42,15 @@ class AdameCore(object):
     _private_securityconfiguration_section_snort: str = "snort"
     _private_securityconfiguration_section_snort_key_globalconfigurationfile: str = "globalconfigurationfile"
     _private_configuration_folder: str = None
-    _private_configuration_file: str = None  # Represents "{_private_configuration_folder}/Adame.configuration"
+    _private_configuration_file: str = None
     _private_security_related_configuration_folder: str = None
     _private_repository_folder: str = None
     _private_configuration: ConfigParser = None
     _private_securityconfiguration: ConfigParser = None
-    _private_log_folder: str = None  # Represents "{_private_repository_folder}/Logs"
-    _private_log_folder_for_internal_overhead: str = None  # Represents "{_private_log_folder}/Overhead"
-    _private_log_folder_for_application: str = None  # Represents "{_private_log_folder}/Application"
-    _private_log_folder_for_ids: str = None  # Represents "{_private_log_folder}/IDS"
+    _private_log_folder: str = None
+    _private_log_folder_for_internal_overhead: str = None
+    _private_log_folder_for_application: str = None
+    _private_log_folder_for_ids: str = None
     _private_log_file_for_adame_overhead: str = None
 
     _private_readme_file: str = None
@@ -63,10 +62,11 @@ class AdameCore(object):
     _private_networktrafficgeneratedrules_file: str = None
     _private_networktrafficcustomrules_file: str = None
     _private_propertiesconfiguration_file: str = None
-    _private_configurationfolder_name: str ="Configuration"
-    _private_gitconfigurationfile_name: str =".gitconfig"
+    _private_configurationfolder_name: str = "Configuration"
+    _private_gitconfiguration_filename: str = ".gitconfig"
     _private_gitconfig_file: str = None
-    _private_metadatafile_name: str = "FileMetadata.csv"
+    _private_metadata_file: str = None
+    _private_metadata_filename: str = "FileMetadata.csv"
 
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
@@ -152,7 +152,7 @@ class AdameCore(object):
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
         self._private_load_securityconfiguration()
 
-        self._private_start_program_synchronously("chmod", f'-R 777 "{self._private_log_folder_for_ids}"')  # TODO Improve: Shrink 777 as far as possible
+        self._private_start_program_synchronously("chmod", f'-R 666 "{self._private_log_folder_for_ids}"')
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         if self._private_gpgkey_of_owner_is_available:
@@ -364,34 +364,21 @@ class AdameCore(object):
 
     # <helper-functions>
 
-    def _private_discard_changes(self) -> None:
-        self._private_start_program_synchronously("git", "reset", self._private_repository_folder, True)
-        self._private_start_program_synchronously("git", "reset --hard HEAD", self._private_repository_folder, True)
-
     def _private_git_checkout(self, branch: str) -> None:
-        self._private_discard_changes()
         self._private_start_program_synchronously("git", f"checkout {branch}", self._private_repository_folder, True)
-        self._private_discard_changes()
+        self._private_sc.discard_all_changes(self._private_repository_folder)
 
     def _private_save_metadata(self) -> None:
-        lines=list()
-        lines.append("File;User;Permission")
-        repository_path_length=len(self._private_repository_folder)
-        for file_or_folder in get_direct_files_of_folder(self._private_repository_folder):# TODO add folder
-            truncated_file=file_or_folder[repository_path_length:]
-            if(not self._private_file_is_git_ignored(self._private_repository_folder,truncated_file)):
-                path = Path(file_or_folder)
-                user=f"{path.owner()}:{path.group()}"
-                permissions="TODO"
-                lines.append(f"{truncated_file};{user};{permissions}")
-        with open(self._private_metadata_file, "w", encoding=self.encoding) as file_object:
-            file_object.write("\n".join(lines))
+        self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self._private_use_file, self.encoding)
 
     def _private_restore_metadata(self) -> None:
-        pass # TODO restore all available metadata from self._private_metadata_file
+        self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
 
-    def _private_file_is_git_ignored(self, repository:str, file:str) -> bool:
-        pass # TODO
+    def _private_use_file(self, file_or_folder: str) -> bool:
+        if os.path.isdir(file_or_folder):
+            return True
+        if os.path.isfile(file_or_folder):
+            return not self._private_sc.file_is_git_ignored(self._private_repository_folder, file_or_folder)
 
     def _private_check_for_elevated_privileges(self) -> None:
         if(not current_user_has_elevated_privileges() and not self._private_test_mode):
@@ -499,10 +486,8 @@ This function is idempotent."""
         return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
     def _private_ensure_container_is_running(self) -> bool:
-        # TODO Improve: Optimize this function so that the container does not have to be stopped for this function
         self._private_ensure_container_is_not_running()
-        result = self._private_start_container()
-        return result
+        return self._private_start_container()
 
     def _private_ensure_container_is_not_running(self) -> bool:
         if(self._private_container_is_running()):
@@ -511,7 +496,6 @@ This function is idempotent."""
 
     def _private_ensure_ids_is_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly."""
-        # TODO Improve: Optimize this function so that the ids does not have to be stopped for this function
         self._private_ensure_ids_is_not_running()
         result = self._private_start_ids()
         self._private_test_ids()
@@ -588,7 +572,7 @@ This function is idempotent."""
                 os.system(f"{program} {argument}")
             finally:
                 os.chdir(original_cwd)
-        return True  # TODO Improve: Find a possibility to really check that this program is running now
+        return True  # TODO Improve: Find a possibility to really check that this program is currently running
 
     def _private_get_stored_running_processes(self) -> tuple:
         # TODO Improve: Do a real check, not just reading this information from a file.
@@ -667,8 +651,8 @@ IDS-process:{ids_is_running_as_string}
             self._private_gitignore_file = os.path.join(self._private_repository_folder, ".gitignore")
             self._private_running_information_file = os.path.join(self._private_configuration_folder, "RunningInformation.txt")
             self._private_dockercompose_file = os.path.join(self._private_configuration_folder, "docker-compose.yml")
-            self._private_gitconfig_file = os.path.join(self._private_configuration_folder,self._private_gitconfigurationfile_name)
-            self._private_metadata_file = os.path.join(self._private_configuration_folder,self._private_metadatafile_name)
+            self._private_gitconfig_file = os.path.join(self._private_configuration_folder, self._private_gitconfiguration_filename)
+            self._private_metadata_file = os.path.join(self._private_configuration_folder, self._private_metadata_filename)
             self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
@@ -978,7 +962,7 @@ The license of this repository is defined in the file 'License.txt'.
                 file.write(prefix+logentry)
 
     def _private_set_git_configuration(self):
-        self._private_start_program_synchronously("git", f"config --local include.path ../{self._private_configurationfolder_name}/{self._private_gitconfigurationfile_name}", self._private_repository_folder)
+        self._private_start_program_synchronously("git", f"config --local include.path ../{self._private_configurationfolder_name}/{self._private_gitconfiguration_filename}", self._private_repository_folder)
 
     # </helper-functions>
 
