@@ -610,8 +610,8 @@ IDS-process:{ids_is_running_as_string}
 [commit]
     gpgsign = {str(gpgkey_of_owner_is_available).lower()}
 [user]
-    signingkey = {gpgkey_of_owner}
     name = {username}
+    signingkey = {gpgkey_of_owner}
 """
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
@@ -877,7 +877,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         self._private_save_metadata()
-        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, True)
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name,"", stage_all_changes, True)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
