@@ -102,7 +102,7 @@ Tests that the create-command works as expected"""
             configuration_folder = os.path.join(environment_for_test.folder,  "Configuration")
             assert os.path.isdir(configuration_folder)
             assert len(get_direct_folders_of_folder(configuration_folder)) == 1  # "Security"
-            assert len(get_direct_files_of_folder(configuration_folder)) == 3
+            assert len(get_direct_files_of_folder(configuration_folder)) == 5
             adameconfigurationfile = os.path.join(configuration_folder, "Adame.configuration")
             assert os.path.isfile(adameconfigurationfile)
             assert not file_is_empty(adameconfigurationfile)
@@ -113,6 +113,12 @@ Tests that the create-command works as expected"""
             assert os.path.isfile(runninginformationfile)
             assert not file_is_empty(runninginformationfile)
             assert os.path.join(configuration_folder, "Adame.configuration") == environment_for_test.adame_configuration_file
+            dockercomposefile = os.path.join(configuration_folder, ".gitconfig")
+            assert os.path.isfile(dockercomposefile)
+            assert not file_is_empty(dockercomposefile)
+            dockercomposefile = os.path.join(configuration_folder, "FileMetadata.csv")
+            assert os.path.isfile(dockercomposefile)
+            assert not file_is_empty(dockercomposefile)
 
             security_folder = os.path.join(configuration_folder, "Security")
             assert os.path.isdir(security_folder)
@@ -240,6 +246,11 @@ Generates a simple adame-managed-repository as demonstration."""
         tests_folder = f"{os.path.dirname(os.path.realpath(__file__))}{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository"
         ensure_directory_does_not_exist(tests_folder)
         environment_for_test = EnvironmentForTest(tests_folder)
-        environment_for_test.adame._private_demo_mode=True
-        environment_for_test.create("DemoApplication","DemoOwner")
+        environment_for_test.adame.set_test_mode(True)
+        environment_for_test.adame._private_demo_mode = True
+        environment_for_test.adame.verbose = True
+        demoowner_name="DemoOwner"
+        environment_for_test.adame._private_sc.register_mock_program_call("ls", "\\-ld.*gsub", ".*", 0, "666", "", 80, 50)
+        environment_for_test.adame._private_sc.register_mock_program_call("ls", "\\-ld.*printf\\(\\$4\\)", ".*", 0, f"{demoowner_name}:DemoGroup", "", 80, 50)
+        environment_for_test.create("DemoApplication", demoowner_name)
         ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")

@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename, os_is_linux
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
 
 product_name = "Adame"
@@ -153,8 +153,7 @@ class AdameCore(object):
         self._private_load_securityconfiguration()
         self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner,self._private_gpgkey_of_owner_is_available,gpgkey_of_owner))
 
-        if os_is_linux():
-            self._private_sc.set_file_permission(self._private_log_folder_for_ids,"666",True)
+        self._private_sc.set_file_permission(self._private_log_folder_for_ids,"666",True)
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         self._private_set_git_configuration()# TODO Improve: Call this function always before executing git commands (except creating a repository)
@@ -344,6 +343,7 @@ class AdameCore(object):
         "This function is for test-purposes only"
         self._private_test_mode = test_mode_enabled
         self._private_sc.mock_program_calls = self._private_test_mode
+        self._private_sc.execute_programy_really_if_no_mock_call_is_defined = self._private_test_mode
 
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
@@ -368,24 +368,19 @@ class AdameCore(object):
         self._private_start_program_synchronously("git", f"checkout {branch}", self._private_repository_folder, True)
 
     def _private_save_metadata(self) -> None:
-        if os_is_linux():
-            self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self._private_use_file, self.encoding)
+        self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self._private_use_file, self.encoding)
 
     def _private_restore_metadata(self) -> None:
-        if os_is_linux():
-            self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
+        self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
 
-    def _private_use_file(self, file_or_folder: str) -> bool:
-        if os.path.isdir(file_or_folder):
+    def _private_use_file(self, repository_folder: str, file: str) -> bool:
+        if(string_is_none_or_whitespace(file)):
             return True
-        if os.path.isfile(file_or_folder):
-            return not self._private_sc.file_is_git_ignored(self._private_repository_folder, file_or_folder)
+        return not self._private_sc.file_is_git_ignored(repository_folder, file)
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
             return True
-        if not os_is_linux():
-            raise Exception("Adame is only available on linx-systems")
         if(not current_user_has_elevated_privileges()):
             raise Exception("Adame requries elevated privileges to get executed")
 
