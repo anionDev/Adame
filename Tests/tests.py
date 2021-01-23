@@ -250,7 +250,6 @@ Generates a simple adame-managed-repository as demonstration."""
         environment_for_test.adame._private_demo_mode = True
         environment_for_test.adame.verbose = True
         demoowner_name="DemoOwner"
-        environment_for_test.adame._private_sc.register_mock_program_call("ls", "\\-ld.*gsub", ".*", 0, "666", "", 80, 50)
-        environment_for_test.adame._private_sc.register_mock_program_call("ls", "\\-ld.*printf\\(\\$4\\)", ".*", 0, f"{demoowner_name}:DemoGroup", "", 80, 50)
+        environment_for_test.adame._private_sc.register_mock_program_call("ls", "\\-ld.*", ".*", 0, f"-rw-rw-rw- 1 {demoowner_name} DemoGroup 55 Dec  4 13:41 name", "", 80, 500)
         environment_for_test.create("DemoApplication", demoowner_name)
         ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")
