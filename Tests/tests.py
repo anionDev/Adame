@@ -23,7 +23,7 @@ class EnvironmentForTest:
         self.adame.set_test_mode(True)
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
 
-    def create(self, name = "myapplication", owner="owner"):
+    def create(self, name="myapplication", owner="owner"):
         self.adame._private_sc.mock_program_calls = False
         assert self.adame.create(name, self.folder, "httpd:latest", owner) == 0
         assert not self.adame._private_container_is_running()
@@ -82,22 +82,22 @@ Tests that the create-command works as expected"""
             overheadlogfiles = get_direct_files_of_folder(log_overhead_folder)
             assert len(overheadlogfiles) == 2
             gitkeep_file = overheadlogfiles[0]
-            assert gitkeep_file==os.path.join(log_overhead_folder, ".gitkeep")
+            assert gitkeep_file == os.path.join(log_overhead_folder, ".gitkeep")
             assert file_is_empty(gitkeep_file)
             assert not file_is_empty(overheadlogfiles[1])
 
             log_application_folder = os.path.join(log_folder, "Application")
             assert os.path.isdir(log_application_folder)
             assert len(get_direct_folders_of_folder(log_application_folder)) == 0
-            application_logfiles =get_direct_files_of_folder(log_application_folder)
-            assert len(application_logfiles) == 1 # ".gitkeep"
+            application_logfiles = get_direct_files_of_folder(log_application_folder)
+            assert len(application_logfiles) == 1  # ".gitkeep"
             assert file_is_empty(application_logfiles[0])
 
             log_ids_folder = os.path.join(log_folder, "IDS")
             assert os.path.isdir(log_ids_folder)
             assert len(get_direct_folders_of_folder(log_ids_folder)) == 0
-            ids_logfiles =get_direct_files_of_folder(log_ids_folder)
-            assert len(ids_logfiles) == 1 # ".gitkeep"
+            ids_logfiles = get_direct_files_of_folder(log_ids_folder)
+            assert len(ids_logfiles) == 1  # ".gitkeep"
             assert file_is_empty(ids_logfiles[0])
 
             configuration_folder = os.path.join(environment_for_test.folder,  "Configuration")
@@ -152,7 +152,7 @@ Tests that the start-command works as expected"""
             environment_for_test = EnvironmentForTest()
             environment_for_test.create()
 
-            environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
+            environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape(f"--project-name {environment_for_test.adame._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-D -i eth0 -c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 52)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
@@ -192,7 +192,7 @@ Tests that the stop-command works as expected"""
             environment_for_test = EnvironmentForTest()
             environment_for_test.create()
 
-            environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
+            environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape(f"--project-name {environment_for_test.adame._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 40)
             environment_for_test.adame._private_sc.register_mock_program_call("snort", re.escape(f'-D -i eth0 -c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
             environment_for_test.adame._private_sc.register_mock_program_call("git", "reset", re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 52)
             environment_for_test.adame._private_sc.register_mock_program_call("git", f'stage -- "{re.escape(environment_for_test.adame._private_running_information_file)}"', re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
@@ -253,7 +253,7 @@ Generates a simple adame-managed-repository as demonstration."""
         environment_for_test.adame.set_test_mode(True)
         environment_for_test.adame._private_demo_mode = True
         environment_for_test.adame.verbose = True
-        demoowner_name="DemoOwner"
+        demoowner_name = "DemoOwner"
         environment_for_test.create("DemoApplication", demoowner_name)
         ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")
         copy_tree(tests_folder, result_folder)

@@ -73,7 +73,7 @@ class AdameCore(object):
     _private_testrule_sid: str = "8979665"
     _private_localipaddress_placeholder: str = "__localipaddress__"
     _private_gitkeep_filename = ".gitkeep"
-    _private_path_separator="/"
+    _private_path_separator = "/"
     # </constants>
 
     # <properties>
@@ -152,12 +152,12 @@ class AdameCore(object):
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
 
         self._private_load_securityconfiguration()
-        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner,self._private_gpgkey_of_owner_is_available,gpgkey_of_owner))
+        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner, self._private_gpgkey_of_owner_is_available, gpgkey_of_owner))
 
-        self._private_sc.set_file_permission(self._private_log_folder_for_ids,"666",True)
+        self._private_sc.set_file_permission(self._private_log_folder_for_ids, "666", True)
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
-        self._private_set_git_configuration()# TODO Improve: Call this function always before executing git commands (except creating a repository)
+        self._private_set_git_configuration()  # TODO Improve: Call this function always before executing git commands (except creating a repository)
 
         self._private_commit(f"Initial commit for app-repository of {name} managed by Adame in folder '{self._private_repository_folder}' on host '{self._private_get_hostname()}'")
 
@@ -370,9 +370,9 @@ class AdameCore(object):
 
     def _private_save_metadata(self) -> None:
         self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self.encoding, self._private_use_file)
-        content=read_text_from_file(self._private_metadata_file,self.encoding)
-        content=content.replace("\\",self._private_path_separator)
-        write_text_to_file(self._private_metadata_file,content,self.encoding)
+        content = read_text_from_file(self._private_metadata_file, self.encoding)
+        content = content.replace("\\", self._private_path_separator)
+        write_text_to_file(self._private_metadata_file, content, self.encoding)
 
     def _private_restore_metadata(self) -> None:
         self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
@@ -380,7 +380,7 @@ class AdameCore(object):
     def _private_use_file(self, repository_folder: str, file_or_folder: str) -> bool:
         if(string_is_none_or_whitespace(file_or_folder)):
             return True
-        if(file_or_folder==".git" or file_or_folder.replace("\\",self._private_path_separator).startswith(f".git{self._private_path_separator}")):
+        if(file_or_folder == ".git" or file_or_folder.replace("\\", self._private_path_separator).startswith(f".git{self._private_path_separator}")):
             return False
         return not self._private_sc.file_is_git_ignored(repository_folder, file_or_folder)
 
@@ -604,7 +604,7 @@ This function is idempotent."""
 IDS-process:{ids_is_running_as_string}
 """
 
-    def _private_get_gitconfig_file_content(self,username:str,gpgkey_of_owner_is_available:bool,gpgkey_of_owner:str):
+    def _private_get_gitconfig_file_content(self, username: str, gpgkey_of_owner_is_available: bool, gpgkey_of_owner: str):
         return f"""[core]
     filemode = false
     symlinks = true
@@ -878,7 +878,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         self._private_save_metadata()
-        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name,"", stage_all_changes, True)
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, True)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
