@@ -3,6 +3,7 @@ import tempfile
 import uuid
 import os
 import re
+from distutils.dir_util import copy_tree
 from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists, get_direct_files_of_folder, get_direct_folders_of_folder, file_is_empty
 from Adame.core import AdameCore
 
@@ -243,13 +244,17 @@ Ensures that adame._private_process_is_running does not throw an exception when 
         """DemonstrationTest
 Generates a simple adame-managed-repository as demonstration."""
 
-        tests_folder = f"{os.path.dirname(os.path.realpath(__file__))}{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository"
-        ensure_directory_does_not_exist(tests_folder)
+        result_folder = f"{os.path.dirname(os.path.realpath(__file__))}{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository"
+        ensure_directory_does_not_exist(result_folder)
+        ensure_directory_exists(result_folder)
+        tests_folder = tempfile.gettempdir()+os.path.sep+str(uuid.uuid4())
+        ensure_directory_exists(tests_folder)
         environment_for_test = EnvironmentForTest(tests_folder)
         environment_for_test.adame.set_test_mode(True)
         environment_for_test.adame._private_demo_mode = True
         environment_for_test.adame.verbose = True
         demoowner_name="DemoOwner"
-        environment_for_test.adame._private_sc.register_mock_program_call("ls", "\\-ld.*", ".*", 0, f"-rw-rw-rw- 1 {demoowner_name} DemoGroup 55 Dec  4 13:41 name", "", 80, 500)
         environment_for_test.create("DemoApplication", demoowner_name)
         ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")
+        copy_tree(tests_folder, result_folder)
+        ensure_directory_does_not_exist(tests_folder)
