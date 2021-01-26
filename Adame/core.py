@@ -72,7 +72,8 @@ class AdameCore(object):
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
     _private_testrule_sid: str = "8979665"
     _private_localipaddress_placeholder: str = "__localipaddress__"
-    private_gitkeep_filename = ".gitkeep"
+    _private_gitkeep_filename = ".gitkeep"
+    _private_path_separator="/"
     # </constants>
 
     # <properties>
@@ -144,9 +145,9 @@ class AdameCore(object):
         self._private_create_file_in_repository(self._private_propertiesconfiguration_file, "")
         self._private_create_file_in_repository(self._private_running_information_file, self._private_get_running_information_file_content(False, False))
 
-        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_application, self.private_gitkeep_filename), "")
-        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_ids, self.private_gitkeep_filename), "")
-        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_internal_overhead, self.private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_application, self._private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_ids, self._private_gitkeep_filename), "")
+        self._private_create_file_in_repository(os.path.join(self._private_log_folder_for_internal_overhead, self._private_gitkeep_filename), "")
 
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
 
@@ -293,7 +294,7 @@ class AdameCore(object):
         log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
         sublogfolder = get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
-            if os.path.basename(log_file) != self.private_gitkeep_filename:
+            if os.path.basename(log_file) != self._private_gitkeep_filename:
                 exitcode = self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
                 if(exitcode == 0):
                     self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
@@ -368,15 +369,20 @@ class AdameCore(object):
         self._private_start_program_synchronously("git", f"checkout {branch}", self._private_repository_folder, True)
 
     def _private_save_metadata(self) -> None:
-        self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self._private_use_file, self.encoding)
+        self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self.encoding, self._private_use_file)
+        content=read_text_from_file(self._private_metadata_file,self.encoding)
+        content=content.replace("\\",self._private_path_separator)
+        write_text_to_file(self._private_metadata_file,content,self.encoding)
 
     def _private_restore_metadata(self) -> None:
         self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
 
-    def _private_use_file(self, repository_folder: str, file: str) -> bool:
-        if(string_is_none_or_whitespace(file)):
+    def _private_use_file(self, repository_folder: str, file_or_folder: str) -> bool:
+        if(string_is_none_or_whitespace(file_or_folder)):
             return True
-        return not self._private_sc.file_is_git_ignored(repository_folder, file)
+        if(file_or_folder==".git" or file_or_folder.replace("\\",self._private_path_separator).startswith(f".git{self._private_path_separator}")):
+            return False
+        return not self._private_sc.file_is_git_ignored(repository_folder, file_or_folder)
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
