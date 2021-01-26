@@ -1,5 +1,4 @@
 mode: Mainline
-next-version: 1.0.0
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
 major-version-bump-message: '\+semver:\s?(major)'
