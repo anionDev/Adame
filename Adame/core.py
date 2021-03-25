@@ -815,7 +815,7 @@ The license of this repository is defined in the file 'License.txt'.
 """
 
     def _private_stop_container(self) -> None:
-        result = self._private_start_program_synchronously("docker-compose", "down --remove-orphans", self._private_configuration_folder)[0]
+        result = self._private_start_program_synchronously("docker-compose", f"--project-name {self._private_get_container_name()} down --remove-orphans", self._private_configuration_folder)[0]
         success = result == 0
         if success:
             self._private_log_information("Container was stopped", False, True, True)
