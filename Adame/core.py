@@ -18,7 +18,7 @@ __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
 
-class AdameCore(object):
+class AdameCore:
 
     # <constants>
     _private_adame_commit_author_name: str = product_name
@@ -386,7 +386,7 @@ class AdameCore(object):
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
-            return True
+            return
         if(not current_user_has_elevated_privileges()):
             raise Exception("Adame requries elevated privileges to get executed")
 
@@ -520,6 +520,7 @@ This function is idempotent."""
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             return self._private_get_stored_running_processes()[1]
+        return False
 
     def _private_start_ids(self) -> bool:
         success = True
