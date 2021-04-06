@@ -13,9 +13,6 @@ Configuration/Security/Security.configuration;f;user:group;666
 License.txt;f;user:group;666
 Logs;d;user:group;777
 Logs/Application;d;user:group;777
-Logs/Application/.gitkeep;f;user:group;666
 Logs/IDS;d;user:group;777
-Logs/IDS/.gitkeep;f;user:group;666
 Logs/Overhead;d;user:group;777
-Logs/Overhead/.gitkeep;f;user:group;666
 ReadMe.md;f;user:group;666
