@@ -13,12 +13,12 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.1.0"
+version = "1.1.1"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
 
-class AdameCore(object):
+class AdameCore:
 
     # <constants>
     _private_adame_commit_author_name: str = product_name
@@ -386,7 +386,7 @@ class AdameCore(object):
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
-            return True
+            return
         if(not current_user_has_elevated_privileges()):
             raise Exception("Adame requries elevated privileges to get executed")
 
@@ -520,6 +520,7 @@ This function is idempotent."""
         ids = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             return self._private_get_stored_running_processes()[1]
+        return False
 
     def _private_start_ids(self) -> bool:
         success = True
@@ -815,7 +816,7 @@ The license of this repository is defined in the file 'License.txt'.
 """
 
     def _private_stop_container(self) -> None:
-        result = self._private_start_program_synchronously("docker-compose", "down --remove-orphans", self._private_configuration_folder)[0]
+        result = self._private_start_program_synchronously("docker-compose", f"--project-name {self._private_get_container_name()} down --remove-orphans", self._private_configuration_folder)[0]
         success = result == 0
         if success:
             self._private_log_information("Container was stopped", False, True, True)

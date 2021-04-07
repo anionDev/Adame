@@ -12,3 +12,4 @@ commandline
 whl
 ip-address
 rsync
+netifaces

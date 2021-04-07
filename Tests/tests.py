@@ -214,7 +214,7 @@ Tests that the stop-command works as expected"""
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('commit --message="Stopped container (Container-process: False; IDS-process: False)" --author="Adame <>" --allow-empty'), re.escape(environment_for_test.adame._private_repository_folder), 0, "", "", 56)
             environment_for_test.adame._private_sc.register_mock_program_call("git", re.escape('rev-parse --verify HEAD'), re.escape(environment_for_test.adame._private_repository_folder), 0, "4d6a38ad96d0acf5e2822bbcd655387b42352cc1", "", 60)
 
-            environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape("down --remove-orphans"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 68)
+            environment_for_test.adame._private_sc.register_mock_program_call("docker-compose",  re.escape(f"--project-name {environment_for_test.adame._private_get_container_name()} down --remove-orphans"), re.escape(environment_for_test.adame._private_configuration_folder), 0, "", "", 68)
 
             environment_for_test.adame.register_mock_process_query(44, f'snort -D -i eth0 -c "{environment_for_test.adame._private_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._private_log_folder_for_ids}" -U -v -x -y -K ascii')
             environment_for_test.adame._private_sc.register_mock_program_call("kill",  re.escape("-TERM 44"), "", 0, "", "", 72)
