@@ -13,7 +13,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.1.3"
+version = "1.1.4"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -383,12 +383,7 @@ class AdameCore:
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self._private_path_separator).startswith(f".git{self._private_path_separator}")):
             return False
         full_file=repository_folder+os.path.sep+file_or_folder
-        ignored=self._private_sc.file_is_git_ignored(full_file)
-        if ignored:
-            self._private_log_information(f"{full_file} is ignored")
-        else:
-            self._private_log_information(f"{full_file} is not ignored")
-        return not ignored
+        return not self._private_sc.file_is_git_ignored(full_file)
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
