@@ -382,7 +382,13 @@ class AdameCore:
             return True
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self._private_path_separator).startswith(f".git{self._private_path_separator}")):
             return False
-        return not self._private_sc.file_is_git_ignored(repository_folder, file_or_folder)
+        ignored=self._private_sc.file_is_git_ignored(repository_folder, file_or_folder)
+        full_file=repository_folder+os.path.sep+file_or_folder
+        if ignored:
+            self._private_log_information(f"{full_file} is ignored")
+        else:
+            self._private_log_information(f"{full_file} is not ignored")
+        return not ignored
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
