@@ -13,7 +13,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.1.2"
+version = "1.1.3"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -71,7 +71,7 @@ class AdameCore:
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
     _private_testrule_sid: str = "8979665"
-    _private_localipaddress_placeholder: str = "__localipaddress__"
+    _private_localipaddress_placeholder: str = "__.builtin.localipaddress.__"
     _private_gitkeep_filename = ".gitkeep"
     _private_path_separator = "/"
     # </constants>
@@ -382,7 +382,13 @@ class AdameCore:
             return True
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self._private_path_separator).startswith(f".git{self._private_path_separator}")):
             return False
-        return not self._private_sc.file_is_git_ignored(repository_folder, file_or_folder)
+        ignored=self._private_sc.file_is_git_ignored(repository_folder, file_or_folder)
+        full_file=repository_folder+os.path.sep+file_or_folder
+        if ignored:
+            self._private_log_information(f"{full_file} is ignored")
+        else:
+            self._private_log_information(f"{full_file} is not ignored")
+        return not ignored
 
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
@@ -488,7 +494,9 @@ This function is idempotent."""
 
     def _private_check_siem_is_reachable(self) -> bool:
         """This function checks wether the SIEM is available."""
-        # siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        if string_is_none_or_whitespace(siemaddress):
+            return False
         return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
     def _private_ensure_container_is_running(self) -> bool:
