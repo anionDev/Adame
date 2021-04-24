@@ -71,7 +71,7 @@ class AdameCore:
     _private_testrule_trigger_content: str = "adame_testrule_trigger_content_0117ae72-6d1a-4720-8942-610fe9711a01"
     _private_testrule_log_content: str = "adame_testrule_trigger_content_0217ae72-6d1a-4720-8942-610fe9711a02"
     _private_testrule_sid: str = "8979665"
-    _private_localipaddress_placeholder: str = "__localipaddress__"
+    _private_localipaddress_placeholder: str = "__.builtin.localipaddress.__"
     _private_gitkeep_filename = ".gitkeep"
     _private_path_separator = "/"
     # </constants>
@@ -488,7 +488,9 @@ This function is idempotent."""
 
     def _private_check_siem_is_reachable(self) -> bool:
         """This function checks wether the SIEM is available."""
-        # siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        if string_is_none_or_whitespace(siemaddress):
+            return False
         return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
     def _private_ensure_container_is_running(self) -> bool:
