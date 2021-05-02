@@ -13,7 +13,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.1.5"
+version = "1.1.6"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -911,7 +911,7 @@ The license of this repository is defined in the file 'License.txt'.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, expect_exitcode_zero, True, False)
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, expect_exitcode_zero, False, False)
         self._private_log_information(f"Program resulted in exitcode {result[0]}", True)
         self._private_log_information("Stdout:", True)
         self._private_log_information(result[1], True)
