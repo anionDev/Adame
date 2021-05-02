@@ -3,9 +3,16 @@ import tempfile
 import uuid
 import os
 import re
+import importlib.util
 from distutils.dir_util import copy_tree
 from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists, get_direct_files_of_folder, get_direct_folders_of_folder, file_is_empty
-from Adame.core import AdameCore
+
+adame_module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f"..{os.path.sep}Adame{os.path.sep}core.py"))
+spec = importlib.util.spec_from_file_location("core", adame_module_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+AdameCore = getattr(module, "Adame")
 
 
 class EnvironmentForTest:
