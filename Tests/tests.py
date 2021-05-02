@@ -12,7 +12,7 @@ spec = importlib.util.spec_from_file_location("core", adame_module_path)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
-AdameCore = getattr(module, "Adame")
+AdameCore = getattr(module, "AdameCore")
 
 
 class EnvironmentForTest:
