@@ -13,7 +13,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.1.10"
+version = "1.1.11"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -649,6 +649,7 @@ IDS-process:{ids_is_running_as_string}
 
     def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
         try:
+            self._private_log_information("Load configuration...",True,True,True)
             configurationfile = resolve_relative_path_from_current_working_directory(configurationfile)
             if not os.path.isfile(configurationfile):
                 raise Exception(F"'{configurationfile}' does not exist")
@@ -659,6 +660,7 @@ IDS-process:{ids_is_running_as_string}
             self._private_configuration = configuration
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             self._private_configuration_folder = os.path.join(self._private_repository_folder, self._private_configurationfolder_name)
+            self._private_log_information(f"Configuration-folder: '{self._private_configuration_folder}'",True,True,True)
             self._private_security_related_configuration_folder = os.path.join(self._private_configuration_folder, "Security")
 
             self._private_readme_file = os.path.join(self._private_repository_folder, "ReadMe.md")
@@ -695,6 +697,7 @@ IDS-process:{ids_is_running_as_string}
 
     def _private_load_securityconfiguration(self) -> None:
         try:
+            self._private_log_information("Load security-configuration...",True,True,True)
             securityconfiguration = configparser.ConfigParser()
             if not os.path.isfile(self._private_propertiesconfiguration_file):
                 raise Exception(F"'{self._private_propertiesconfiguration_file}' does not exist")
