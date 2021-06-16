@@ -12,6 +12,7 @@ Adame is able to do the following things:
 - Start-/Stop the docker-container according to the configuration-file
 - Saves the state of the application inside the docker-container in a git-repository
 - Automatically configure a basic intrusion-detection-system for the network-traffic of the docker-container
+- Automatically export log-files of the managed application
 
 ## Reference
 
