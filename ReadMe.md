@@ -60,11 +60,11 @@ The recommended addons for developing Adame with Visual Studio Code are:
 
 ### Run testcases
 
-To run the testcases simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exit-code `0`.
+To run the testcases simply execute the script stored in `./Reference/Scripts/RunTestcases.script` in the repository's home-directory which is expected to terminate with the exit-code `0`.
 
 ### Build
 
-To create an installable whl-package simply execute the script stored in `./Reference/Scripts/CreateWhlFile` in the repository's home-directory which is expected to terminate with the exit-code `0`.
+To create an installable whl-package simply execute the script stored in `./Reference/Scripts/CreateWhlFile.script` in the repository's home-directory which is expected to terminate with the exit-code `0`.
 
 ## Installation
 
