@@ -5,4 +5,6 @@ name = DemoApplication
 owner = DemoOwner
 repositoryid = de30de30-de30-de30-de30-de30de30de30
 networkinterface = eth0
+prescript = 
+postscript = 
 

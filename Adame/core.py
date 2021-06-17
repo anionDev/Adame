@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, string_has_content, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
 
 product_name = "Adame"
@@ -24,6 +24,8 @@ class AdameCore:
     _private_adame_commit_author_name: str = product_name
     _private_configuration_section_general: str = "general"
     _private_configuration_section_general_key_networkinterface: str = "networkinterface"
+    _private_configuration_section_general_key_prescript: str = "prescript"
+    _private_configuration_section_general_key_postscript: str = "postscript"
     _private_configuration_section_general_key_repositoryid: str = "repositoryid"
     _private_configuration_section_general_key_repositoryversion: str = "repositoryversion"
     _private_configuration_section_general_key_formatversion: str = "formatversion"
@@ -152,7 +154,8 @@ class AdameCore:
         self._private_create_securityconfiguration_file(gpgkey_of_owner)
 
         self._private_load_securityconfiguration()
-        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner, self._private_gpgkey_of_owner_is_available, gpgkey_of_owner))
+        self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner,
+                                                self._private_gpgkey_of_owner_is_available, gpgkey_of_owner))
 
         self._private_sc.set_file_permission(self._private_log_folder_for_ids, "666", True)
 
@@ -291,11 +294,13 @@ class AdameCore:
         siemaddress = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
         siemfolder = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder]
         siemuser = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser]
-        log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead)+get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
+        log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead) + \
+            get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
         sublogfolder = get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
             if os.path.basename(log_file) != self._private_gitkeep_filename:
-                exitcode = self._private_start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
+                exitcode = self._private_start_program_synchronously(
+                    "rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
                 if(exitcode == 0):
                     self._private_log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                     os.remove(log_file)
@@ -359,7 +364,8 @@ class AdameCore:
         "This function is for test-purposes only"
         if(len(self._private_mock_process_queries) > 0):
             for mock_query_result in self._private_mock_process_queries:
-                raise AssertionError("The following mock-process-queries were not queried:\n    "+",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
+                raise AssertionError("The following mock-process-queries were not queried:\n    " +
+                                     ",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
 
     # </other-functions>
 
@@ -382,7 +388,7 @@ class AdameCore:
             return True
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self._private_path_separator).startswith(f".git{self._private_path_separator}")):
             return False
-        full_file=repository_folder+os.path.sep+file_or_folder
+        full_file = repository_folder+os.path.sep+file_or_folder
         return not self._private_sc.file_is_git_ignored(full_file)
 
     def _private_check_whether_execution_is_possible(self) -> None:
@@ -489,7 +495,7 @@ This function is idempotent."""
 
     def _private_check_siem_is_reachable(self) -> bool:
         """This function checks wether the SIEM is available."""
-        siemaddress=self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
+        siemaddress = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
         if string_is_none_or_whitespace(siemaddress):
             return False
         return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
@@ -538,7 +544,8 @@ This function is idempotent."""
             else:
                 verbose_argument = ""
             networkinterface = self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface]
-            success = self._private_run_system_command("snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
+            success = self._private_run_system_command(
+                "snort", f'-D -i {networkinterface} -c "{self._private_networktrafficgeneratedrules_file}" -l "{self._private_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
         if success:
             self._private_log_information("IDS was started", False, True, True)
         else:
@@ -634,6 +641,8 @@ IDS-process:{ids_is_running_as_string}
         else:
             local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid] = str(uuid.uuid4())
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface] = "eth0"
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_prescript] = ""
+        local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_postscript] = ""
 
         with open(self._private_configuration_file, 'w+', encoding=self.encoding) as configfile:
             local_configparser.write(configfile)
@@ -645,11 +654,12 @@ IDS-process:{ids_is_running_as_string}
         self._private_log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
 
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str) -> None:
-        self._private_log_information(f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
+        self._private_log_information(
+            f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
     def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
         try:
-            self._private_log_information("Load configuration...",True,True,True)
+            self._private_log_information("Load configuration...", True, True, True)
             configurationfile = resolve_relative_path_from_current_working_directory(configurationfile)
             if not os.path.isfile(configurationfile):
                 raise Exception(F"'{configurationfile}' does not exist")
@@ -660,7 +670,7 @@ IDS-process:{ids_is_running_as_string}
             self._private_configuration = configuration
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             self._private_configuration_folder = os.path.join(self._private_repository_folder, self._private_configurationfolder_name)
-            self._private_log_information(f"Configuration-folder: '{self._private_configuration_folder}'",True,True,True)
+            self._private_log_information(f"Configuration-folder: '{self._private_configuration_folder}'", True, True, True)
             self._private_security_related_configuration_folder = os.path.join(self._private_configuration_folder, "Security")
 
             self._private_readme_file = os.path.join(self._private_repository_folder, "ReadMe.md")
@@ -670,7 +680,8 @@ IDS-process:{ids_is_running_as_string}
             self._private_dockercompose_file = os.path.join(self._private_configuration_folder, "docker-compose.yml")
             self._private_gitconfig_file = os.path.join(self._private_configuration_folder, self._private_gitconfiguration_filename)
             self._private_metadata_file = os.path.join(self._private_configuration_folder, self._private_metadata_filename)
-            self._private_applicationprovidedsecurityinformation_file = os.path.join(self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
+            self._private_applicationprovidedsecurityinformation_file = os.path.join(
+                self._private_security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
             self._private_networktrafficgeneratedrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Generated.rules")
             self._private_networktrafficcustomrules_file = os.path.join(self._private_security_related_configuration_folder, "Networktraffic.Custom.rules")
             self._private_propertiesconfiguration_file = os.path.join(self._private_security_related_configuration_folder, "Security.configuration")
@@ -697,20 +708,24 @@ IDS-process:{ids_is_running_as_string}
 
     def _private_load_securityconfiguration(self) -> None:
         try:
-            self._private_log_information("Load security-configuration...",True,True,True)
+            self._private_log_information("Load security-configuration...", True, True, True)
             securityconfiguration = configparser.ConfigParser()
             if not os.path.isfile(self._private_propertiesconfiguration_file):
                 raise Exception(F"'{self._private_propertiesconfiguration_file}' does not exist")
             securityconfiguration.read(self._private_propertiesconfiguration_file)
             self._private_securityconfiguration = securityconfiguration
 
-            self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
-            self._private_remote_address_is_available = string_has_nonwhitespace_content(self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress])
+            self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(
+                self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
+            self._private_remote_address_is_available = string_has_nonwhitespace_content(
+                self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress])
 
             if(not self._private_gpgkey_of_owner_is_available):
-                self._private_log_information("Warning: GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
+                self._private_log_information(
+                    "Warning: GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
             if(not self._private_remote_address_is_available):
-                self._private_log_information("Warning: Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
+                self._private_log_information(
+                    "Warning: Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
 
         except Exception as exception:
             self._private_log_exception(f"Error while loading configurationfile '{self._private_propertiesconfiguration_file}'.", exception)
@@ -774,7 +789,8 @@ Logs/Overhead/**
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress] = ""
-        securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self._private_get_hostname()}/{self._private_get_container_name()}"
+        securityconfiguration[self._private_securityconfiguration_section_general][
+            self._private_securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self._private_get_hostname()}/{self._private_get_container_name()}"
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser] = "username_on_siem_system"
         securityconfiguration.add_section(self._private_securityconfiguration_section_snort)
         securityconfiguration[self._private_securityconfiguration_section_snort][self._private_securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
@@ -821,17 +837,27 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
+    def _private_run_script_if_available(self, file: str):
+        if(string_has_content(file)):
+            self._private_start_program_synchronously(file, "", None, True)
+
     def _private_stop_container(self) -> None:
-        result = self._private_start_program_synchronously("docker-compose", f"--project-name {self._private_get_container_name()} down --remove-orphans", self._private_configuration_folder)[0]
+        result = self._private_start_program_synchronously(
+            "docker-compose", f"--project-name {self._private_get_container_name()} down --remove-orphans", self._private_configuration_folder)[0]
         success = result == 0
         if success:
             self._private_log_information("Container was stopped", False, True, True)
         else:
             self._private_log_warning("Container could not be stopped")
+        self._private_run_script_if_available(self._private_configuration.get(
+            self._private_configuration_section_general, self._private_configuration_section_general_key_postscript))
         return success
 
     def _private_start_container(self) -> bool:
-        success = self._private_run_system_command("docker-compose", f"--project-name {self._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        self._private_run_script_if_available(self._private_configuration.get(
+            self._private_configuration_section_general, self._private_configuration_section_general_key_prescript))
+        success = self._private_run_system_command(
+            "docker-compose", f"--project-name {self._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         if success:
             self._private_log_information("Container was started", False, True, True)
         else:
@@ -859,7 +885,8 @@ The license of this repository is defined in the file 'License.txt'.
                     process.command = " ".join(item.cmdline())
                     result.append(process)
                 except psutil.AccessDenied:
-                    pass  # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
+                    # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
+                    pass
             return result
 
     def _private_process_is_running(self, process_id: int, command: str) -> bool:
@@ -876,7 +903,8 @@ The license of this repository is defined in the file 'License.txt'.
                 if(string_is_none_or_whitespace(actual_command)):
                     self._private_log_warning(f"It seems that the process with id {expected_pid} was not executed", False, True, False)
                 else:
-                    self._private_log_warning(f"The process with id {expected_pid} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
+                    self._private_log_warning(
+                        f"The process with id {expected_pid} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
         return False
 
     def _private_get_local_ip_address(self) -> str:
@@ -914,7 +942,8 @@ The license of this repository is defined in the file 'License.txt'.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False, None, 3600, False, None, expect_exitcode_zero, False, False)
+        result = self._private_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
+                                                              None, 3600, False, None, expect_exitcode_zero, False, False)
         self._private_log_information(f"Program resulted in exitcode {result[0]}", True)
         self._private_log_information("Stdout:", True)
         self._private_log_information(result[1], True)
@@ -979,7 +1008,8 @@ The license of this repository is defined in the file 'License.txt'.
                 file.write(prefix+logentry)
 
     def _private_set_git_configuration(self):
-        self._private_start_program_synchronously("git", f"config --local include.path ../{self._private_configurationfolder_name}/{self._private_gitconfiguration_filename}", self._private_repository_folder)
+        self._private_start_program_synchronously(
+            "git", f"config --local include.path ../{self._private_configurationfolder_name}/{self._private_gitconfiguration_filename}", self._private_repository_folder)
 
     # </helper-functions>
 
