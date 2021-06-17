@@ -9,11 +9,11 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, str_none_safe, ensure_file_exists, string_has_content, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
+from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, resolve_relative_path, str_none_safe, ensure_file_exists, string_has_content, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
 
 product_name = "Adame"
-version = "1.2.0"
+version = "1.2.1"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -837,9 +837,11 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
-    def _private_run_script_if_available(self, file: str):
+    def _private_run_script_if_available(self, file: str, name:str):
         if(string_has_content(file)):
-            self._private_start_program_synchronously(file, "", None, True)
+            self._private_log_information(f"Run {name} (File: {file})", False, True, True)
+            file=resolve_relative_path(file,self._private_configuration_folder)
+            self._private_start_program_synchronously("sh",file, self._private_configuration_folder, True)
 
     def _private_stop_container(self) -> None:
         result = self._private_start_program_synchronously(
@@ -850,12 +852,12 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             self._private_log_warning("Container could not be stopped")
         self._private_run_script_if_available(self._private_configuration.get(
-            self._private_configuration_section_general, self._private_configuration_section_general_key_postscript))
+            self._private_configuration_section_general, self._private_configuration_section_general_key_postscript),"PostScript")
         return success
 
     def _private_start_container(self) -> bool:
         self._private_run_script_if_available(self._private_configuration.get(
-            self._private_configuration_section_general, self._private_configuration_section_general_key_prescript))
+            self._private_configuration_section_general, self._private_configuration_section_general_key_prescript),"PreScript")
         success = self._private_run_system_command(
             "docker-compose", f"--project-name {self._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         if success:
