@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "netifaces==0.10.9",
         "psutil==5.7.3",
-        "ScriptCollection==2.5.19",
+        "ScriptCollection==2.5.22",
     ],
     entry_points={
         'console_scripts': [
