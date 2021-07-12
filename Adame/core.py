@@ -401,7 +401,7 @@ class AdameCore:
         write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(container_is_running, ids_is_running))
         self._private_sc.git_unstage_all_changes(self._private_repository_folder)
         self._private_sc.git_stage_file(self._private_repository_folder, self._private_running_information_file)
-        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", False)
+        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", False, 1)
 
     def _private_adame_general_diagonisis(self) -> bool:
         if(not self._private_check_whether_required_tools_for_adame_are_available()):
@@ -912,10 +912,10 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_get_local_ip_address(self) -> str:
         return netifaces.ifaddresses(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
 
-    def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
+    def _private_commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0) -> None:
         repository = self._private_repository_folder
         self._private_save_metadata()
-        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, 1)
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, no_changes_behavior)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
