@@ -837,11 +837,11 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
-    def _private_run_script_if_available(self, file: str, name:str):
+    def _private_run_script_if_available(self, file: str, name: str):
         if(string_has_content(file)):
             self._private_log_information(f"Run {name} (File: {file})", False, True, True)
-            file=resolve_relative_path(file,self._private_configuration_folder)
-            self._private_start_program_synchronously("sh",file, self._private_configuration_folder, True)
+            file = resolve_relative_path(file, self._private_configuration_folder)
+            self._private_start_program_synchronously("sh", file, self._private_configuration_folder, True)
 
     def _private_stop_container(self) -> None:
         result = self._private_start_program_synchronously(
@@ -852,12 +852,12 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             self._private_log_warning("Container could not be stopped")
         self._private_run_script_if_available(self._private_configuration.get(
-            self._private_configuration_section_general, self._private_configuration_section_general_key_postscript),"PostScript")
+            self._private_configuration_section_general, self._private_configuration_section_general_key_postscript), "PostScript")
         return success
 
     def _private_start_container(self) -> bool:
         self._private_run_script_if_available(self._private_configuration.get(
-            self._private_configuration_section_general, self._private_configuration_section_general_key_prescript),"PreScript")
+            self._private_configuration_section_general, self._private_configuration_section_general_key_prescript), "PreScript")
         success = self._private_run_system_command(
             "docker-compose", f"--project-name {self._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
         if success:
@@ -915,7 +915,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
         repository = self._private_repository_folder
         self._private_save_metadata()
-        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, True)
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, 1)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
