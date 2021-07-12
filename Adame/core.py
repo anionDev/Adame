@@ -672,6 +672,7 @@ IDS-process:{ids_is_running_as_string}
         try:
             self._private_log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
             function()
+            self._private_commit(f"Migrated from v{sourceVersion} to v{target_version}")
             return target_version
         except Exception as exception:
             self._private_log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
