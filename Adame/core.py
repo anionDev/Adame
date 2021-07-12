@@ -677,7 +677,6 @@ IDS-process:{ids_is_running_as_string}
 
     def _private_migrate_configuration(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
-        latest_adame_version = parse(version)
 
         if config_format_version < parse('1.2.2'):
             raise ValueError("Migrations of versions older than 1.2.2 are not supported")
@@ -686,7 +685,7 @@ IDS-process:{ids_is_running_as_string}
 
         configuration = configparser.ConfigParser()
         configuration.read(configuration_file)
-        configuration.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, latest_adame_version)
+        configuration.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, version)
         self._private_save_configfile(configuration_file, configuration)
         return configuration
 
