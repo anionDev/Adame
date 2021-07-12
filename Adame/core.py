@@ -1,6 +1,7 @@
 import os
 import configparser
 import socket
+import time
 import traceback
 import uuid
 from argparse import RawTextHelpFormatter
@@ -8,12 +9,13 @@ from configparser import ConfigParser
 from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
+from packaging.version import parse
 import psutil
 from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, resolve_relative_path, str_none_safe, ensure_file_exists, string_has_content, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
 
 product_name = "Adame"
-version = "1.2.3"
+version = "1.2.4"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -35,6 +37,8 @@ class AdameCore:
     _private_configuration_section_general_key_remoteaddress: str = "remoteaddress"
     _private_configuration_section_general_key_remotename: str = "remotename"
     _private_configuration_section_general_key_remotebranch: str = "remotebranch"
+    _private_configuration_section_general_key_maximalexpectedstartduration: str = "maximalexpectedstartduration"
+    _private_configuration_section_general_key_maximalexpectedstartduration_defaultvalue: int = 0
     _private_securityconfiguration_section_general: str = "general"
     _private_securityconfiguration_section_general_key_siemaddress: str = "siemaddress"
     _private_securityconfiguration_section_general_key_siemfolder: str = "siemfolder"
@@ -401,7 +405,7 @@ class AdameCore:
         write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(container_is_running, ids_is_running))
         self._private_sc.git_unstage_all_changes(self._private_repository_folder)
         self._private_sc.git_stage_file(self._private_repository_folder, self._private_running_information_file)
-        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", False)
+        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", False, 1)
 
     def _private_adame_general_diagonisis(self) -> bool:
         if(not self._private_check_whether_required_tools_for_adame_are_available()):
@@ -636,6 +640,9 @@ IDS-process:{ids_is_running_as_string}
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryversion] = "1.0.0"
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_name] = name
         local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_owner] = owner
+        local_configparser.set(self._private_configuration_section_general, self._private_configuration_section_general_key_maximalexpectedstartduration,
+                               str(self._private_configuration_section_general_key_maximalexpectedstartduration_defaultvalue))
+
         if self._private_demo_mode:
             local_configparser[self._private_configuration_section_general][self._private_configuration_section_general_key_repositoryid] = "de30de30-de30-de30-de30-de30de30de30"
         else:
@@ -657,6 +664,31 @@ IDS-process:{ids_is_running_as_string}
         self._private_log_information(
             f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
 
+    def _private_save_configfile(self, file: str, configuration: configparser.ConfigParser) -> None:
+        with open(file, 'w', encoding=self.encoding) as file_writer:
+            configuration.write(file_writer)
+
+    def _private_migrate_v_1_2_2_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> str:
+        configuration_v_1_2_2.set(self._private_configuration_section_general, self._private_configuration_section_general_key_maximalexpectedstartduration,
+                                  str(self._private_configuration_section_general_key_maximalexpectedstartduration_defaultvalue))
+        configuration_v_1_2_2.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, "1.2.3")
+        self._private_save_configfile(configuration_file, configuration_v_1_2_2)
+        return '1.2.3'
+
+    def _private_migrate_configuration(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
+        config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
+
+        if config_format_version < parse('1.2.2'):
+            raise ValueError("Migrations of versions older than 1.2.2 are not supported")
+        if config_format_version == parse('1.2.2'):
+            config_format_version = self._private_migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration)
+
+        configuration = configparser.ConfigParser()
+        configuration.read(configuration_file)
+        configuration.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, version)
+        self._private_save_configfile(configuration_file, configuration)
+        return configuration
+
     def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
         try:
             self._private_log_information("Load configuration...", True, True, True)
@@ -666,6 +698,8 @@ IDS-process:{ids_is_running_as_string}
             self._private_configuration_file = configurationfile
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
+
+            configuration = self._private_migrate_configuration(self._private_configuration_file, configuration)
 
             self._private_configuration = configuration
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
@@ -860,6 +894,7 @@ The license of this repository is defined in the file 'License.txt'.
             self._private_configuration_section_general, self._private_configuration_section_general_key_prescript), "PreScript")
         success = self._private_run_system_command(
             "docker-compose", f"--project-name {self._private_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._private_configuration_folder)
+        time.sleep(int(self._private_configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self._private_log_information("Container was started", False, True, True)
         else:
@@ -912,10 +947,10 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_get_local_ip_address(self) -> str:
         return netifaces.ifaddresses(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
 
-    def _private_commit(self, message: str, stage_all_changes: bool = True) -> None:
+    def _private_commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0) -> None:
         repository = self._private_repository_folder
         self._private_save_metadata()
-        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, 1)
+        commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, no_changes_behavior)
         remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
         branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
         remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
