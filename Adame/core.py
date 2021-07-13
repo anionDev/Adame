@@ -15,7 +15,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.2.6"
+version = "1.2.7"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -672,7 +672,7 @@ IDS-process:{ids_is_running_as_string}
         try:
             self._private_log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
             function()
-            self._private_commit(f"Migrated from v{sourceVersion} to v{target_version}")
+            self._private_commit(f"Migrated from v{sourceVersion} to v{target_version}", True, no_changes_behavior=1, overhead=False)
             return target_version
         except Exception as exception:
             self._private_log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
@@ -685,19 +685,23 @@ IDS-process:{ids_is_running_as_string}
         self._private_save_configfile(configuration_file, configuration_v_1_2_2)
 
     def _private_migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
-        config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
-        if config_format_version > parse(version):
-            raise ValueError(f"Can not run {product_name} because the format-version is greater than the current used version of {product_name}. Please update {product_name} to the latest version.")
-        if config_format_version < parse('1.2.2'):
-            raise ValueError("Migrations of versions older than v1.2.2 are not supported")
+        # Migration should only be done when the repository already exist and the repository-creation-process is already completed.
+        if(os.path.isdir(os.path.join(self._private_repository_folder, ".git"))):
+            config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
+            if config_format_version > parse(version):
+                raise ValueError(
+                    f"Can not run {product_name} because the format-version is greater than the current used version of {product_name}. Please update {product_name} to the latest version.")
+            if config_format_version < parse('1.2.2'):
+                raise ValueError("Migrations of versions older than v1.2.2 are not supported")
 
-        if config_format_version == parse('1.2.2'):
-            config_format_version = self._private_migrate_overhead('1.2.2', '1.2.3', lambda:  self._private_migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration))
+            if config_format_version == parse('1.2.2'):
+                config_format_version = self._private_migrate_overhead('1.2.2', '1.2.3', lambda:  self._private_migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration))
 
-        configuration = configparser.ConfigParser()
-        configuration.read(configuration_file)
-        configuration.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, version)
-        self._private_save_configfile(configuration_file, configuration)
+            configuration = configparser.ConfigParser()
+            configuration.read(configuration_file)
+            configuration.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, version)
+            self._private_save_configfile(configuration_file, configuration)
+            self._private_commit(f"Updated repository-version to v{version}", True, no_changes_behavior=1, overhead=False)
         return configuration
 
     def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
@@ -707,13 +711,13 @@ IDS-process:{ids_is_running_as_string}
             if not os.path.isfile(configurationfile):
                 raise Exception(F"'{configurationfile}' does not exist")
             self._private_configuration_file = configurationfile
+            self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
 
             configuration = self._private_migrate_configuration_if_required(self._private_configuration_file, configuration)
 
             self._private_configuration = configuration
-            self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             self._private_configuration_folder = os.path.join(self._private_repository_folder, self._private_configurationfolder_name)
             self._private_log_information(f"Configuration-folder: '{self._private_configuration_folder}'", True, True, True)
             self._private_security_related_configuration_folder = os.path.join(self._private_configuration_folder, "Security")
@@ -958,20 +962,26 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_get_local_ip_address(self) -> str:
         return netifaces.ifaddresses(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
 
-    def _private_commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0) -> None:
+    def _private_commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0, overhead: bool = True) -> None:
+        # no_changes_behavior=0 => No commit
+        # no_changes_behavior=1 => Commit anyway
+        # no_changes_behavior=2 => Exception
         repository = self._private_repository_folder
-        self._private_save_metadata()
+        if overhead:
+            self._private_save_metadata()
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, no_changes_behavior)
-        remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
-        branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
-        remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general, self._private_configuration_section_general_key_remoteaddress)
-        self._private_log_information(f"Created commit {commit_id} in repository '{repository}' (commit-message: '{message}')", False, True, True)
-        if self._private_remote_address_is_available:
-            self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
-            self._private_sc.git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
-            self._private_log_information(f"Pushed repository '{repository}' to remote remote_name ('{remote_address}')", False, True, True)
-        else:
-            self._private_log_warning("Either no remote-address is defined or the remote-address for the backup of the app-repository is not available.")
+        if overhead:
+            remote_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotename]
+            branch_name = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remotebranch]
+            remote_address = self._private_securityconfiguration.get(self._private_securityconfiguration_section_general,
+                                                                     self._private_configuration_section_general_key_remoteaddress)
+            self._private_log_information(f"Created commit {commit_id} in repository '{repository}' (commit-message: '{message}')", False, True, True)
+            if self._private_remote_address_is_available:
+                self._private_sc.git_add_or_set_remote_address(self._private_repository_folder, remote_name, remote_address)
+                self._private_sc.git_push(self._private_repository_folder, remote_name, branch_name, branch_name, False, False)
+                self._private_log_information(f"Pushed repository '{repository}' to remote remote_name ('{remote_address}')", False, True, True)
+            else:
+                self._private_log_warning("Either no remote-address is defined or the remote-address for the backup of the app-repository is not available.")
 
     def _private_name_to_docker_allowed_name(self, name: str) -> str:
         name = name.lower()
