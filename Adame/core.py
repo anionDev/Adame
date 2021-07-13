@@ -672,7 +672,7 @@ IDS-process:{ids_is_running_as_string}
         try:
             self._private_log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
             function()
-            self._private_commit(f"Migrated from v{sourceVersion} to v{target_version}")
+            self._private_commit(f"Migrated from v{sourceVersion} to v{target_version}", True, no_changes_behavior=1)
             return target_version
         except Exception as exception:
             self._private_log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
@@ -687,7 +687,8 @@ IDS-process:{ids_is_running_as_string}
     def _private_migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
         if config_format_version > parse(version):
-            raise ValueError(f"Can not run {product_name} because the format-version is greater than the current used version of {product_name}. Please update {product_name} to the latest version.")
+            raise ValueError(
+                f"Can not run {product_name} because the format-version is greater than the current used version of {product_name}. Please update {product_name} to the latest version.")
         if config_format_version < parse('1.2.2'):
             raise ValueError("Migrations of versions older than v1.2.2 are not supported")
 
@@ -698,6 +699,7 @@ IDS-process:{ids_is_running_as_string}
         configuration.read(configuration_file)
         configuration.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, version)
         self._private_save_configfile(configuration_file, configuration)
+        self._private_commit(f"Updated repository-version to v{version}", True, no_changes_behavior=1)
         return configuration
 
     def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
@@ -959,6 +961,9 @@ The license of this repository is defined in the file 'License.txt'.
         return netifaces.ifaddresses(self._private_configuration[self._private_configuration_section_general][self._private_configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
 
     def _private_commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0) -> None:
+        # no_changes_behavior=0 => No commit
+        # no_changes_behavior=1 => Commit anyway
+        # no_changes_behavior=2 => Exception
         repository = self._private_repository_folder
         self._private_save_metadata()
         commit_id = self._private_sc.git_commit(repository, message, self._private_adame_commit_author_name, "", stage_all_changes, no_changes_behavior)
