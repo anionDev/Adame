@@ -684,11 +684,13 @@ IDS-process:{ids_is_running_as_string}
         configuration_v_1_2_2.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, "1.2.3")
         self._private_save_configfile(configuration_file, configuration_v_1_2_2)
 
-    def _private_migrate_configuration(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
+    def _private_migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
-
+        if config_format_version > parse(version):
+            raise ValueError(f"Can not run {product_name} because the format-version is greater than the current used version of {product_name}. Please update {product_name} to the latest version.")
         if config_format_version < parse('1.2.2'):
-            raise ValueError("Migrations of versions older than 1.2.2 are not supported")
+            raise ValueError("Migrations of versions older than v1.2.2 are not supported")
+
         if config_format_version == parse('1.2.2'):
             config_format_version = self._private_migrate_overhead('1.2.2', '1.2.3', lambda:  self._private_migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration))
 
@@ -708,7 +710,7 @@ IDS-process:{ids_is_running_as_string}
             configuration = configparser.ConfigParser()
             configuration.read(configurationfile)
 
-            configuration = self._private_migrate_configuration(self._private_configuration_file, configuration)
+            configuration = self._private_migrate_configuration_if_required(self._private_configuration_file, configuration)
 
             self._private_configuration = configuration
             self._private_repository_folder = os.path.dirname(os.path.dirname(configurationfile))
