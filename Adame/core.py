@@ -668,7 +668,7 @@ IDS-process:{ids_is_running_as_string}
         with open(file, 'w', encoding=self.encoding) as file_writer:
             configuration.write(file_writer)
 
-    def _private_migrate_overhead(self, sourceVersion, target_version, function):
+    def _private_migrate_overhead(self, sourceVersion, target_version, function) -> None:
         try:
             self._private_log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
             function()
@@ -676,6 +676,7 @@ IDS-process:{ids_is_running_as_string}
             return target_version
         except Exception as exception:
             self._private_log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
+            raise
 
     def _private_migrate_v_1_2_2_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> None:
         configuration_v_1_2_2.set(self._private_configuration_section_general, self._private_configuration_section_general_key_maximalexpectedstartduration,
