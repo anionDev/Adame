@@ -15,7 +15,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.2.4"
+version = "1.2.5"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -668,12 +668,21 @@ IDS-process:{ids_is_running_as_string}
         with open(file, 'w', encoding=self.encoding) as file_writer:
             configuration.write(file_writer)
 
-    def _private_migrate_v_1_2_2_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> str:
+    def _private_migrate_overhead(self, sourceVersion, target_version, function) -> None:
+        try:
+            self._private_log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
+            function()
+            self._private_commit(f"Migrated from v{sourceVersion} to v{target_version}")
+            return target_version
+        except Exception as exception:
+            self._private_log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
+            raise
+
+    def _private_migrate_v_1_2_2_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> None:
         configuration_v_1_2_2.set(self._private_configuration_section_general, self._private_configuration_section_general_key_maximalexpectedstartduration,
                                   str(self._private_configuration_section_general_key_maximalexpectedstartduration_defaultvalue))
         configuration_v_1_2_2.set(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion, "1.2.3")
         self._private_save_configfile(configuration_file, configuration_v_1_2_2)
-        return '1.2.3'
 
     def _private_migrate_configuration(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         config_format_version = parse(configuration.get(self._private_configuration_section_general, self._private_configuration_section_general_key_formatversion))
@@ -681,7 +690,7 @@ IDS-process:{ids_is_running_as_string}
         if config_format_version < parse('1.2.2'):
             raise ValueError("Migrations of versions older than 1.2.2 are not supported")
         if config_format_version == parse('1.2.2'):
-            config_format_version = self._private_migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration)
+            config_format_version = self._private_migrate_overhead('1.2.2', '1.2.3', lambda:  self._private_migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration))
 
         configuration = configparser.ConfigParser()
         configuration.read(configuration_file)
