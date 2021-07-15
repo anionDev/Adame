@@ -32,6 +32,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "netifaces==0.10.9",
+        "packaging==21.0",
         "psutil==5.7.3",
         "ScriptCollection==2.5.27",
     ],
