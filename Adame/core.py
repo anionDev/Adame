@@ -15,7 +15,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.2.9"
+version = "1.2.10"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -404,8 +404,7 @@ class AdameCore:
     def _private_log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
         write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(container_is_running, ids_is_running))
         self._private_sc.git_unstage_all_changes(self._private_repository_folder)
-        self._private_sc.git_stage_file(self._private_repository_folder, self._private_running_information_file)
-        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", False, 1)
+        self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", True, 1)
 
     def _private_adame_general_diagonisis(self) -> bool:
         if(not self._private_check_whether_required_tools_for_adame_are_available()):
