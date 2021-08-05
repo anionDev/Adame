@@ -73,3 +73,8 @@ To install an Adame simply execute `pip install Adame-1.0.0-py3-none-any.whl`.
 ## License
 
 See `License.txt` for license-information.
+
+## TODO-List
+
+- Bug: When running in a different folder (like `adame startadvanced -c someotherfolder/Adame.configuration` then the prescript and postscript may have wrong working-directories.
+- Feature: Before starting the docker-container then if a container with same name already exists the already existing container should be stopped and then removed to avoid errors due to already existing container-names.
