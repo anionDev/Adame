@@ -18,5 +18,4 @@ Logs/IDS;d;user:group;777
 Logs/IDS/.gitkeep;f;user:group;666
 Logs/Overhead;d;user:group;777
 Logs/Overhead/.gitkeep;f;user:group;666
-Logs/Overhead/Adame_2021-09-20_15-41-29.log;f;user:group;666
 ReadMe.md;f;user:group;666
