@@ -10,11 +10,11 @@ branches:
     regex: 'development'
     increment: Patch
     mode: ContinuousDelivery
-    source-branches: ['master']
+    source-branches: ['main']
   nextrelease:
-    regex: 'next-release'
+    regex: 'stable'
     increment: Patch
     mode: ContinuousDelivery
-    source-branches: ['master']
+    source-branches: ['main']
 ignore:
   sha: []
