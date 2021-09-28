@@ -15,7 +15,7 @@ from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_emp
 import netifaces
 
 product_name = "Adame"
-version = "1.2.11"
+version = "1.2.12"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
