@@ -161,7 +161,7 @@ class AdameCore:
         self._private_create_file_in_repository(self._private_gitconfig_file, self._private_get_gitconfig_file_content(owner,
                                                 self._private_gpgkey_of_owner_is_available, gpgkey_of_owner))
 
-        self._private_sc.set_file_permission(self._private_log_folder_for_ids, "666", True)
+        self._private_sc.set_permission(self._private_log_folder_for_ids, "666", True)
 
         self._private_start_program_synchronously("git", "init", self._private_repository_folder)
         self._private_set_git_configuration()  # TODO Improve: Call this function always before executing git commands (except creating a repository)
