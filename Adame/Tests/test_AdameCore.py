@@ -3,29 +3,22 @@ import tempfile
 import uuid
 import os
 import re
-import importlib.util
 from distutils.dir_util import copy_tree
-from ScriptCollection.core import ensure_directory_does_not_exist, ensure_directory_exists, get_direct_files_of_folder, get_direct_folders_of_folder, file_is_empty
-
-adame_module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f"..{os.path.sep}Adame{os.path.sep}core.py"))
-spec = importlib.util.spec_from_file_location("core", adame_module_path)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-
-AdameCore = getattr(module, "AdameCore")
+from ScriptCollection.Utilities.GeneralUtilities import GeneralUtilities
+from ..AdameCore import Adame
 
 
 class EnvironmentForTest:
-    adame: AdameCore = None
+    adame: Adame = None
     folder: str = None
     adame_configuration_file: str = None
 
     def __init__(self, folder=None):
         if(folder is None):
             folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
-        ensure_directory_exists(folder)
+        GeneralUtilities.ensure_directory_exists(folder)
         self.folder = folder
-        self.adame = AdameCore()
+        self.adame = Adame()
         self.adame.verbose = True
         self.adame.set_test_mode(True)
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
@@ -39,7 +32,7 @@ class EnvironmentForTest:
         self.adame._private_sc.verify_no_pending_mock_program_calls()
 
     def dispose(self):
-        ensure_directory_does_not_exist(self.folder)
+        GeneralUtilities.ensure_directory_does_not_exist(self.folder)
         self.adame.verify_no_pending_mock_process_queries()
         self.adame._private_sc.verify_no_pending_mock_program_calls()
 
@@ -50,7 +43,7 @@ class MiscellaneousTests(unittest.TestCase):
         """UnitTest
 Tests that the constructor does not throw any exception"""
 
-        AdameCore()
+        Adame()
 
     def test_command_create(self):
         """UnitTest
@@ -70,8 +63,8 @@ Tests that the create-command works as expected"""
 
             repository_folder = environment_for_test.folder
             assert os.path.isdir(repository_folder)
-            assert len(get_direct_folders_of_folder(repository_folder)) == 3  # ".git", "Configuration", "Logs"
-            assert len(get_direct_files_of_folder(repository_folder)) == 3
+            assert len(GeneralUtilities.get_direct_folders_of_folder(repository_folder)) == 3  # ".git", "Configuration", "Logs"
+            assert len(GeneralUtilities.get_direct_files_of_folder(repository_folder)) == 3
 
             assert os.path.isfile(os.path.join(repository_folder, ".gitignore"))
             assert os.path.isfile(os.path.join(repository_folder, "ReadMe.md"))
@@ -80,70 +73,70 @@ Tests that the create-command works as expected"""
 
             log_folder = os.path.join(repository_folder, "Logs")
             assert os.path.isdir(log_folder)
-            assert len(get_direct_folders_of_folder(log_folder)) == 3  # "Overhead", "Application", "IDS"
-            assert len(get_direct_files_of_folder(log_folder)) == 0
+            assert len(GeneralUtilities.get_direct_folders_of_folder(log_folder)) == 3  # "Overhead", "Application", "IDS"
+            assert len(GeneralUtilities.get_direct_files_of_folder(log_folder)) == 0
 
             log_overhead_folder = os.path.join(log_folder, "Overhead")
             assert os.path.isdir(log_overhead_folder)
-            assert len(get_direct_folders_of_folder(log_overhead_folder)) == 0
-            overheadlogfiles = get_direct_files_of_folder(log_overhead_folder)
+            assert len(GeneralUtilities.get_direct_folders_of_folder(log_overhead_folder)) == 0
+            overheadlogfiles = GeneralUtilities.get_direct_files_of_folder(log_overhead_folder)
             assert len(overheadlogfiles) == 2
             gitkeep_file = overheadlogfiles[0]
             assert gitkeep_file == os.path.join(log_overhead_folder, ".gitkeep")
-            assert file_is_empty(gitkeep_file)
-            assert not file_is_empty(overheadlogfiles[1])
+            assert GeneralUtilities.file_is_empty(gitkeep_file)
+            assert not GeneralUtilities.file_is_empty(overheadlogfiles[1])
 
             log_application_folder = os.path.join(log_folder, "Application")
             assert os.path.isdir(log_application_folder)
-            assert len(get_direct_folders_of_folder(log_application_folder)) == 0
-            application_logfiles = get_direct_files_of_folder(log_application_folder)
+            assert len(GeneralUtilities.get_direct_folders_of_folder(log_application_folder)) == 0
+            application_logfiles = GeneralUtilities.get_direct_files_of_folder(log_application_folder)
             assert len(application_logfiles) == 1  # ".gitkeep"
-            assert file_is_empty(application_logfiles[0])
+            assert GeneralUtilities.file_is_empty(application_logfiles[0])
 
             log_ids_folder = os.path.join(log_folder, "IDS")
             assert os.path.isdir(log_ids_folder)
-            assert len(get_direct_folders_of_folder(log_ids_folder)) == 0
-            ids_logfiles = get_direct_files_of_folder(log_ids_folder)
+            assert len(GeneralUtilities.get_direct_folders_of_folder(log_ids_folder)) == 0
+            ids_logfiles = GeneralUtilities.get_direct_files_of_folder(log_ids_folder)
             assert len(ids_logfiles) == 1  # ".gitkeep"
-            assert file_is_empty(ids_logfiles[0])
+            assert GeneralUtilities.file_is_empty(ids_logfiles[0])
 
             configuration_folder = os.path.join(environment_for_test.folder,  "Configuration")
             assert os.path.isdir(configuration_folder)
-            assert len(get_direct_folders_of_folder(configuration_folder)) == 1  # "Security"
-            assert len(get_direct_files_of_folder(configuration_folder)) == 5
+            assert len(GeneralUtilities.get_direct_folders_of_folder(configuration_folder)) == 1  # "Security"
+            assert len(GeneralUtilities.get_direct_files_of_folder(configuration_folder)) == 5
             adameconfigurationfile = os.path.join(configuration_folder, "Adame.configuration")
             assert os.path.isfile(adameconfigurationfile)
-            assert not file_is_empty(adameconfigurationfile)
+            assert not GeneralUtilities.file_is_empty(adameconfigurationfile)
             dockercomposefile = os.path.join(configuration_folder, "docker-compose.yml")
             assert os.path.isfile(dockercomposefile)
-            assert not file_is_empty(dockercomposefile)
+            assert not GeneralUtilities.file_is_empty(dockercomposefile)
             runninginformationfile = os.path.join(configuration_folder, "RunningInformation.txt")
             assert os.path.isfile(runninginformationfile)
-            assert not file_is_empty(runninginformationfile)
+            assert not GeneralUtilities.file_is_empty(runninginformationfile)
             assert os.path.join(configuration_folder, "Adame.configuration") == environment_for_test.adame_configuration_file
             dockercomposefile = os.path.join(configuration_folder, ".gitconfig")
             assert os.path.isfile(dockercomposefile)
-            assert not file_is_empty(dockercomposefile)
+            assert not GeneralUtilities.file_is_empty(dockercomposefile)
             dockercomposefile = os.path.join(configuration_folder, "FileMetadata.csv")
             assert os.path.isfile(dockercomposefile)
-            assert not file_is_empty(dockercomposefile)
+            assert not GeneralUtilities.file_is_empty(dockercomposefile)
 
             security_folder = os.path.join(configuration_folder, "Security")
             assert os.path.isdir(security_folder)
-            assert len(get_direct_folders_of_folder(security_folder)) == 0
-            assert len(get_direct_files_of_folder(security_folder)) == 4
+            assert len(GeneralUtilities.get_direct_folders_of_folder(security_folder)) == 0
+            assert len(GeneralUtilities.get_direct_files_of_folder(security_folder)) == 4
             applicationprovidedscurityinformationfile = os.path.join(security_folder, "ApplicationProvidedSecurityInformation.xml")
             assert os.path.isfile(applicationprovidedscurityinformationfile)
-            assert file_is_empty(applicationprovidedscurityinformationfile)
+            assert GeneralUtilities.file_is_empty(applicationprovidedscurityinformationfile)
             networktrafficcustomrules = os.path.join(security_folder, "Networktraffic.Custom.rules")
             assert os.path.isfile(networktrafficcustomrules)
-            assert file_is_empty(networktrafficcustomrules)
+            assert GeneralUtilities.file_is_empty(networktrafficcustomrules)
             networktrafficgeneratedrules = os.path.join(security_folder, "Networktraffic.Generated.rules")
             assert os.path.isfile(networktrafficgeneratedrules)
-            assert file_is_empty(networktrafficgeneratedrules)
+            assert GeneralUtilities.file_is_empty(networktrafficgeneratedrules)
             securityconfigurationfile = os.path.join(security_folder, "Security.configuration")
             assert os.path.isfile(securityconfigurationfile)
-            assert not file_is_empty(securityconfigurationfile)
+            assert not GeneralUtilities.file_is_empty(securityconfigurationfile)
 
         finally:
             environment_for_test.dispose()
@@ -226,7 +219,7 @@ Tests that the stop-command works as expected"""
         """RegressionTest
 Ensures that adame._private_process_is_running does not throw an exception when adame._private_test_mode is false."""
 
-        adame = AdameCore()
+        adame = Adame()
         adame.verbose = True
         adame.set_test_mode(False)
         assert not adame._private_process_is_running(42, "test")
@@ -235,17 +228,18 @@ Ensures that adame._private_process_is_running does not throw an exception when 
         """DemonstrationTest
 Generates a simple adame-managed-repository as demonstration."""
 
-        result_folder = f"{os.path.dirname(os.path.realpath(__file__))}{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository"
-        ensure_directory_does_not_exist(result_folder)
-        ensure_directory_exists(result_folder)
+        result_folder = GeneralUtilities.resolve_relative_path(
+            f"..{os.path.sep}..{os.path.sep}Reference{os.path.sep}Examples{os.path.sep}NewRepository", os.path.dirname(os.path.realpath(__file__)))
+        GeneralUtilities.ensure_directory_does_not_exist(result_folder)
+        GeneralUtilities.ensure_directory_exists(result_folder)
         tests_folder = tempfile.gettempdir()+os.path.sep+str(uuid.uuid4())
-        ensure_directory_exists(tests_folder)
+        GeneralUtilities.ensure_directory_exists(tests_folder)
         environment_for_test = EnvironmentForTest(tests_folder)
         environment_for_test.adame.set_test_mode(True)
         environment_for_test.adame._private_demo_mode = True
         environment_for_test.adame.verbose = True
         demoowner_name = "DemoOwner"
         environment_for_test.create("DemoApplication", demoowner_name)
-        ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")
+        GeneralUtilities.ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")
         copy_tree(tests_folder, result_folder)
-        ensure_directory_does_not_exist(tests_folder)
+        GeneralUtilities.ensure_directory_does_not_exist(tests_folder)

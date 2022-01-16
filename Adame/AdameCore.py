@@ -11,8 +11,9 @@ from distutils.spawn import find_executable
 import argparse
 from packaging.version import parse
 import psutil
-from ScriptCollection.core import ScriptCollection, file_is_empty, folder_is_empty, resolve_relative_path, str_none_safe, ensure_file_exists, string_has_content, write_message_to_stdout, write_message_to_stderr, write_exception_to_stderr_with_traceback, write_text_to_file, ensure_directory_exists, resolve_relative_path_from_current_working_directory, string_has_nonwhitespace_content, current_user_has_elevated_privileges, read_text_from_file, get_time_based_logfile_by_folder, datetime_to_string_for_logfile_entry, string_is_none_or_whitespace, string_to_boolean, get_direct_files_of_folder, get_time_based_logfilename
 import netifaces
+from ScriptCollection.Core.ScriptCollectionCore import ScriptCollectionCore
+from ScriptCollection.Utilities.GeneralUtilities import GeneralUtilities
 
 product_name = "Adame"
 version = "1.2.13"
@@ -20,7 +21,7 @@ __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
 
-class AdameCore:
+class Adame:
 
     # <constants>
     _private_adame_commit_author_name: str = product_name
@@ -91,7 +92,7 @@ class AdameCore:
 
     _private_test_mode: bool = False
     _private_demo_mode: bool = False
-    _private_sc: ScriptCollection = ScriptCollection()
+    _private_sc: ScriptCollectionCore = ScriptCollectionCore()
     _private_mock_process_queries: list = list()
     _private_gpgkey_of_owner_is_available: bool = False
     _private_remote_address_is_available: bool = False
@@ -121,10 +122,10 @@ class AdameCore:
         if folder is None:
             raise Exception("Argument 'folder' is not defined")
         else:
-            if(os.path.isdir(folder) and not folder_is_empty(folder)):
+            if(os.path.isdir(folder) and not GeneralUtilities.folder_is_empty(folder)):
                 raise Exception(f"Folder '{folder}' does already have content")
             else:
-                ensure_directory_exists(folder)
+                GeneralUtilities.ensure_directory_exists(folder)
 
         if image is None:
             raise Exception("Argument 'image' is not defined")
@@ -135,11 +136,11 @@ class AdameCore:
         if gpgkey_of_owner is None:
             gpgkey_of_owner = ""
 
-        configuration_file = resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
+        configuration_file = GeneralUtilities.resolve_relative_path_from_current_working_directory(os.path.join(folder, "Configuration", "Adame.configuration"))
 
         self._private_create_adame_configuration_file(configuration_file, name, owner)
 
-        ensure_directory_exists(self._private_security_related_configuration_folder)
+        GeneralUtilities.ensure_directory_exists(self._private_security_related_configuration_folder)
 
         self._private_create_file_in_repository(self._private_readme_file, self._private_get_readme_file_content(self._private_configuration, image))
         self._private_create_file_in_repository(self._private_license_file, self._private_get_license_file_content(self._private_configuration))
@@ -299,9 +300,9 @@ class AdameCore:
         siemaddress = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
         siemfolder = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemfolder]
         siemuser = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemuser]
-        log_files = get_direct_files_of_folder(self._private_log_folder_for_internal_overhead) + \
-            get_direct_files_of_folder(self._private_log_folder_for_ids)+get_direct_files_of_folder(self._private_log_folder_for_application)
-        sublogfolder = get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+        log_files = GeneralUtilities.get_direct_files_of_folder(self._private_log_folder_for_internal_overhead) + \
+            GeneralUtilities.get_direct_files_of_folder(self._private_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self._private_log_folder_for_application)
+        sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
             if os.path.basename(log_file) != self._private_gitkeep_filename:
                 exitcode = self._private_start_program_synchronously(
@@ -358,7 +359,7 @@ class AdameCore:
 
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
-        process = AdameCore._private_process()
+        process = Adame._private_process()
         process.process_id = process_id
         process.command = command
         resultlist = list()
@@ -381,15 +382,15 @@ class AdameCore:
 
     def _private_save_metadata(self) -> None:
         self._private_sc.export_filemetadata(self._private_repository_folder, self._private_metadata_file, self.encoding, self._private_use_file)
-        content = read_text_from_file(self._private_metadata_file, self.encoding)
+        content = GeneralUtilities.read_text_from_file(self._private_metadata_file, self.encoding)
         content = content.replace("\\", self._private_path_separator)
-        write_text_to_file(self._private_metadata_file, content, self.encoding)
+        GeneralUtilities.write_text_to_file(self._private_metadata_file, content, self.encoding)
 
     def _private_restore_metadata(self) -> None:
         self._private_sc.restore_filemetadata(self._private_repository_folder, self._private_metadata_file, False, self.encoding)
 
     def _private_use_file(self, repository_folder: str, file_or_folder: str) -> bool:
-        if(string_is_none_or_whitespace(file_or_folder)):
+        if(GeneralUtilities.string_is_none_or_whitespace(file_or_folder)):
             return True
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self._private_path_separator).startswith(f".git{self._private_path_separator}")):
             return False
@@ -399,11 +400,11 @@ class AdameCore:
     def _private_check_whether_execution_is_possible(self) -> None:
         if self._private_test_mode:
             return
-        if(not current_user_has_elevated_privileges()):
+        if(not GeneralUtilities.current_user_has_elevated_privileges()):
             raise Exception("Adame requries elevated privileges to get executed")
 
     def _private_log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
-        write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(container_is_running, ids_is_running))
+        GeneralUtilities.write_text_to_file(self._private_running_information_file, self._private_get_running_information_file_content(container_is_running, ids_is_running))
         self._private_sc.git_unstage_all_changes(self._private_repository_folder)
         self._private_commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", True, 1)
 
@@ -436,7 +437,7 @@ class AdameCore:
         ]
         for tool in tools:
             if not self._private_tool_exists_in_path(tool):
-                write_message_to_stderr(f"Tool '{tool}' is not available")
+                GeneralUtilities.write_message_to_stderr(f"Tool '{tool}' is not available")
                 result = False
         for tool in recommended_tools:
             if not self._private_tool_exists_in_path(tool):
@@ -474,7 +475,7 @@ This function is idempotent."""
     def _private_regenerate_networktrafficgeneratedrules_filecontent(self) -> None:
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
-        customrules = read_text_from_file(self._private_networktrafficcustomrules_file, self.encoding)
+        customrules = GeneralUtilities.read_text_from_file(self._private_networktrafficcustomrules_file, self.encoding)
         applicationprovidedrules = "# (not implemented yet)"  # TODO Improve: Implement usage of application-provided security-information
         local_ip_address = self._private_get_local_ip_address()
         file_content = f"""# Rules file for Snort generated by Adame.
@@ -495,12 +496,12 @@ This function is idempotent."""
 {customrules}
 """
         file_content = file_content.replace(self._private_localipaddress_placeholder, local_ip_address)  # replacement to allow to use this variable in the customrules.
-        write_text_to_file(self._private_networktrafficgeneratedrules_file, file_content, self.encoding)
+        GeneralUtilities.write_text_to_file(self._private_networktrafficgeneratedrules_file, file_content, self.encoding)
 
     def _private_check_siem_is_reachable(self) -> bool:
         """This function checks wether the SIEM is available."""
         siemaddress = self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_siemaddress]
-        if string_is_none_or_whitespace(siemaddress):
+        if GeneralUtilities.string_is_none_or_whitespace(siemaddress):
             return False
         return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
@@ -580,13 +581,13 @@ This function is idempotent."""
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
         if(working_directory is None):
             working_directory = os.getcwd()
-        working_directory = resolve_relative_path_from_current_working_directory(working_directory)
+        working_directory = GeneralUtilities.resolve_relative_path_from_current_working_directory(working_directory)
         self._private_log_information(f"Start '{working_directory}>{program} {argument}'", True, True, True)
         if self._private_test_mode:
             self._private_start_program_synchronously(program, argument, working_directory)  # mocks defined in self._private_sc will be used here when running the unit-tests
         else:
             original_cwd = os.getcwd()
-            if(string_is_none_or_whitespace(working_directory)):
+            if(GeneralUtilities.string_is_none_or_whitespace(working_directory)):
                 working_directory = original_cwd
             os.chdir(working_directory)
             try:
@@ -597,15 +598,15 @@ This function is idempotent."""
 
     def _private_get_stored_running_processes(self) -> tuple:
         # TODO Improve: Do a real check, not just reading this information from a file.
-        lines = read_text_from_file(self._private_running_information_file).splitlines()
+        lines = GeneralUtilities.read_text_from_file(self._private_running_information_file).splitlines()
         processid_of_container_as_string = False
         processid_of_ids_as_string = False
         for line in lines:
             if ":" in line:
                 splitted = line.split(":")
                 value_as_string = splitted[1].strip()
-                if string_has_nonwhitespace_content(value_as_string):
-                    value = string_to_boolean(value_as_string)
+                if GeneralUtilities.string_has_nonwhitespace_content(value_as_string):
+                    value = GeneralUtilities.string_to_boolean(value_as_string)
                     if splitted[0] == "Container-process":
                         processid_of_container_as_string = value
                     if splitted[0] == "IDS-process":
@@ -632,7 +633,7 @@ IDS-process:{ids_is_running_as_string}
 
     def _private_create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
         self._private_configuration_file = configuration_file
-        ensure_directory_exists(os.path.dirname(self._private_configuration_file))
+        GeneralUtilities.ensure_directory_exists(os.path.dirname(self._private_configuration_file))
         local_configparser = ConfigParser()
 
         local_configparser.add_section(self._private_configuration_section_general)
@@ -662,7 +663,7 @@ IDS-process:{ids_is_running_as_string}
 
     def _private_verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str) -> None:
         self._private_log_information(
-            f"Started Adame with  name='{str_none_safe(name)}', folder='{str_none_safe(folder)}', image='{str_none_safe(image)}', owner='{str_none_safe(owner)}'", True)
+            f"Started Adame with  name='{GeneralUtilities.str_none_safe(name)}', folder='{GeneralUtilities.str_none_safe(folder)}', image='{GeneralUtilities.str_none_safe(image)}', owner='{GeneralUtilities.str_none_safe(owner)}'", True)
 
     def _private_save_configfile(self, file: str, configuration: configparser.ConfigParser) -> None:
         with open(file, 'w', encoding=self.encoding) as file_writer:
@@ -710,7 +711,7 @@ IDS-process:{ids_is_running_as_string}
     def _private_load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
         try:
             self._private_log_information("Load configuration...", True, True, True)
-            configurationfile = resolve_relative_path_from_current_working_directory(configurationfile)
+            configurationfile = GeneralUtilities.resolve_relative_path_from_current_working_directory(configurationfile)
             if not os.path.isfile(configurationfile):
                 raise Exception(F"'{configurationfile}' does not exist")
             self._private_configuration_file = configurationfile
@@ -741,15 +742,15 @@ IDS-process:{ids_is_running_as_string}
             self._private_log_folder = os.path.join(self._private_repository_folder, "Logs")
 
             self._private_log_folder_for_application = os.path.join(self._private_log_folder, "Application")
-            ensure_directory_exists(self._private_log_folder_for_application)
+            GeneralUtilities.ensure_directory_exists(self._private_log_folder_for_application)
 
             self._private_log_folder_for_ids = os.path.join(self._private_log_folder, "IDS")
-            ensure_directory_exists(self._private_log_folder_for_ids)
+            GeneralUtilities.ensure_directory_exists(self._private_log_folder_for_ids)
 
             self._private_log_folder_for_internal_overhead = os.path.join(self._private_log_folder, "Overhead")
-            ensure_directory_exists(self._private_log_folder_for_internal_overhead)
-            self._private_log_file_for_adame_overhead = get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
-            ensure_file_exists(self._private_log_file_for_adame_overhead)
+            GeneralUtilities.ensure_directory_exists(self._private_log_folder_for_internal_overhead)
+            self._private_log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(self._private_log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
+            GeneralUtilities.ensure_file_exists(self._private_log_file_for_adame_overhead)
 
             if load_securityconfiguration:
                 self._private_load_securityconfiguration()
@@ -767,9 +768,9 @@ IDS-process:{ids_is_running_as_string}
             securityconfiguration.read(self._private_propertiesconfiguration_file)
             self._private_securityconfiguration = securityconfiguration
 
-            self._private_gpgkey_of_owner_is_available = string_has_nonwhitespace_content(
+            self._private_gpgkey_of_owner_is_available = GeneralUtilities.string_has_nonwhitespace_content(
                 self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_gpgkeyofowner])
-            self._private_remote_address_is_available = string_has_nonwhitespace_content(
+            self._private_remote_address_is_available = GeneralUtilities.string_has_nonwhitespace_content(
                 self._private_securityconfiguration[self._private_securityconfiguration_section_general][self._private_configuration_section_general_key_remoteaddress])
 
             if(not self._private_gpgkey_of_owner_is_available):
@@ -804,7 +805,7 @@ services:
 """
 
     def _private_create_file_in_repository(self, file, filecontent) -> None:
-        write_text_to_file(file, filecontent, self.encoding)
+        GeneralUtilities.write_text_to_file(file, filecontent, self.encoding)
         self._private_log_information(f"Created file '{file}'", True)
 
     def _private_get_license_file_content(self, configuration: ConfigParser) -> str:
@@ -824,7 +825,7 @@ Logs/Overhead/**
 !Logs/Overhead/.gitkeep
 """
 
-    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: string_to_boolean) -> None:
+    def _private_create_securityconfiguration_file(self, gpgkey_of_owner: GeneralUtilities.string_to_boolean) -> None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self._private_securityconfiguration_section_general)
         securityconfiguration[self._private_securityconfiguration_section_general][self._private_securityconfiguration_section_general_key_enabledids] = "false"
@@ -890,9 +891,9 @@ The license of this repository is defined in the file 'License.txt'.
 """
 
     def _private_run_script_if_available(self, file: str, name: str):
-        if(string_has_content(file)):
+        if(GeneralUtilities.string_has_content(file)):
             self._private_log_information(f"Run {name} (File: {file})", False, True, True)
-            file = resolve_relative_path(file, self._private_configuration_folder)
+            file = GeneralUtilities.resolve_relative_path(file, self._private_configuration_folder)
             self._private_start_program_synchronously("sh", file, self._private_configuration_folder, True)
 
     def _private_stop_container(self) -> None:
@@ -935,7 +936,7 @@ The license of this repository is defined in the file 'License.txt'.
             result = list()
             for item in psutil.process_iter():
                 try:
-                    process = AdameCore._private_process()
+                    process = Adame._private_process()
                     process.process_id = item.pid
                     process.command = " ".join(item.cmdline())
                     result.append(process)
@@ -955,7 +956,7 @@ The license of this repository is defined in the file 'License.txt'.
             if expected_command in actual_command:
                 return True
             else:
-                if(string_is_none_or_whitespace(actual_command)):
+                if(GeneralUtilities.string_is_none_or_whitespace(actual_command)):
                     self._private_log_warning(f"It seems that the process with id {expected_pid} was not executed", False, True, False)
                 else:
                     self._private_log_warning(
@@ -998,7 +999,7 @@ The license of this repository is defined in the file 'License.txt'.
         return pid
 
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
-        workingdirectory = str_none_safe(workingdirectory)
+        workingdirectory = GeneralUtilities.str_none_safe(workingdirectory)
         self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         self._private_log_diagnostic_information(f"Argument: '{argument}'")
         if self.verbose:
@@ -1051,7 +1052,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True) -> None:
         self._private_write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
         if(self.verbose):
-            write_exception_to_stderr_with_traceback(exception, traceback, message)
+            GeneralUtilities.write_exception_to_stderr_with_traceback(exception, traceback, message)
 
     def _private_write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool) -> None:
         if is_verbose_log_entry and not self.verbose:
@@ -1060,15 +1061,15 @@ The license of this repository is defined in the file 'License.txt'.
             date_as_string = datetime.utcnow()
         else:
             date_as_string = datetime.now()
-        logentry = f"[{datetime_to_string_for_logfile_entry(date_as_string)}] [{loglevel}] {message}"
+        logentry = f"[{GeneralUtilities.datetime_to_string_for_logfile_entry(date_as_string)}] [{loglevel}] {message}"
         if(write_to_console):
             if(loglevel == "Error"):
-                write_message_to_stderr(logentry)
+                GeneralUtilities.write_message_to_stderr(logentry)
             else:
-                write_message_to_stdout(logentry)
+                GeneralUtilities.write_message_to_stdout(logentry)
         if(write_to_logfile and self._private_log_file_for_adame_overhead is not None):
-            ensure_file_exists(self._private_log_file_for_adame_overhead)
-            if file_is_empty(self._private_log_file_for_adame_overhead):
+            GeneralUtilities.ensure_file_exists(self._private_log_file_for_adame_overhead)
+            if GeneralUtilities.file_is_empty(self._private_log_file_for_adame_overhead):
                 prefix = ''
             else:
                 prefix = '\n'
@@ -1162,7 +1163,7 @@ Adame must be executed with elevated privileges. This is required to run command
 
     options = arger.parse_args()
 
-    core = AdameCore()
+    core = Adame()
 
     core.diagnostic = options.diagnostic
     if core.diagnostic:
@@ -1201,8 +1202,8 @@ Adame must be executed with elevated privileges. This is required to run command
         return core.checkout(options.configurationfile, options.branch)
 
     else:
-        write_message_to_stdout(versioned_product_name)
-        write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
+        GeneralUtilities.write_message_to_stdout(versioned_product_name)
+        GeneralUtilities.write_message_to_stdout(f"Run '{product_name} --help' to get help about the usage.")
         return 0
 
 # </miscellaneous>
