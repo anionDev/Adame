@@ -85,6 +85,7 @@ class AdameCore:
     # <properties>
 
     verbose: bool = False
+    diagnostic: bool = False
     encoding: str = "utf-8"
     format_datetimes_to_utc: bool = True
 
@@ -991,6 +992,7 @@ The license of this repository is defined in the file 'License.txt'.
 
     def _private_start_program_asynchronously(self, program: str, argument: str, workingdirectory: str = None) -> int:
         self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}' asynchronously", True)
+        self._private_log_diagnostic_information(f"Argument: '{argument}'")
         pid = self._private_sc.start_program_asynchronously(program, argument, workingdirectory)
         self._private_log_information(f"Started program has processid {pid}", True)
         return pid
@@ -998,6 +1000,7 @@ The license of this repository is defined in the file 'License.txt'.
     def _private_start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
         workingdirectory = str_none_safe(workingdirectory)
         self._private_log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
+        self._private_log_diagnostic_information(f"Argument: '{argument}'")
         if self.verbose:
             verbose_argument = 2
         else:
@@ -1030,6 +1033,11 @@ The license of this repository is defined in the file 'License.txt'.
         finally:
             self._private_log_information(f"Finished task '{name}'. Task resulted in exitcode {exitcode}")
         return exitcode
+
+
+    def _private_log_diagnostic_information(self, message: str) -> None:
+        if self.diagnostic:
+            self._private_write_to_log("Diagnostic", message,True,True,True)
 
     def _private_log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self._private_write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
@@ -1103,6 +1111,7 @@ Adame must be executed with elevated privileges. This is required to run command
 """, formatter_class=RawTextHelpFormatter)
 
     arger.add_argument("-v", "--verbose", action="store_true", required=False, default=False)
+    arger.add_argument("-d", "--diagnostic", action="store_true", required=False, default=False)
 
     subparsers = arger.add_subparsers(dest="command")
 
@@ -1154,7 +1163,12 @@ Adame must be executed with elevated privileges. This is required to run command
     options = arger.parse_args()
 
     core = AdameCore()
-    core.verbose = options.verbose
+
+    core.diagnostic = options.diagnostic
+    if core.diagnostic:
+        core.verbose=True
+    else:
+        core.verbose = options.verbose
 
     if options.command == create_command_name:
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
