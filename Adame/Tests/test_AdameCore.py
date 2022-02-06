@@ -4,7 +4,7 @@ import uuid
 import os
 import re
 from distutils.dir_util import copy_tree
-from ScriptCollection.Utilities.GeneralUtilities import GeneralUtilities
+from ScriptCollection.Utilities import GeneralUtilities
 from ..AdameCore import Adame
 
 

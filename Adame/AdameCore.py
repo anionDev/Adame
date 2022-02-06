@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 from packaging.version import parse
+from ScriptCollection.Core import ScriptCollectionCore
+from ScriptCollection.Utilities import GeneralUtilities
 import psutil
 import netifaces
-from ScriptCollection.Core.ScriptCollectionCore import ScriptCollectionCore
-from ScriptCollection.Utilities.GeneralUtilities import GeneralUtilities
 
 product_name = "Adame"
 version = "1.2.13"
@@ -183,7 +183,7 @@ class Adame:
         return self._private_execute_task("Start", self._private_start)
 
     def _private_start(self) -> None:
-        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
+        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids,dict()):
             ids_is_running = self._private_ensure_ids_is_running()
         else:
             ids_is_running = False
@@ -205,7 +205,7 @@ class Adame:
     def _private_stop(self) -> None:
         container_is_running = not self._private_ensure_container_is_not_running()
         ids_is_running = False
-        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids):
+        if self._private_sc.get_boolean_value_from_configuration(self._private_securityconfiguration, self._private_securityconfiguration_section_general, self._private_securityconfiguration_section_general_key_enabledids,dict()):
             ids_is_running = not self._private_ensure_ids_is_not_running()
         self._private_log_running_state(container_is_running, ids_is_running, "Stopped")
 
@@ -1073,7 +1073,7 @@ The license of this repository is defined in the file 'License.txt'.
                 prefix = ''
             else:
                 prefix = '\n'
-            with open(self._private_log_file_for_adame_overhead, "a") as file:
+            with open(self._private_log_file_for_adame_overhead, "a", encoding="utf-8") as file:
                 file.write(prefix+logentry)
 
     def _private_set_git_configuration(self):
