@@ -15,7 +15,7 @@ from ScriptCollection.Utilities import GeneralUtilities
 import psutil
 import netifaces
 product_name = "Adame"
-version = "1.2.14"
+version = "1.2.15"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 

@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-version = "1.2.14"
+version = "1.2.15"
 
 
 def create_wheel_file():
@@ -37,7 +37,7 @@ def create_wheel_file():
             "netifaces==0.10.9",
             "packaging==21.0",
             "psutil==5.7.3",
-            "ScriptCollection>=2.7.1",
+            "ScriptCollection>=2.7.4",
         ],
         entry_points={
             'console_scripts': [
