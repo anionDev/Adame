@@ -1,8 +1,8 @@
 # Adame
 
-Adame (pronounced: ăˈ.dam) is the abbreviation for "Automatic Docker Application Management Engine". So in short: Adame is a tool to manage docker-applications as part in a linux-environment.
+Adame (pronounced: `ăˈ.dam`) is the abbreviation for "Automatic Docker Application Management Engine". So in short: Adame is a tool to manage docker-applications as part in a Linux-environment.
 
-Since adame is usable declarative and is storing data in a [git](https://git-scm.com)-repository Adame is suitable as a application-managing-part of a [GitOps](https://www.weave.works/technologies/gitops)-environment. 
+Since adame is usable declarative and is storing data in a [git](https://git-scm.com)-repository Adame is suitable as a application-managing-part of a [GitOps](https://www.weave.works/technologies/gitops)-environment.
 
 ## Features
 
@@ -16,7 +16,7 @@ Adame is able to do the following things:
 
 ## Reference
 
-The reference can be found [here](Reference/index.md).
+The reference can be found [here](Reference/Index.md).
 
 ## Runtime-requirements
 
@@ -35,26 +35,30 @@ Furthermore Adame requires that the following commandline-commands are available
 - `ssh` (Required for rsync)
 - `snort` (For inspecting the network-traffic of the application)
 
-## Development-requirements
+## Development
+
+### Branching-system
+
+This repository applies the [GitFlowSimplified](https://projects.aniondev.de/Common/Templates/ProjectTemplates/-/blob/main/Templates/Conventions/BranchingSystem/GitFlowSimplified.md)-branching-system.
 
 ### Install dependencies
 
-To develop Adame it is obviously required that the following commandline-commands are available on your system:
+To develop ScriptCollection it is obviously required that the following commandline-commands are available on your system:
 
 - `python` (on some systems `python3`)
-- `pip` (on some systems `pip3`)
+- `pip3`
+
+The pip-packaged which are required for developing on this project are defined in `requirements.txt`.
 
 Commands like `docker-compose` or `snort` are technically not required for development since these commands will be mocked in the unit-tests.
-
-To install all requirements simply execute the script stored in `./Reference/Scripts/InstallDevelopmentDependencies.script`. Every command in this script is expected to terminate with the exit-code `0`
 
 ### IDE
 
 The recommended IDE for developing Adame is Visual Studio Code.
 The recommended addons for developing Adame with Visual Studio Code are:
 
+- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
 - [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-- [Python Test Explorer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter)
 - [Spell Right](https://marketplace.visualstudio.com/items?itemName=ban.spellright)
 - [docs-markdown](https://marketplace.visualstudio.com/items?itemName=docsmsft.docs-markdown)
 
@@ -64,17 +68,17 @@ To run the testcases simply execute the script stored in `./Reference/Scripts/Ru
 
 ### Build
 
-To create an installable whl-package simply execute the script stored in `./Reference/Scripts/CreateWhlFile.script` in the repository's home-directory which is expected to terminate with the exit-code `0`.
+To Create an installable whl-package simply execute `python Setup.py bdist_wheel --dist-dir .`.
 
 ## Installation
 
-To install an Adame simply execute `pip install Adame-1.0.0-py3-none-any.whl`.
-
-## License
-
-See `License.txt` for license-information.
+To install an Adame simply execute `pip install Adame-x.x.x-py3-none-any.whl`.
 
 ## TODO-List
 
 - Bug: When running in a different folder (like `adame startadvanced -c someotherfolder/Adame.configuration` then the prescript and postscript may have wrong working-directories.
 - Feature: Before starting the docker-container then if a container with same name already exists the already existing container should be stopped and then removed to avoid errors due to already existing container-names.
+
+## License
+
+See `License.txt` for license-information.
