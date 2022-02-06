@@ -5,7 +5,7 @@ import os
 import re
 from distutils.dir_util import copy_tree
 from ScriptCollection.Utilities import GeneralUtilities
-from ..AdameCore import Adame
+from ..Core import Adame
 
 
 class EnvironmentForTest:
