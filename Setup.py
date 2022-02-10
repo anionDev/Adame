@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-version = "1.2.16"
+version = "1.2.17"
 
 
 def create_wheel_file():
@@ -41,7 +41,7 @@ def create_wheel_file():
         ],
         entry_points={
             'console_scripts': [
-                f"adame = {productname}.AdameCore:adame_cli"
+                f"adame = {productname}.Core:adame_cli"
             ],
         },
     )
