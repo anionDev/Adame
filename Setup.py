@@ -41,7 +41,7 @@ def create_wheel_file():
         ],
         entry_points={
             'console_scripts': [
-                f"adame = {productname}.AdameCore:adame_cli"
+                f"adame = {productname}.Core:adame_cli"
             ],
         },
     )
