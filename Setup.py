@@ -34,10 +34,10 @@ def create_wheel_file():
         long_description=long_description,
         long_description_content_type="text/markdown",
         install_requires=[
-            "netifaces==0.10.9",
-            "packaging==21.0",
-            "psutil==5.7.3",
-            "ScriptCollection>=2.7.8",
+            "netifaces>=0.11",
+            "packaging>=21.3",
+            "psutil>=5.9.0",
+            "ScriptCollection>=2.7.9",
         ],
         entry_points={
             'console_scripts': [
