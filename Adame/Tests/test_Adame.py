@@ -4,40 +4,12 @@ import uuid
 import os
 import re
 from distutils.dir_util import copy_tree
-from ScriptCollection.Utilities import GeneralUtilities
-from ..Core import Adame
+from ScriptCollection.GeneralUtilities import GeneralUtilities
+from ..Adame import Adame
+from .EnvironmentForTest import EnvironmentForTest
 
 
-class EnvironmentForTest:
-    adame: Adame = None
-    folder: str = None
-    adame_configuration_file: str = None
-
-    def __init__(self, folder=None):
-        if(folder is None):
-            folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
-        GeneralUtilities.ensure_directory_exists(folder)
-        self.folder = folder
-        self.adame = Adame()
-        self.adame.verbose = True
-        self.adame.set_test_mode(True)
-        self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
-
-    def create(self, name="myapplication", owner="owner"):
-        self.adame._internal_sc.mock_program_calls = False
-        assert self.adame.create(name, self.folder, "httpd:latest", owner) == 0
-        assert not self.adame._internal_container_is_running()
-        self.adame.set_test_mode(True)
-        self.adame.verify_no_pending_mock_process_queries()
-        self.adame._internal_sc.verify_no_pending_mock_program_calls()
-
-    def dispose(self):
-        GeneralUtilities.ensure_directory_does_not_exist(self.folder)
-        self.adame.verify_no_pending_mock_process_queries()
-        self.adame._internal_sc.verify_no_pending_mock_program_calls()
-
-
-class MiscellaneousTests(unittest.TestCase):
+class AdameTests(unittest.TestCase):
 
     def test_adamecore_constructor_does_not_throw_any_exception(self):
         """UnitTest
@@ -138,6 +110,8 @@ Tests that the create-command works as expected"""
             assert os.path.isfile(securityconfigurationfile)
             assert not GeneralUtilities.file_is_empty(securityconfigurationfile)
 
+        except Exception as e:
+            GeneralUtilities.write_exception_to_stderr(e)
         finally:
             environment_for_test.dispose()
 
@@ -145,18 +119,20 @@ Tests that the create-command works as expected"""
         """UnitTest
 Tests that the start-command works as expected"""
 
+        # arrange
+        environment_for_test = EnvironmentForTest()
         try:
-
-            # arrange
-
-            environment_for_test = EnvironmentForTest()
             environment_for_test.create()
             # mock program calls which are maybe not available in a development-environment:
-            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(f"--project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
-            environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
+            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(
+                f"--project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans " +
+                "--force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
+            environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(
+                f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" ' +
+                '-U -v -x -y -K ascii'), "", 0, "", "", 44)
+            environment_for_test.adame._internal_sc.register_mock_program_call("git",  ".*", ".*", 0, "", "", 40, 29)
 
             # act
-
             exitcode = environment_for_test.adame.start(environment_for_test.adame_configuration_file)
 
             # assert
@@ -172,7 +148,9 @@ Tests that the start-command works as expected"""
             assert environment_for_test.adame._internal_ids_is_running()
             environment_for_test.adame.verify_no_pending_mock_process_queries()
             environment_for_test.adame._internal_sc.verify_no_pending_mock_program_calls()
-
+        except Exception as e:
+            GeneralUtilities.write_exception_to_stderr(e)
+            raise e
         finally:
             environment_for_test.dispose()
 
@@ -187,8 +165,10 @@ Tests that the stop-command works as expected"""
             environment_for_test = EnvironmentForTest()
             environment_for_test.create()
             # mock program calls which are maybe not available in a development-environment:
-            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(f"--project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
-            environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
+            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(
+                f"--project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
+            environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(
+                f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
             assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
 
             assert environment_for_test.adame._internal_container_is_running()
@@ -199,9 +179,12 @@ Tests that the stop-command works as expected"""
             environment_for_test.adame._internal_sc.verify_no_pending_mock_program_calls()
 
             # mock program calls which are maybe not available in a development-environment:
-            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(f"--project-name {environment_for_test.adame._internal_get_container_name()} down --remove-orphans"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 68)
-            environment_for_test.adame.register_mock_process_query(44, f'snort -D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii')
+            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(
+                f"--project-name {environment_for_test.adame._internal_get_container_name()} down --remove-orphans"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 68)
+            environment_for_test.adame.register_mock_process_query(
+                44, f'snort -D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii')
             environment_for_test.adame._internal_sc.register_mock_program_call("kill",  re.escape("-TERM 44"), "", 0, "", "", 72)
+            environment_for_test.adame._internal_sc.register_mock_program_call("git",  ".*", ".*", 0, "", "", 40, 29)
 
             # act
 
@@ -212,6 +195,8 @@ Tests that the stop-command works as expected"""
             assert exitcode == 0
             assert not environment_for_test.adame._internal_container_is_running()
 
+        except Exception as e:
+            GeneralUtilities.write_exception_to_stderr(e)
         finally:
             environment_for_test.dispose()
 

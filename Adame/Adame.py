@@ -10,12 +10,13 @@ from datetime import datetime, timedelta
 from distutils.spawn import find_executable
 import argparse
 from packaging.version import parse
-from ScriptCollection.Core import ScriptCollectionCore
-from ScriptCollection.Utilities import GeneralUtilities
+from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
+from ScriptCollection.GeneralUtilities import GeneralUtilities
 import psutil
 import netifaces
+
 product_name = "Adame"
-version = "1.2.18"
+version = "1.2.19"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -106,12 +107,13 @@ class Adame:
     # </initialization>
 
     # <create-command>
-
+    @GeneralUtilities.check_arguments
     def create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str = None) -> int:
         self.__check_whether_execution_is_possible()
         self.__verbose_log_start_by_create_command(name, folder, image, owner)
         return self.__execute_task("Create", lambda: self.__create(name, folder, image, owner, gpgkey_of_owner))
 
+    @GeneralUtilities.check_arguments
     def __create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str) -> None:
         if name is None:
             raise Exception("Argument 'name' is not defined")
@@ -160,7 +162,7 @@ class Adame:
 
         self.__load_securityconfiguration()
         self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,
-                                                self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
+                                                                                                  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
 
         self._internal_sc.set_permission(self._internal_log_folder_for_ids, "666", True)
 
@@ -173,6 +175,7 @@ class Adame:
 
     # <start-command>
 
+    @GeneralUtilities.check_arguments
     def start(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -181,8 +184,9 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("Start", self.__start)
 
+    @GeneralUtilities.check_arguments
     def __start(self) -> None:
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids,dict()):
+        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
             ids_is_running = self.__ensure_ids_is_running()
         else:
             ids_is_running = False
@@ -193,6 +197,7 @@ class Adame:
 
     # <stop-command>
 
+    @GeneralUtilities.check_arguments
     def stop(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -201,10 +206,11 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("Stop", self.__stop)
 
+    @GeneralUtilities.check_arguments
     def __stop(self) -> None:
         container_is_running = not self.__ensure_container_is_not_running()
         ids_is_running = False
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids,dict()):
+        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
             ids_is_running = not self.__ensure_ids_is_not_running()
         self.__log_running_state(container_is_running, ids_is_running, "Stopped")
 
@@ -212,6 +218,7 @@ class Adame:
 
     # <applyconfiguration-command>
 
+    @GeneralUtilities.check_arguments
     def applyconfiguration(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -220,6 +227,7 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("ApplyConfiguration", self.__applyconfiguration)
 
+    @GeneralUtilities.check_arguments
     def __applyconfiguration(self) -> None:
         self.__regenerate_networktrafficgeneratedrules_filecontent()
         if not self.__check_siem_is_reachable():
@@ -230,6 +238,7 @@ class Adame:
 
     # <startadvanced-command>
 
+    @GeneralUtilities.check_arguments
     def startadvanced(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -238,6 +247,7 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("StartAdvanced", self.__startadvanced)
 
+    @GeneralUtilities.check_arguments
     def __startadvanced(self) -> None:
         self.__stopadvanced()
         self.__applyconfiguration()
@@ -247,6 +257,7 @@ class Adame:
 
     # <stopadvanced-command>
 
+    @GeneralUtilities.check_arguments
     def stopadvanced(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -255,6 +266,7 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("StopAdvanced", self.__stopadvanced)
 
+    @GeneralUtilities.check_arguments
     def __stopadvanced(self) -> None:
         self.__stop()
         self.__commit("Saved changes")
@@ -264,6 +276,7 @@ class Adame:
 
     # <checkintegrity-command>
 
+    @GeneralUtilities.check_arguments
     def checkintegrity(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -272,6 +285,7 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("CheckIntegrity", self.__checkintegrity)
 
+    @GeneralUtilities.check_arguments
     def __checkintegrity(self) -> None:
         self.__check_integrity_of_repository(7)
 
@@ -279,6 +293,7 @@ class Adame:
 
     # <exportlogs-command>
 
+    @GeneralUtilities.check_arguments
     def exportlogs(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__check_configurationfile_argument(configurationfile)
@@ -287,6 +302,7 @@ class Adame:
         self.__load_configuration(configurationfile)
         return self.__execute_task("ExportLogs", self.__exportlogs)
 
+    @GeneralUtilities.check_arguments
     def __exportlogs(self) -> None:
         if(not self.__tool_exists_in_path("rsync")):
             self.__log_warning("rsync is not available", False, True, True)
@@ -316,6 +332,7 @@ class Adame:
 
     # <diagnosis-command>
 
+    @GeneralUtilities.check_arguments
     def diagnosis(self, configurationfile: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__verbose_log_start_by_configuration_file(configurationfile)
@@ -323,6 +340,7 @@ class Adame:
             self.__load_configuration(configurationfile)
         return self.__execute_task("Diagnosis", self.__diagnosis)
 
+    @GeneralUtilities.check_arguments
     def __diagnosis(self) -> None:
         if not self.__adame_general_diagonisis():
             raise Exception("General diagnosis found discrepancies")
@@ -334,6 +352,7 @@ class Adame:
 
     # <checkout-command>
 
+    @GeneralUtilities.check_arguments
     def checkout(self, configurationfile: str, branch: str) -> int:
         self.__check_whether_execution_is_possible()
         self.__verbose_log_start_by_configuration_file(configurationfile)
@@ -341,6 +360,7 @@ class Adame:
             self.__load_configuration(configurationfile)
         return self.__execute_task("Checkout", lambda: self.__checkout(branch))
 
+    @GeneralUtilities.check_arguments
     def __checkout(self, branch: str) -> None:
         self.__stopadvanced()
         self.__git_checkout(branch)
@@ -350,12 +370,14 @@ class Adame:
 
     # <other-functions>
 
+    @GeneralUtilities.check_arguments
     def set_test_mode(self, test_mode_enabled: bool) -> None:
         "This function is for test-purposes only"
         self.__test_mode = test_mode_enabled
         self._internal_sc.mock_program_calls = self.__test_mode
         self._internal_sc.execute_programy_really_if_no_mock_call_is_defined = self.__test_mode
 
+    @GeneralUtilities.check_arguments
     def register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
         process = Adame.__process()
@@ -365,6 +387,7 @@ class Adame:
         resultlist.append(process)
         self.__mock_process_queries.append(resultlist)
 
+    @GeneralUtilities.check_arguments
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
         if(len(self.__mock_process_queries) > 0):
@@ -376,18 +399,22 @@ class Adame:
 
     # <helper-functions>
 
+    @GeneralUtilities.check_arguments
     def __git_checkout(self, branch: str) -> None:
         self.__start_program_synchronously("git", f"checkout {branch}", self.__repository_folder, True)
 
+    @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
         content = content.replace("\\", self.__path_separator)
         GeneralUtilities.write_text_to_file(self.__metadata_file, content, self.encoding)
 
+    @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
 
+    @GeneralUtilities.check_arguments
     def __use_file(self, repository_folder: str, file_or_folder: str) -> bool:
         if(GeneralUtilities.string_is_none_or_whitespace(file_or_folder)):
             return True
@@ -395,30 +422,34 @@ class Adame:
             return False
         return not self._internal_sc.file_is_git_ignored(file_or_folder, repository_folder)
 
-
+    @GeneralUtilities.check_arguments
     def __check_whether_execution_is_possible(self) -> None:
         if self.__test_mode:
             return
         if(not GeneralUtilities.current_user_has_elevated_privileges()):
             raise Exception("Adame requries elevated privileges to get executed")
 
+    @GeneralUtilities.check_arguments
     def __log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
         GeneralUtilities.write_text_to_file(self.__running_information_file, self.__get_running_information_file_content(container_is_running, ids_is_running))
         self._internal_sc.git_unstage_all_changes(self.__repository_folder)
         self.__commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", True, 1)
 
+    @GeneralUtilities.check_arguments
     def __adame_general_diagonisis(self) -> bool:
         if(not self.__check_whether_required_tools_for_adame_are_available()):
             return False
         # Add other checks if required
         return True
 
+    @GeneralUtilities.check_arguments
     def __adame_repository_diagonisis(self) -> bool:
         if not self.__check_whether_required_files_for_adamerepository_are_available():
             return False
         # Add other checks if required
         return True
 
+    @GeneralUtilities.check_arguments
     def __check_whether_required_tools_for_adame_are_available(self) -> bool:
         result = True
         if not self.__test_mode:
@@ -444,17 +475,20 @@ class Adame:
                 result = False
         return result
 
+    @GeneralUtilities.check_arguments
     def __check_whether_required_files_for_adamerepository_are_available(self) -> bool:
         # TODO Improve: Add checks for files like RunningInformation.txt etc.
         # Add other checks if required
         return True
 
+    @GeneralUtilities.check_arguments
     def __check_configurationfile_argument(self, configurationfile: str) -> None:
         if configurationfile is None:
             raise Exception("Argument 'configurationfile' is not defined")
         if not os.path.isfile(configurationfile):
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
 
+    @GeneralUtilities.check_arguments
     def __check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None) -> None:
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
@@ -465,12 +499,15 @@ This function is idempotent."""
             if not self._internal_sc.commit_is_signed_by_key(self.__repository_folder, commithash, self.__configuration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner]):
                 self.__log_warning(f"The app-repository '{self.__repository_folder}' contains the unsigned commit {commithash}", False, True, True)
 
+    @GeneralUtilities.check_arguments
     def get_entire_testrule_trigger_content(self) -> str:
         return f"testrule_content_{self.__testrule_trigger_content}_{self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_repositoryid]}"
 
+    @GeneralUtilities.check_arguments
     def get_entire_testrule_trigger_answer(self) -> str:
         return f"testrule_answer_{self.__testrule_log_content}_{self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_repositoryid]}"
 
+    @GeneralUtilities.check_arguments
     def __regenerate_networktrafficgeneratedrules_filecontent(self) -> None:
         """This function regenerates the content of the file Networktraffic.Generated.rules.
 This function is idempotent."""
@@ -497,6 +534,7 @@ This function is idempotent."""
         file_content = file_content.replace(self.__localipaddress_placeholder, local_ip_address)  # replacement to allow to use this variable in the customrules.
         GeneralUtilities.write_text_to_file(self._internal_networktrafficgeneratedrules_file, file_content, self.encoding)
 
+    @GeneralUtilities.check_arguments
     def __check_siem_is_reachable(self) -> bool:
         """This function checks wether the SIEM is available."""
         siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
@@ -504,15 +542,18 @@ This function is idempotent."""
             return False
         return True  # TODO Improve: Return true if and only if siemaddress is available to receive log-files
 
+    @GeneralUtilities.check_arguments
     def __ensure_container_is_running(self) -> bool:
         self.__ensure_container_is_not_running()
         return self.__start_container()
 
+    @GeneralUtilities.check_arguments
     def __ensure_container_is_not_running(self) -> bool:
         if(self._internal_container_is_running()):
             return self.__stop_container()
         return True
 
+    @GeneralUtilities.check_arguments
     def __ensure_ids_is_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is running and the rules will be applied correctly."""
         self.__ensure_ids_is_not_running()
@@ -520,21 +561,25 @@ This function is idempotent."""
         self.__test_ids()
         return result
 
+    @GeneralUtilities.check_arguments
     def __ensure_ids_is_not_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is not running anymore."""
         if(self._internal_ids_is_running()):
             return self.__stop_ids()
         return True
 
+    @GeneralUtilities.check_arguments
     def _internal_container_is_running(self) -> bool:
         return self.__get_stored_running_processes()[0]
 
+    @GeneralUtilities.check_arguments
     def _internal_ids_is_running(self) -> bool:
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
             return self.__get_stored_running_processes()[1]
         return False
 
+    @GeneralUtilities.check_arguments
     def __start_ids(self) -> bool:
         success = True
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
@@ -556,6 +601,7 @@ This function is idempotent."""
             self.__log_warning("IDS could not be started")
         return success
 
+    @GeneralUtilities.check_arguments
     def __stop_ids(self) -> bool:
         result = 0
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
@@ -573,9 +619,11 @@ This function is idempotent."""
             self.__log_warning("IDS could not be stopped")
         return success
 
+    @GeneralUtilities.check_arguments
     def __test_ids(self) -> None:
         pass  # TODO Improve: Test if a specific test-rule will be applied by sending a package to the docker-container which should be result in a log-folder
 
+    @GeneralUtilities.check_arguments
     def __run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
         if(working_directory is None):
@@ -595,6 +643,7 @@ This function is idempotent."""
                 os.chdir(original_cwd)
         return True  # TODO Improve: Find a possibility to really check that this program is currently running
 
+    @GeneralUtilities.check_arguments
     def __get_stored_running_processes(self) -> tuple:
         # TODO Improve: Do a real check, not just reading this information from a file.
         lines = GeneralUtilities.read_text_from_file(self.__running_information_file).splitlines()
@@ -612,6 +661,7 @@ This function is idempotent."""
                         processid_of_ids_as_string = value
         return (processid_of_container_as_string, processid_of_ids_as_string)
 
+    @GeneralUtilities.check_arguments
     def __get_running_information_file_content(self, container_is_running: bool, ids_is_running: int) -> str:
         container_is_running_as_string = str(container_is_running)
         ids_is_running_as_string = str(ids_is_running)
@@ -619,6 +669,7 @@ This function is idempotent."""
 IDS-process:{ids_is_running_as_string}
 """
 
+    @GeneralUtilities.check_arguments
     def __get_gitconfig_file_content(self, username: str, gpgkey_of_owner_is_available: bool, gpgkey_of_owner: str):
         return f"""[core]
     filemode = false
@@ -630,6 +681,7 @@ IDS-process:{ids_is_running_as_string}
     signingkey = {gpgkey_of_owner}
 """
 
+    @GeneralUtilities.check_arguments
     def __create_adame_configuration_file(self, configuration_file: str, name: str, owner: str) -> None:
         self.__configuration_file = configuration_file
         GeneralUtilities.ensure_directory_exists(os.path.dirname(self.__configuration_file))
@@ -657,17 +709,21 @@ IDS-process:{ids_is_running_as_string}
 
         self.__load_configuration(self.__configuration_file, False)
 
+    @GeneralUtilities.check_arguments
     def __verbose_log_start_by_configuration_file(self, configurationfile: str) -> None:
         self.__log_information(f"Started Adame with configurationfile '{configurationfile}'", True)
 
+    @GeneralUtilities.check_arguments
     def __verbose_log_start_by_create_command(self, name: str, folder: str, image: str, owner: str) -> None:
         self.__log_information(
             f"Started Adame with  name='{GeneralUtilities.str_none_safe(name)}', folder='{GeneralUtilities.str_none_safe(folder)}', image='{GeneralUtilities.str_none_safe(image)}', owner='{GeneralUtilities.str_none_safe(owner)}'", True)
 
+    @GeneralUtilities.check_arguments
     def __save_configfile(self, file: str, configuration: configparser.ConfigParser) -> None:
         with open(file, 'w', encoding=self.encoding) as file_writer:
             configuration.write(file_writer)
 
+    @GeneralUtilities.check_arguments
     def __migrate_overhead(self, sourceVersion, target_version, function) -> None:
         try:
             self.__log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
@@ -678,12 +734,14 @@ IDS-process:{ids_is_running_as_string}
             self.__log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
             raise
 
+    @GeneralUtilities.check_arguments
     def __migrate_v_1_2_2_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> None:
         configuration_v_1_2_2.set(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration,
                                   str(self.__configuration_section_general_key_maximalexpectedstartduration_defaultvalue))
         configuration_v_1_2_2.set(self.__configuration_section_general, self.__configuration_section_general_key_formatversion, "1.2.3")
         self.__save_configfile(configuration_file, configuration_v_1_2_2)
 
+    @GeneralUtilities.check_arguments
     def __migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         # Migration should only be done when the repository already exist and the repository-creation-process is already completed.
         if(os.path.isdir(os.path.join(self.__repository_folder, ".git"))):
@@ -707,6 +765,7 @@ IDS-process:{ids_is_running_as_string}
                 self.__commit(f"Updated repository-version to v{version}", True, no_changes_behavior=1, overhead=False)
         return configuration
 
+    @GeneralUtilities.check_arguments
     def __load_configuration(self, configurationfile: str, load_securityconfiguration: bool = True) -> None:
         try:
             self.__log_information("Load configuration...", True, True, True)
@@ -748,7 +807,8 @@ IDS-process:{ids_is_running_as_string}
 
             self.__log_folder_for_internal_overhead = os.path.join(self.__log_folder, "Overhead")
             GeneralUtilities.ensure_directory_exists(self.__log_folder_for_internal_overhead)
-            self.__log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(self.__log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
+            self.__log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(
+                self.__log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
             GeneralUtilities.ensure_file_exists(self.__log_file_for_adame_overhead)
 
             if load_securityconfiguration:
@@ -758,6 +818,7 @@ IDS-process:{ids_is_running_as_string}
             self.__log_exception(f"Error while loading configurationfile '{configurationfile}'.", exception)
             raise
 
+    @GeneralUtilities.check_arguments
     def __load_securityconfiguration(self) -> None:
         try:
             self.__log_information("Load security-configuration...", True, True, True)
@@ -783,9 +844,11 @@ IDS-process:{ids_is_running_as_string}
             self.__log_exception(f"Error while loading configurationfile '{self.__propertiesconfiguration_file}'.", exception)
             raise
 
+    @GeneralUtilities.check_arguments
     def _internal_get_container_name(self) -> str:
         return self.__name_to_docker_allowed_name(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_name))
 
+    @GeneralUtilities.check_arguments
     def __get_dockercompose_file_content(self, image: str) -> str:
         name_as_docker_allowed_name = self._internal_get_container_name()
         return f"""version: '3.2'
@@ -803,16 +866,19 @@ services:
 #       - ./../Logs/Application:/DirectoryInContainer/Logs
 """
 
+    @GeneralUtilities.check_arguments
     def __create_file_in_repository(self, file, filecontent) -> None:
         GeneralUtilities.write_text_to_file(file, filecontent, self.encoding)
         self.__log_information(f"Created file '{file}'", True)
 
+    @GeneralUtilities.check_arguments
     def __get_license_file_content(self, configuration: ConfigParser) -> str:
         return f"""Owner of this repository and its content: {configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_owner)}
 Only the owner of this repository is allowed to read, use, change, publish this repository or its content.
 Only the owner of this repository is allowed to change the license of this repository or its content.
 """
 
+    @GeneralUtilities.check_arguments
     def __get_gitignore_file_content(self) -> str:
         return """Logs/Application/**
 !Logs/Application/.gitkeep
@@ -824,7 +890,8 @@ Logs/Overhead/**
 !Logs/Overhead/.gitkeep
 """
 
-    def __create_securityconfiguration_file(self, gpgkey_of_owner: GeneralUtilities.string_to_boolean) -> None:
+    @GeneralUtilities.check_arguments
+    def __create_securityconfiguration_file(self, gpgkey_of_owner: str) -> None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self.__securityconfiguration_section_general)
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "false"
@@ -833,6 +900,7 @@ Logs/Overhead/**
         with open(self.__propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
             securityconfiguration.write(configfile)
 
+    @GeneralUtilities.check_arguments
     def __add_default_ids_configuration_to_securityconfiguration(self, securityconfiguration: ConfigParser, gpgkey_of_owner: str) -> None:
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remoteaddress] = ""
@@ -847,12 +915,14 @@ Logs/Overhead/**
         securityconfiguration.add_section(self.__securityconfiguration_section_snort)
         securityconfiguration[self.__securityconfiguration_section_snort][self.__securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
 
+    @GeneralUtilities.check_arguments
     def __get_hostname(self) -> str:
         if self._internal_demo_mode:
             return "Hostname"
         else:
             return socket.gethostname()
 
+    @GeneralUtilities.check_arguments
     def __get_readme_file_content(self, configuration: ConfigParser, image: str) -> str:
 
         if self.__remote_address_is_available:
@@ -889,12 +959,14 @@ The license of this repository is defined in the file 'License.txt'.
 
 """
 
+    @GeneralUtilities.check_arguments
     def __run_script_if_available(self, file: str, name: str):
         if(GeneralUtilities.string_has_content(file)):
             self.__log_information(f"Run {name} (File: {file})", False, True, True)
             file = GeneralUtilities.resolve_relative_path(file, self._internal_configuration_folder)
             self.__start_program_synchronously("sh", file, self._internal_configuration_folder, True)
 
+    @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
         result = self.__start_program_synchronously(
             "docker-compose", f"--project-name {self._internal_get_container_name()} down --remove-orphans", self._internal_configuration_folder)[0]
@@ -907,6 +979,7 @@ The license of this repository is defined in the file 'License.txt'.
             self.__configuration_section_general, self.__configuration_section_general_key_postscript), "PostScript")
         return success
 
+    @GeneralUtilities.check_arguments
     def __start_container(self) -> bool:
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
@@ -919,6 +992,7 @@ The license of this repository is defined in the file 'License.txt'.
             self.__log_warning("Container could not be started")
         return success
 
+    @GeneralUtilities.check_arguments
     def __get_running_processes(self) -> list:
         if self.__test_mode:
             if len(self.__mock_process_queries) == 0:
@@ -938,12 +1012,14 @@ The license of this repository is defined in the file 'License.txt'.
                     pass
             return result
 
+    @GeneralUtilities.check_arguments
     def _internal_process_is_running(self, process_id: int, command: str) -> bool:
         for process in self.__get_running_processes():
             if(self.__process_is_running_helper(process.process_id, process.command, process_id, command)):
                 return True
         return False
 
+    @GeneralUtilities.check_arguments
     def __process_is_running_helper(self, actual_pid: int, actual_command: str, expected_pid: int, expected_command: str) -> bool:
         if actual_pid == expected_pid:
             if expected_command in actual_command:
@@ -956,9 +1032,11 @@ The license of this repository is defined in the file 'License.txt'.
                         f"The process with id {expected_pid} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
         return False
 
+    @GeneralUtilities.check_arguments
     def __get_local_ip_address(self) -> str:
         return netifaces.ifaddresses(self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
 
+    @GeneralUtilities.check_arguments
     def __commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0, overhead: bool = True) -> None:
         # no_changes_behavior=0 => No commit
         # no_changes_behavior=1 => Commit anyway
@@ -971,7 +1049,7 @@ The license of this repository is defined in the file 'License.txt'.
             remote_name = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotename]
             branch_name = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch]
             remote_address = self.__securityconfiguration.get(self.__securityconfiguration_section_general,
-                                                                     self.__configuration_section_general_key_remoteaddress)
+                                                              self.__configuration_section_general_key_remoteaddress)
             self.__log_information(f"Created commit {commit_id} in repository '{repository}' (commit-message: '{message}')", False, True, True)
             if self.__remote_address_is_available:
                 self._internal_sc.git_add_or_set_remote_address(self.__repository_folder, remote_name, remote_address)
@@ -980,11 +1058,13 @@ The license of this repository is defined in the file 'License.txt'.
             else:
                 self.__log_warning("Either no remote-address is defined or the remote-address for the backup of the app-repository is not available.")
 
+    @GeneralUtilities.check_arguments
     def __name_to_docker_allowed_name(self, name: str) -> str:
         name = name.lower()
         return name
 
-    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
+    @GeneralUtilities.check_arguments
+    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> tuple[int, str, str, int]:
         workingdirectory = GeneralUtilities.str_none_safe(workingdirectory)
         self.__log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         self.__log_diagnostic_information(f"Argument: '{argument}'")
@@ -992,8 +1072,8 @@ The license of this repository is defined in the file 'License.txt'.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
-                                                              None, 3600, False, None, expect_exitcode_zero, False, False)
+        result: tuple[int, str, str, int] = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
+                                                                                          None, 72000, False, None, expect_exitcode_zero, False)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
@@ -1001,6 +1081,7 @@ The license of this repository is defined in the file 'License.txt'.
         self.__log_information(result[2], True)
         return result
 
+    @GeneralUtilities.check_arguments
     def __tool_exists_in_path(self, name: str) -> bool:
         return find_executable(name) is not None
 
@@ -1021,22 +1102,26 @@ The license of this repository is defined in the file 'License.txt'.
             self.__log_information(f"Finished task '{name}'. Task resulted in exitcode {exitcode}")
         return exitcode
 
-
+    @GeneralUtilities.check_arguments
     def __log_diagnostic_information(self, message: str) -> None:
         if self.diagnostic:
-            self.__write_to_log("Diagnostic", message,True,True,True)
+            self.__write_to_log("Diagnostic", message, True, True, True)
 
+    @GeneralUtilities.check_arguments
     def __log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self.__write_to_log("Information", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
+    @GeneralUtilities.check_arguments
     def __log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self.__write_to_log("Warning", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
+    @GeneralUtilities.check_arguments
     def __log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True) -> None:
         self.__write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
         if(self.verbose):
             GeneralUtilities.write_exception_to_stderr_with_traceback(exception, traceback, message)
 
+    @GeneralUtilities.check_arguments
     def __write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool) -> None:
         if is_verbose_log_entry and not self.verbose:
             return
@@ -1059,6 +1144,7 @@ The license of this repository is defined in the file 'License.txt'.
             with open(self.__log_file_for_adame_overhead, "a", encoding="utf-8") as file:
                 file.write(prefix+logentry)
 
+    @GeneralUtilities.check_arguments
     def __set_git_configuration(self):
         self.__start_program_synchronously(
             "git", f"config --local include.path ../{self.__configurationfolder_name}/{self.__gitconfiguration_filename}", self.__repository_folder)
@@ -1068,10 +1154,12 @@ The license of this repository is defined in the file 'License.txt'.
 # <miscellaneous>
 
 
+@GeneralUtilities.check_arguments
 def get_adame_version() -> str:
     return version
 
 
+@GeneralUtilities.check_arguments
 def adame_cli() -> int:
     arger = argparse.ArgumentParser(description=f"""{versioned_product_name}
 Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications.
@@ -1150,7 +1238,7 @@ Adame must be executed with elevated privileges. This is required to run command
 
     core.diagnostic = options.diagnostic
     if core.diagnostic:
-        core.verbose=True
+        core.verbose = True
     else:
         core.verbose = options.verbose
 
