@@ -30,7 +30,7 @@ Furthermore Adame requires that the following commandline-commands are available
 - `gpg` (For checking the integrity of commits)
 - `kill` (For killing snort)
 - `pip` >= 20.3.1 (On some systems `pip3`)
-- `python` >= 3.8.3 (On some systems `python3`)
+- `python` >= 3.10 (On some systems `python3`)
 - `rsync` (For exporting the log-files to a SIEM-server)
 - `ssh` (Required for rsync)
 - `snort` (For inspecting the network-traffic of the application)
@@ -45,7 +45,7 @@ This repository applies the [GitFlowSimplified](https://projects.aniondev.de/Com
 
 To develop ScriptCollection it is obviously required that the following commandline-commands are available on your system:
 
-- `python` (on some systems `python3`)
+- `python` >= 3.10
 - `pip3`
 
 The pip-packaged which are required for developing on this project are defined in `requirements.txt`.

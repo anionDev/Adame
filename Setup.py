@@ -22,7 +22,7 @@ def create_wheel_file():
         url='https://not.available.yet',
         license='None',
         classifiers=[
-            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
             "License :: OSI Approved :: MIT License",
             "Operating System :: POSIX :: Linux",
             "Operating System :: Microsoft :: Windows :: Windows 10",
