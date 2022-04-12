@@ -891,7 +891,7 @@ Logs/Overhead/**
 """
 
     @GeneralUtilities.check_arguments
-    def __create_securityconfiguration_file(self, gpgkey_of_owner: GeneralUtilities.string_to_boolean) -> None:
+    def __create_securityconfiguration_file(self, gpgkey_of_owner: str) -> None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self.__securityconfiguration_section_general)
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "false"
