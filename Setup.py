@@ -37,7 +37,7 @@ def create_wheel_file():
             "netifaces>=0.11",
             "packaging>=21.3",
             "psutil>=5.9.0",
-            "ScriptCollection>=2.8.6",
+            "ScriptCollection>=2.8.7",
         ],
         entry_points={
             'console_scripts': [
