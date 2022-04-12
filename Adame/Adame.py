@@ -48,7 +48,7 @@ class Adame:
     __securityconfiguration_section_general_key_enabledids: str = "enableids"
     __securityconfiguration_section_snort: str = "snort"
     __securityconfiguration_section_snort_key_globalconfigurationfile: str = "globalconfigurationfile"
-    __internal_configuration_folder: str = None
+    _internal_configuration_folder: str = None
     __configuration_file: str = None
     __security_related_configuration_folder: str = None
     __repository_folder: str = None
@@ -57,7 +57,7 @@ class Adame:
     __log_folder: str = None
     __log_folder_for_internal_overhead: str = None
     __log_folder_for_application: str = None
-    __internal_log_folder_for_ids: str = None
+    _internal_log_folder_for_ids: str = None
     __log_file_for_adame_overhead: str = None
 
     __readme_file: str = None
@@ -66,7 +66,7 @@ class Adame:
     __dockercompose_file: str = None
     __running_information_file: str = None
     __applicationprovidedsecurityinformation_file: str = None
-    __internal_networktrafficgeneratedrules_file: str = None
+    _internal_networktrafficgeneratedrules_file: str = None
     __networktrafficcustomrules_file: str = None
     __propertiesconfiguration_file: str = None
     __configurationfolder_name: str = "Configuration"
@@ -102,7 +102,6 @@ class Adame:
     # <initialization>
 
     def __init__(self):
-        self.__internal_configuration_folder=None
         self.set_test_mode(False)
 
     # </initialization>
@@ -150,13 +149,13 @@ class Adame:
         self.__create_file_in_repository(self.__dockercompose_file, self.__get_dockercompose_file_content(image))
         self.__create_file_in_repository(self.__metadata_file, "")
         self.__create_file_in_repository(self.__applicationprovidedsecurityinformation_file, "")
-        self.__create_file_in_repository(self.__internal_networktrafficgeneratedrules_file, "")
+        self.__create_file_in_repository(self._internal_networktrafficgeneratedrules_file, "")
         self.__create_file_in_repository(self.__networktrafficcustomrules_file, "")
         self.__create_file_in_repository(self.__propertiesconfiguration_file, "")
         self.__create_file_in_repository(self.__running_information_file, self.__get_running_information_file_content(False, False))
 
         self.__create_file_in_repository(os.path.join(self.__log_folder_for_application, self.__gitkeep_filename), "")
-        self.__create_file_in_repository(os.path.join(self.__internal_log_folder_for_ids, self.__gitkeep_filename), "")
+        self.__create_file_in_repository(os.path.join(self._internal_log_folder_for_ids, self.__gitkeep_filename), "")
         self.__create_file_in_repository(os.path.join(self.__log_folder_for_internal_overhead, self.__gitkeep_filename), "")
 
         self.__create_securityconfiguration_file(gpgkey_of_owner)
@@ -165,7 +164,7 @@ class Adame:
         self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,
                                                                                                   self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
 
-        self._internal_sc.set_permission(self.__internal_log_folder_for_ids, "666", True)
+        self._internal_sc.set_permission(self._internal_log_folder_for_ids, "666", True)
 
         self.__start_program_synchronously("git", "init", self.__repository_folder)
         self.__set_git_configuration()  # TODO Improve: Call this function always before executing git commands (except creating a repository)
@@ -317,7 +316,7 @@ class Adame:
         siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
         siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
         log_files = GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_internal_overhead) + \
-            GeneralUtilities.get_direct_files_of_folder(self.__internal_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_application)
+            GeneralUtilities.get_direct_files_of_folder(self._internal_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_application)
         sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         for log_file in log_files:
             if os.path.basename(log_file) != self.__gitkeep_filename:
@@ -533,7 +532,7 @@ This function is idempotent."""
 {customrules}
 """
         file_content = file_content.replace(self.__localipaddress_placeholder, local_ip_address)  # replacement to allow to use this variable in the customrules.
-        GeneralUtilities.write_text_to_file(self.__internal_networktrafficgeneratedrules_file, file_content, self.encoding)
+        GeneralUtilities.write_text_to_file(self._internal_networktrafficgeneratedrules_file, file_content, self.encoding)
 
     @GeneralUtilities.check_arguments
     def __check_siem_is_reachable(self) -> bool:
@@ -595,7 +594,7 @@ This function is idempotent."""
                 verbose_argument = ""
             networkinterface = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_networkinterface]
             success = self.__run_system_command(
-                "snort", f'-D -i {networkinterface} -c "{self.__internal_networktrafficgeneratedrules_file}" -l "{self.__internal_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
+                "snort", f'-D -i {networkinterface} -c "{self._internal_networktrafficgeneratedrules_file}" -l "{self._internal_log_folder_for_ids}"{utc_argument}{verbose_argument} -x -y -K ascii')
         if success:
             self.__log_information("IDS was started", False, True, True)
         else:
@@ -781,20 +780,20 @@ IDS-process:{ids_is_running_as_string}
             configuration = self.__migrate_configuration_if_required(self.__configuration_file, configuration)
 
             self.__configuration = configuration
-            self.__internal_configuration_folder = os.path.join(self.__repository_folder, self.__configurationfolder_name)
-            self.__log_information(f"Configuration-folder: '{self.__internal_configuration_folder}'", True, True, True)
-            self.__security_related_configuration_folder = os.path.join(self.__internal_configuration_folder, "Security")
+            self._internal_configuration_folder = os.path.join(self.__repository_folder, self.__configurationfolder_name)
+            self.__log_information(f"Configuration-folder: '{self._internal_configuration_folder}'", True, True, True)
+            self.__security_related_configuration_folder = os.path.join(self._internal_configuration_folder, "Security")
 
             self.__readme_file = os.path.join(self.__repository_folder, "ReadMe.md")
             self.__license_file = os.path.join(self.__repository_folder, "License.txt")
             self.__gitignore_file = os.path.join(self.__repository_folder, ".gitignore")
-            self.__running_information_file = os.path.join(self.__internal_configuration_folder, "RunningInformation.txt")
-            self.__dockercompose_file = os.path.join(self.__internal_configuration_folder, "docker-compose.yml")
-            self.__gitconfig_file = os.path.join(self.__internal_configuration_folder, self.__gitconfiguration_filename)
-            self.__metadata_file = os.path.join(self.__internal_configuration_folder, self.__metadata_filename)
+            self.__running_information_file = os.path.join(self._internal_configuration_folder, "RunningInformation.txt")
+            self.__dockercompose_file = os.path.join(self._internal_configuration_folder, "docker-compose.yml")
+            self.__gitconfig_file = os.path.join(self._internal_configuration_folder, self.__gitconfiguration_filename)
+            self.__metadata_file = os.path.join(self._internal_configuration_folder, self.__metadata_filename)
             self.__applicationprovidedsecurityinformation_file = os.path.join(
                 self.__security_related_configuration_folder, "ApplicationProvidedSecurityInformation.xml")
-            self.__internal_networktrafficgeneratedrules_file = os.path.join(self.__security_related_configuration_folder, "Networktraffic.Generated.rules")
+            self._internal_networktrafficgeneratedrules_file = os.path.join(self.__security_related_configuration_folder, "Networktraffic.Generated.rules")
             self.__networktrafficcustomrules_file = os.path.join(self.__security_related_configuration_folder, "Networktraffic.Custom.rules")
             self.__propertiesconfiguration_file = os.path.join(self.__security_related_configuration_folder, "Security.configuration")
 
@@ -803,8 +802,8 @@ IDS-process:{ids_is_running_as_string}
             self.__log_folder_for_application = os.path.join(self.__log_folder, "Application")
             GeneralUtilities.ensure_directory_exists(self.__log_folder_for_application)
 
-            self.__internal_log_folder_for_ids = os.path.join(self.__log_folder, "IDS")
-            GeneralUtilities.ensure_directory_exists(self.__internal_log_folder_for_ids)
+            self._internal_log_folder_for_ids = os.path.join(self.__log_folder, "IDS")
+            GeneralUtilities.ensure_directory_exists(self._internal_log_folder_for_ids)
 
             self.__log_folder_for_internal_overhead = os.path.join(self.__log_folder, "Overhead")
             GeneralUtilities.ensure_directory_exists(self.__log_folder_for_internal_overhead)
@@ -964,13 +963,13 @@ The license of this repository is defined in the file 'License.txt'.
     def __run_script_if_available(self, file: str, name: str):
         if(GeneralUtilities.string_has_content(file)):
             self.__log_information(f"Run {name} (File: {file})", False, True, True)
-            file = GeneralUtilities.resolve_relative_path(file, self.__internal_configuration_folder)
-            self.__start_program_synchronously("sh", file, self.__internal_configuration_folder, True)
+            file = GeneralUtilities.resolve_relative_path(file, self._internal_configuration_folder)
+            self.__start_program_synchronously("sh", file, self._internal_configuration_folder, True)
 
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
         result = self.__start_program_synchronously(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} down --remove-orphans", self.__internal_configuration_folder)[0]
+            "docker-compose", f"--project-name {self._internal_get_container_name()} down --remove-orphans", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -985,7 +984,7 @@ The license of this repository is defined in the file 'License.txt'.
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         success = self.__run_system_command(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self.__internal_configuration_folder)
+            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
@@ -1065,7 +1064,7 @@ The license of this repository is defined in the file 'License.txt'.
         return name
 
     @GeneralUtilities.check_arguments
-    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> tuple[int,str,str,int]:
+    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> tuple[int, str, str, int]:
         workingdirectory = GeneralUtilities.str_none_safe(workingdirectory)
         self.__log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         self.__log_diagnostic_information(f"Argument: '{argument}'")
@@ -1073,8 +1072,8 @@ The license of this repository is defined in the file 'License.txt'.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result:tuple[int,str,str,int] = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
-                                                               None, 72000, False, None, expect_exitcode_zero, False)
+        result: tuple[int, str, str, int] = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
+                                                                                          None, 72000, False, None, expect_exitcode_zero, False)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)

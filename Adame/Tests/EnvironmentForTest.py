@@ -4,6 +4,7 @@ import os
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 from ..Adame import Adame
 
+
 class EnvironmentForTest:
     adame: Adame = None
     folder: str = None
