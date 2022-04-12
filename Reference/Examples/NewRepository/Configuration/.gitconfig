@@ -1,0 +1,8 @@
+[core]
+    filemode = false
+    symlinks = true
+[commit]
+    gpgsign = false
+[user]
+    name = DemoOwner
+    signingkey = 

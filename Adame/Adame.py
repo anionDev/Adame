@@ -102,6 +102,7 @@ class Adame:
     # <initialization>
 
     def __init__(self):
+        self.__internal_configuration_folder=None
         self.set_test_mode(False)
 
     # </initialization>
@@ -1064,7 +1065,7 @@ The license of this repository is defined in the file 'License.txt'.
         return name
 
     @GeneralUtilities.check_arguments
-    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> list:
+    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> tuple[int,str,str,int]:
         workingdirectory = GeneralUtilities.str_none_safe(workingdirectory)
         self.__log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         self.__log_diagnostic_information(f"Argument: '{argument}'")
@@ -1072,8 +1073,8 @@ The license of this repository is defined in the file 'License.txt'.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
-                                                               None, 3600, False, None, expect_exitcode_zero, False, False)
+        result:tuple[int,str,str,int] = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
+                                                               None, 72000, False, None, expect_exitcode_zero, False)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
@@ -1090,7 +1091,6 @@ The license of this repository is defined in the file 'License.txt'.
         process_id: str
         command: str
 
-    @GeneralUtilities.check_arguments
     def __execute_task(self, name: str, function) -> int:
         exitcode = 0
         try:
