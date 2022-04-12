@@ -1,7 +1,6 @@
 src/.vscode/*
 !src/.vscode/settings.json
 *.whl
-Tests/userpasswordfortests
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
