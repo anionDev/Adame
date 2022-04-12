@@ -37,7 +37,7 @@ class EnvironmentForTest:
         self.adame._internal_sc.verify_no_pending_mock_program_calls()
 
 
-class MiscellaneousTests(unittest.TestCase):
+class AdameTests(unittest.TestCase):
 
     def test_adamecore_constructor_does_not_throw_any_exception(self):
         """UnitTest
