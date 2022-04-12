@@ -161,7 +161,7 @@ class Adame:
 
         self.__load_securityconfiguration()
         self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,
-                                                self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
+                                                                                                  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
 
         self._internal_sc.set_permission(self.__internal_log_folder_for_ids, "666", True)
 
@@ -185,7 +185,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __start(self) -> None:
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids,dict()):
+        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
             ids_is_running = self.__ensure_ids_is_running()
         else:
             ids_is_running = False
@@ -209,7 +209,7 @@ class Adame:
     def __stop(self) -> None:
         container_is_running = not self.__ensure_container_is_not_running()
         ids_is_running = False
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids,dict()):
+        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
             ids_is_running = not self.__ensure_ids_is_not_running()
         self.__log_running_state(container_is_running, ids_is_running, "Stopped")
 
@@ -420,7 +420,6 @@ class Adame:
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self.__path_separator).startswith(f".git{self.__path_separator}")):
             return False
         return not self._internal_sc.file_is_git_ignored(file_or_folder, repository_folder)
-
 
     @GeneralUtilities.check_arguments
     def __check_whether_execution_is_possible(self) -> None:
@@ -807,7 +806,8 @@ IDS-process:{ids_is_running_as_string}
 
             self.__log_folder_for_internal_overhead = os.path.join(self.__log_folder, "Overhead")
             GeneralUtilities.ensure_directory_exists(self.__log_folder_for_internal_overhead)
-            self.__log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(self.__log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
+            self.__log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(
+                self.__log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
             GeneralUtilities.ensure_file_exists(self.__log_file_for_adame_overhead)
 
             if load_securityconfiguration:
@@ -1048,7 +1048,7 @@ The license of this repository is defined in the file 'License.txt'.
             remote_name = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotename]
             branch_name = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch]
             remote_address = self.__securityconfiguration.get(self.__securityconfiguration_section_general,
-                                                                     self.__configuration_section_general_key_remoteaddress)
+                                                              self.__configuration_section_general_key_remoteaddress)
             self.__log_information(f"Created commit {commit_id} in repository '{repository}' (commit-message: '{message}')", False, True, True)
             if self.__remote_address_is_available:
                 self._internal_sc.git_add_or_set_remote_address(self.__repository_folder, remote_name, remote_address)
@@ -1072,7 +1072,7 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             verbose_argument = 1
         result = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
-                                                              None, 3600, False, None, expect_exitcode_zero, False, False)
+                                                               None, 3600, False, None, expect_exitcode_zero, False, False)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
@@ -1102,11 +1102,10 @@ The license of this repository is defined in the file 'License.txt'.
             self.__log_information(f"Finished task '{name}'. Task resulted in exitcode {exitcode}")
         return exitcode
 
-
     @GeneralUtilities.check_arguments
     def __log_diagnostic_information(self, message: str) -> None:
         if self.diagnostic:
-            self.__write_to_log("Diagnostic", message,True,True,True)
+            self.__write_to_log("Diagnostic", message, True, True, True)
 
     @GeneralUtilities.check_arguments
     def __log_information(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
@@ -1239,7 +1238,7 @@ Adame must be executed with elevated privileges. This is required to run command
 
     core.diagnostic = options.diagnostic
     if core.diagnostic:
-        core.verbose=True
+        core.verbose = True
     else:
         core.verbose = options.verbose
 
