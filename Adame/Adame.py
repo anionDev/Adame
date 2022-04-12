@@ -969,7 +969,7 @@ The license of this repository is defined in the file 'License.txt'.
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
         result = self.__start_program_synchronously(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} down --remove-orphans", self._internal_configuration_folder)[0]
+            "docker-compose", f"--project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -984,7 +984,7 @@ The license of this repository is defined in the file 'License.txt'.
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         success = self.__run_system_command(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --remove-orphans --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
