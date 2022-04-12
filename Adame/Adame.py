@@ -14,6 +14,7 @@ from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 import psutil
 import netifaces
+
 product_name = "Adame"
 version = "1.2.18"
 __version__ = version
