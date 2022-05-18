@@ -1,10 +1,4 @@
 
-Adame/Other/QualityCheck/TestCoverage/TestCoverageReport
-Adame/Other/QualityCheck/TestCoverage/Badges/*
-!Adame/Other/QualityCheck/TestCoverage/Badges/badge_shieldsio_linecoverage_blue.svg
-Adame/Other/Reference/GeneratedReference
-Adame/Other/Build/BuildArtifact
-
 
 src/.vscode/*
 !src/.vscode/settings.json
@@ -20,7 +14,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+#build/
 develop-eggs/
 dist/
 downloads/
