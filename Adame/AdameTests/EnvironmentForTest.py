@@ -2,7 +2,7 @@ import tempfile
 import uuid
 import os
 from ScriptCollection.GeneralUtilities import GeneralUtilities
-from ..Adame import Adame
+from ..Adame.Adame import Adame
 
 
 class EnvironmentForTest:

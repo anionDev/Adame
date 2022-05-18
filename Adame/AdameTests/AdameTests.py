@@ -3,9 +3,9 @@ import tempfile
 import uuid
 import os
 import re
-from distutils.dir_util import copy_tree
+import shutil
 from ScriptCollection.GeneralUtilities import GeneralUtilities
-from ..Adame import Adame
+from ..Adame.Adame import Adame
 from .EnvironmentForTest import EnvironmentForTest
 
 
@@ -226,5 +226,5 @@ Generates a simple adame-managed-repository as demonstration."""
         demoowner_name = "DemoOwner"
         environment_for_test.create("DemoApplication", demoowner_name)
         GeneralUtilities.ensure_directory_does_not_exist(f"{tests_folder}{os.path.sep}.git")
-        copy_tree(tests_folder, result_folder)
+        shutil.copytree(tests_folder, result_folder)
         GeneralUtilities.ensure_directory_does_not_exist(tests_folder)
