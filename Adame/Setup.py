@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-version = "1.2.20"
+version = "1.2.21"
 
 
 def create_wheel_file():
