@@ -1,5 +1,0 @@
-./Other/QualityCheck/TestCoverage/TestCoverageReport
-./Other/QualityCheck/TestCoverage/Badges/*
-!./Other/QualityCheck/TestCoverage/Badges/badge_shieldsio_linecoverage_blue.svg
-./Other/Reference/GeneratedReference
-./Other/Build/BuildArtifact
