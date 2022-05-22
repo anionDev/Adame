@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import configparser
 import socket
 import time
@@ -420,7 +421,10 @@ class Adame:
             return True
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self.__path_separator).startswith(f".git{self.__path_separator}")):
             return False
-        return not self._internal_sc.file_is_git_ignored(file_or_folder, repository_folder)
+        if Path(os.path.join(repository_folder, file_or_folder)).is_symlink():
+            return False
+        else:
+            return not self._internal_sc.file_is_git_ignored(file_or_folder, repository_folder)
 
     @GeneralUtilities.check_arguments
     def __check_whether_execution_is_possible(self) -> None:
