@@ -11,6 +11,6 @@ def common_tasks():
     version=sc.getversion_from_arguments_or_gitversion(file,sys.argv)
     sc.update_version_of_codeunit_to_project_version(file,version)
     sc.replace_version_in_python_file(GeneralUtilities.resolve_relative_path("../Setup.py",folder_of_current_file),version)
-    sc.replace_version_in_python_file(GeneralUtilities.resolve_relative_path("../ScriptCollection/ScriptCollectionCore.py",folder_of_current_file),version)
+    sc.replace_version_in_python_file(GeneralUtilities.resolve_relative_path("../Adame/Adame.py",folder_of_current_file),version)
 
 common_tasks()
