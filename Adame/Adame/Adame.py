@@ -8,7 +8,7 @@ import uuid
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
-from distutils.spawn import find_executable# pylint: disable=deprecated-module
+from distutils.spawn import find_executable  # pylint: disable=deprecated-module
 import argparse
 from packaging.version import parse
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
@@ -1077,7 +1077,7 @@ The license of this repository is defined in the file 'License.txt'.
         else:
             verbose_argument = 1
         result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False,
-                                                                                          None, 72000, False, None, expect_exitcode_zero, False)
+                                                                          throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
