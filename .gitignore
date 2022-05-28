@@ -1,6 +1,8 @@
-src/.vscode/*
-!src/.vscode/spellright.dict
+.vscode/*
+!.vscode/spellright.dict
+
 *.whl
+
 # ----------------------------------------------------------------------------------
 # From https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore :
 # Byte-compiled / optimized / DLL files
