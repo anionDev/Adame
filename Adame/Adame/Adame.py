@@ -1094,6 +1094,7 @@ The license of this repository is defined in the file 'License.txt'.
         process_id: str
         command: str
 
+    @GeneralUtilities.check_arguments
     def __execute_task(self, name: str, function) -> int:
         exitcode = 0
         try:
