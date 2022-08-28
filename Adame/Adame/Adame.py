@@ -252,6 +252,7 @@ class Adame:
     def __startadvanced(self) -> None:
         self.__stopadvanced()
         self.__applyconfiguration()
+        self.__restore_metadata()
         self.__start()
 
     # </startadvanced-command>
@@ -270,7 +271,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __stopadvanced(self) -> None:
         self.__stop()
-        self.__commit("Saved changes")
+        self.__commit("Saved changes")  # FIXME this saves filemetadata. saving filemetadata should only be done when the container really was running
         self.__exportlogs()
 
     # </stopadvanced-command>
