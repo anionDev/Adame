@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 from setuptools import setup
 
-version = "1.2.20"
+version = "1.2.21"
 
 
 def create_wheel_file():
@@ -9,7 +10,8 @@ def create_wheel_file():
     productname = "Adame"
 
     folder_of_current_file = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(folder_of_current_file, "ReadMe.md"), "r", encoding='utf-8') as file:
+
+    with open(os.path.join(Path(folder_of_current_file).parent.absolute(), "ReadMe.md"), "r", encoding='utf-8') as file:
         long_description = file.read()
 
     setup(
@@ -37,7 +39,7 @@ def create_wheel_file():
             "netifaces>=0.11",
             "packaging>=21.3",
             "psutil>=5.9.0",
-            "ScriptCollection>=2.8.7",
+            "ScriptCollection>=3.1.39",
         ],
         entry_points={
             'console_scripts': [

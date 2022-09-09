@@ -1,7 +1,9 @@
-"netifaces>=0.11"
-"packaging>=21.3"
-"psutil>=5.9.0"
-"pylint>=2.13.4"
-"pytest>=7.1.1"
-"ScriptCollection>=2.8.7"
-"wheel>=0.37.1"
+autopep8>=1.6.0
+coverage>=6.3.2
+netifaces>=0.11
+packaging>=21.3
+psutil>=5.9.0
+pylint>=2.13.4
+pytest>=7.1.1
+ScriptCollection>=3.1.39
+wheel>=0.37.1

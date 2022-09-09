@@ -1,5 +1,7 @@
 # Adame
 
+![Coverage](./Adame/Other/QualityCheck/TestCoverage/Badges/badge_shieldsio_linecoverage_blue.svg)
+
 Adame (pronounced: `ăˈ.dam`) is the abbreviation for "Automatic Docker Application Management Engine". So in short: Adame is a tool to manage docker-applications as part in a Linux-environment.
 
 Since adame is usable declarative and is storing data in a [git](https://git-scm.com)-repository Adame is suitable as a application-managing-part of a [GitOps](https://www.weave.works/technologies/gitops)-environment.
@@ -78,6 +80,7 @@ To install an Adame simply execute `pip install Adame-x.x.x-py3-none-any.whl`.
 
 - Bug: When running in a different folder (like `adame startadvanced -c someotherfolder/Adame.configuration` then the prescript and postscript may have wrong working-directories.
 - Feature: Before starting the docker-container then if a container with same name already exists the already existing container should be stopped and then removed to avoid errors due to already existing container-names.
+- Feature: After waiting `maximalexpectedstartduration` seconds there must be a check whether the container is running (and healthy if the health-information is available). If not then an error must be thrown
 
 ## License
 
