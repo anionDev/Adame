@@ -2,7 +2,7 @@ import tempfile
 import uuid
 import os
 from ScriptCollection.GeneralUtilities import GeneralUtilities
-from ..Adame import Adame
+from ..Adame.Adame import Adame
 
 
 class EnvironmentForTest:
@@ -20,6 +20,7 @@ class EnvironmentForTest:
         self.adame.set_test_mode(True)
         self.adame_configuration_file = os.path.join(self.folder, "Configuration", "Adame.configuration")
 
+    @GeneralUtilities.check_arguments
     def create(self, name="myapplication", owner="owner"):
         self.adame._internal_sc.mock_program_calls = False
         assert self.adame.create(name, self.folder, "httpd:latest", owner) == 0
@@ -28,6 +29,7 @@ class EnvironmentForTest:
         self.adame.verify_no_pending_mock_process_queries()
         self.adame._internal_sc.verify_no_pending_mock_program_calls()
 
+    @GeneralUtilities.check_arguments
     def dispose(self):
         GeneralUtilities.ensure_directory_does_not_exist(self.folder)
         self.adame.verify_no_pending_mock_process_queries()

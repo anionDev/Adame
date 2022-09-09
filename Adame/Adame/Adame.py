@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import configparser
 import socket
 import time
@@ -7,7 +8,7 @@ import uuid
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
-from distutils.spawn import find_executable
+from distutils.spawn import find_executable  # pylint: disable=deprecated-module
 import argparse
 from packaging.version import parse
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
@@ -16,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.20"
+version = "1.2.21"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -186,7 +187,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __start(self) -> None:
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
+        if self.__securityconfiguration.getboolean(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids):
             ids_is_running = self.__ensure_ids_is_running()
         else:
             ids_is_running = False
@@ -210,7 +211,7 @@ class Adame:
     def __stop(self) -> None:
         container_is_running = not self.__ensure_container_is_not_running()
         ids_is_running = False
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
+        if self.__securityconfiguration.getboolean(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids):
             ids_is_running = not self.__ensure_ids_is_not_running()
         self.__log_running_state(container_is_running, ids_is_running, "Stopped")
 
@@ -251,6 +252,7 @@ class Adame:
     def __startadvanced(self) -> None:
         self.__stopadvanced()
         self.__applyconfiguration()
+        self.__restore_metadata()
         self.__start()
 
     # </startadvanced-command>
@@ -269,7 +271,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __stopadvanced(self) -> None:
         self.__stop()
-        self.__commit("Saved changes")
+        self.__commit("Saved changes")  # FIXME this saves filemetadata. saving filemetadata should only be done when the container really was running
         self.__exportlogs()
 
     # </stopadvanced-command>
@@ -405,6 +407,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
+        self._internal_sc.escape_git_repositories_in_folder(self._internal_configuration_folder)
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
         content = content.replace("\\", self.__path_separator)
@@ -412,6 +415,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
+        self._internal_sc.deescape_git_repositories_in_folder(self._internal_configuration_folder)
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
 
     @GeneralUtilities.check_arguments
@@ -420,7 +424,10 @@ class Adame:
             return True
         if(file_or_folder == ".git" or file_or_folder.replace("\\", self.__path_separator).startswith(f".git{self.__path_separator}")):
             return False
-        return not self._internal_sc.file_is_git_ignored(file_or_folder, repository_folder)
+        if Path(os.path.join(repository_folder, file_or_folder)).is_symlink():
+            return False
+        else:
+            return not self._internal_sc.file_is_git_ignored(file_or_folder, repository_folder)
 
     @GeneralUtilities.check_arguments
     def __check_whether_execution_is_possible(self) -> None:
@@ -1072,8 +1079,8 @@ The license of this repository is defined in the file 'License.txt'.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result: tuple[int, str, str, int] = self._internal_sc.start_program_synchronously(program, argument, workingdirectory, verbose_argument, False,
-                                                                                          None, 72000, False, None, expect_exitcode_zero, False)
+        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False,
+                                                                          throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
@@ -1090,6 +1097,7 @@ The license of this repository is defined in the file 'License.txt'.
         process_id: str
         command: str
 
+    @GeneralUtilities.check_arguments
     def __execute_task(self, name: str, function) -> int:
         exitcode = 0
         try:
