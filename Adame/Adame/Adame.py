@@ -187,7 +187,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __start(self) -> None:
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
+        if self.__securityconfiguration.getboolean(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids):
             ids_is_running = self.__ensure_ids_is_running()
         else:
             ids_is_running = False
@@ -211,7 +211,7 @@ class Adame:
     def __stop(self) -> None:
         container_is_running = not self.__ensure_container_is_not_running()
         ids_is_running = False
-        if self._internal_sc.get_boolean_value_from_configuration(self.__securityconfiguration, self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids, dict()):
+        if self.__securityconfiguration.getboolean(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_enabledids):
             ids_is_running = not self.__ensure_ids_is_not_running()
         self.__log_running_state(container_is_running, ids_is_running, "Stopped")
 
@@ -407,6 +407,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
+        self._internal_sc.escape_git_repositories_in_folder(self._internal_configuration_folder)
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
         content = content.replace("\\", self.__path_separator)
@@ -414,6 +415,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
+        self._internal_sc.deescape_git_repositories_in_folder(self._internal_configuration_folder)
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
 
     @GeneralUtilities.check_arguments
