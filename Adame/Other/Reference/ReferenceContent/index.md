@@ -1,7 +1,9 @@
 # Adame Reference
 
-## Topics
+This is the reference of Adame.
 
-- [Configuration](./configuration.md)
+## Content
+
 - [Usage](./usage.md)
+- [Configuration](./configuration.md)
 - [Generated files](./generatedfiles.md)
