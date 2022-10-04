@@ -17,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.21"
+version = "1.2.22"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -415,8 +415,8 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
-        self._internal_sc.deescape_git_repositories_in_folder(self._internal_configuration_folder)
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
+        self._internal_sc.deescape_git_repositories_in_folder(self._internal_configuration_folder)
 
     @GeneralUtilities.check_arguments
     def __use_file(self, repository_folder: str, file_or_folder: str) -> bool:
