@@ -1,6 +1,6 @@
 .gitignore;f;user:group;666
 Configuration;d;user:group;777
-Configuration/.gitconfig;f;user:group;666
+Configuration/.gitxconfig;f;user:group;666
 Configuration/Adame.configuration;f;user:group;666
 Configuration/docker-compose.yml;f;user:group;666
 Configuration/FileMetadata.csv;f;user:group;666
