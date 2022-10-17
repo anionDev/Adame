@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from setuptools import setup
 
-version = "1.2.22"
+version = "1.2.23"
 
 
 def create_wheel_file():
@@ -39,7 +39,7 @@ def create_wheel_file():
             "netifaces>=0.11",
             "packaging>=21.3",
             "psutil>=5.9.0",
-            "ScriptCollection>=3.1.42",
+            "ScriptCollection>=3.2.21",
         ],
         entry_points={
             'console_scripts': [
