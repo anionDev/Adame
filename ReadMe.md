@@ -1,6 +1,16 @@
 # Adame
 
-![Coverage](./Adame/Other/QualityCheck/TestCoverage/Badges/badge_shieldsio_linecoverage_blue.svg)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/Adame.svg)](https://pypi.org/project/v/)
+![PyPI](https://img.shields.io/pypi/v/Adame)
+![Dependencies](https://img.shields.io/librariesio/github/anionDev/Adame)
+
+[![CodeFactor](https://www.codefactor.io/repository/github/aniondev/Adame/badge/main)](https://www.codefactor.io/repository/github/aniondev/Adame/overview/main)
+[![Downloads](https://pepy.tech/badge/adame)](https://pepy.tech/project/adame)
+![Coverage](./Adame/Other/Resources/TestCoverageBadges/badge_shieldsio_linecoverage_blue.svg)
+
+![License](https://img.shields.io/badge/license-No_license_available-blue)
+![GitHub last commit](https://img.shields.io/github/last-commit/anionDev/Adame)
+![GitHub issues](https://img.shields.io/github/issues-raw/anionDev/Adame)
 
 Adame (pronounced: `ăˈ.dam`) is the abbreviation for "Automatic Docker Application Management Engine". So in short: Adame is a tool to manage docker-applications as part in a Linux-environment.
 
