@@ -1,5 +1,6 @@
 {
-  "metadata": [],
+  "metadata": [
+  ],
   "build": {
     "content": [
       {
@@ -10,14 +11,14 @@
         "exclude": [
           "Examples/**"
         ],
-        "src": "./ReferenceContent"
+        "src":"./ReferenceContent"
       },
       {
-        "files": [
+       "files": [
           "**.yml"
         ],
-        "src": "./ReferenceContent/api",
-        "dest": "../Artifacts/Reference/api"
+        "src":"./ReferenceContent/api",
+        "dest":"../Artifacts/Reference/api"
       }
     ],
     "resource": [
@@ -25,13 +26,15 @@
         "files": [
           "images/**"
         ],
-        "src": "./ReferenceContent"
+        "src":"./ReferenceContent"
       }
     ],
     "overwrite": [
       {
-        "files": [],
-        "exclude": []
+        "files": [
+        ],
+        "exclude": [
+        ]
       }
     ],
     "dest": "../Artifacts/Reference",
