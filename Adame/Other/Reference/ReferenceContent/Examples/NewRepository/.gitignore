@@ -1,0 +1,8 @@
+Logs/Application/**
+!Logs/Application/.gitkeep
+
+Logs/IDS/**
+!Logs/IDS/.gitkeep
+
+Logs/Overhead/**
+!Logs/Overhead/.gitkeep

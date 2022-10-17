@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from setuptools import setup
 
-version = "1.2.22"
+version = "1.2.23"
 
 
 def create_wheel_file():

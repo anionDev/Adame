@@ -1,0 +1,11 @@
+[general]
+formatversion = 1.2.23
+repositoryversion = 1.0.0
+name = DemoApplication
+owner = DemoOwner
+maximalexpectedstartduration = 0
+repositoryid = de30de30-de30-de30-de30-de30de30de30
+networkinterface = eth0
+prescript = 
+postscript = 
+
