@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=65.5.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Adame"
+dynamic = ["readme"]
+version = "1.2.24"
+authors = [
+  { name="Marius Göcke", email="marius.goecke@gmail.com" },
+]
+description = "Adame (Automatic Docker Application Management Engine) is a tool which manages (install, start, stop) docker-applications."
+requires-python = ">=3.10"
+classifiers = [
+            "Programming Language :: Python :: 3.10",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: POSIX :: Linux",
+            "Operating System :: Microsoft :: Windows :: Windows 10",
+            "Topic :: System :: Logging",
+            "Topic :: System :: Monitoring",
+            "Topic :: Terminals"
+]
+dependencies = [
+            "netifaces>=0.11",
+            "packaging>=21.3",
+            "psutil>=5.9.0",
+            "ScriptCollection>=3.3.3",
+]
+
+[tool.setuptools.dynamic]
+readme = {file = ["ReadMe.md"]}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["Adame"]
