@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Adame"
 dynamic = ["readme"]
-version = "1.2.24"
+version = "1.2.25"
 authors = [
   { name="Marius Göcke", email="marius.goecke@gmail.com" },
 ]
@@ -26,6 +26,9 @@ dependencies = [
             "psutil>=5.9.0",
             "ScriptCollection>=3.3.3",
 ]
+
+[project.scripts]
+adame = "Adame.Adame:adame_cli"
 
 [tool.setuptools.dynamic]
 readme = {file = ["ReadMe.md"]}
