@@ -65,6 +65,8 @@ class Adame:
     __license_file: str = None
     __gitignore_file: str = None
     __dockercompose_file: str = None
+    __renamed_items_file: str = None
+    __volumes_folder: str = None
     __running_information_file: str = None
     __applicationprovidedsecurityinformation_file: str = None
     _internal_networktrafficgeneratedrules_file: str = None
@@ -377,7 +379,7 @@ class Adame:
         "This function is for test-purposes only"
         self.__test_mode = test_mode_enabled
         self._internal_sc.mock_program_calls = self.__test_mode
-        self._internal_sc.execute_programy_really_if_no_mock_call_is_defined = self.__test_mode
+        self._internal_sc.execute_program_really_if_no_mock_call_is_defined = self.__test_mode
 
     @GeneralUtilities.check_arguments
     def register_mock_process_query(self, process_id: int, command: str) -> None:
@@ -406,8 +408,40 @@ class Adame:
         self.__start_program_synchronously("git", f"checkout {branch}", self.__repository_folder, True)
 
     @GeneralUtilities.check_arguments
+    def __ensure_git_folder_is_escaped(self) -> None:
+        renamed_items = self._internal_sc.escape_git_repositories_in_folder(self.__volumes_folder)
+        if 0 < len(renamed_items):
+            prefix_length = len(self.__volumes_folder)
+            renamed_items_with_relative_paths: dict[str, str] = dict[str, str]()
+            for renamed_item_key, renamed_item_value in renamed_items.items():
+                if not renamed_item_key.startswith(self.__volumes_folder):
+                    GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_key}" does not start with "{self.__volumes_folder}"')
+                if not renamed_item_value.startswith(self.__volumes_folder):
+                    GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_value}" does not start with "{self.__volumes_folder}"')
+                renamed_item_key_relative = f"./{renamed_item_key[prefix_length+1:]} "
+                renamed_item_value_relative = f"./{renamed_item_value[prefix_length+1:]} "
+                renamed_items_with_relative_paths[renamed_item_key_relative] = renamed_item_value_relative
+            GeneralUtilities.ensure_file_exists(self.__renamed_items_file)
+            GeneralUtilities.write_lines_to_file(self.__renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
+        else:
+            GeneralUtilities.ensure_file_does_not_exist(self.__renamed_items_file)
+
+    @GeneralUtilities.check_arguments
+    def __ensure_git_folder_is_deescaped(self) -> None:
+        if os.path.isfile(self.__renamed_items_file):
+            lines: list[list[str]] = GeneralUtilities.read_csv_file(self.__renamed_items_file, False, False, False)
+            renamed_items_with_absolute_paths: dict[str, str] = dict[str, str]()
+            for line in lines:
+                key_relative = line[0]
+                value_relative = line[1]
+                key_absolute = GeneralUtilities.resolve_relative_path(key_relative, self.__volumes_folder)
+                value_absolute = GeneralUtilities.resolve_relative_path(value_relative, self.__volumes_folder)
+                renamed_items_with_absolute_paths[key_absolute] = value_absolute
+                self._internal_sc.deescape_git_repositories_in_folder(renamed_items_with_absolute_paths)
+
+    @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
-        self._internal_sc.escape_git_repositories_in_folder(self._internal_configuration_folder)
+        self.__ensure_git_folder_is_escaped()
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
         content = content.replace("\\", self.__path_separator)
@@ -416,7 +450,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
-        self._internal_sc.deescape_git_repositories_in_folder(self._internal_configuration_folder)
+        self.__ensure_git_folder_is_deescaped()
 
     @GeneralUtilities.check_arguments
     def __use_file(self, repository_folder: str, file_or_folder: str) -> bool:
@@ -794,8 +828,10 @@ IDS-process:{ids_is_running_as_string}
             self.__readme_file = os.path.join(self.__repository_folder, "ReadMe.md")
             self.__license_file = os.path.join(self.__repository_folder, "License.txt")
             self.__gitignore_file = os.path.join(self.__repository_folder, ".gitignore")
+            self.__volumes_folder = os.path.join(self._internal_configuration_folder, "Volumes")
             self.__running_information_file = os.path.join(self._internal_configuration_folder, "RunningInformation.txt")
             self.__dockercompose_file = os.path.join(self._internal_configuration_folder, "docker-compose.yml")
+            self.__renamed_items_file = os.path.join(self._internal_configuration_folder, "renamed_items.csv")
             self.__gitconfig_file = os.path.join(self._internal_configuration_folder, self.__gitconfiguration_filename)
             self.__metadata_file = os.path.join(self._internal_configuration_folder, self.__metadata_filename)
             self.__applicationprovidedsecurityinformation_file = os.path.join(
