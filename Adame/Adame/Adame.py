@@ -1,3 +1,4 @@
+from genericpath import isdir
 import os
 from pathlib import Path
 import configparser
@@ -409,22 +410,23 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __ensure_git_folder_is_escaped(self) -> None:
-        renamed_items = self._internal_sc.escape_git_repositories_in_folder(self.__volumes_folder)
-        if 0 < len(renamed_items):
-            prefix_length = len(self.__volumes_folder)
-            renamed_items_with_relative_paths: dict[str, str] = dict[str, str]()
-            for renamed_item_key, renamed_item_value in renamed_items.items():
-                if not renamed_item_key.startswith(self.__volumes_folder):
-                    GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_key}" does not start with "{self.__volumes_folder}"')
-                if not renamed_item_value.startswith(self.__volumes_folder):
-                    GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_value}" does not start with "{self.__volumes_folder}"')
-                renamed_item_key_relative = f"./{renamed_item_key[prefix_length+1:]} "
-                renamed_item_value_relative = f"./{renamed_item_value[prefix_length+1:]} "
-                renamed_items_with_relative_paths[renamed_item_key_relative] = renamed_item_value_relative
-            GeneralUtilities.ensure_file_exists(self.__renamed_items_file)
-            GeneralUtilities.write_lines_to_file(self.__renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
-        else:
-            GeneralUtilities.ensure_file_does_not_exist(self.__renamed_items_file)
+        if os.path.isdir(self.__volumes_folder):
+            renamed_items = self._internal_sc.escape_git_repositories_in_folder(self.__volumes_folder)
+            if 0 < len(renamed_items):
+                prefix_length = len(self.__volumes_folder)
+                renamed_items_with_relative_paths: dict[str, str] = dict[str, str]()
+                for renamed_item_key, renamed_item_value in renamed_items.items():
+                    if not renamed_item_key.startswith(self.__volumes_folder):
+                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_key}" does not start with "{self.__volumes_folder}"')
+                    if not renamed_item_value.startswith(self.__volumes_folder):
+                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_value}" does not start with "{self.__volumes_folder}"')
+                    renamed_item_key_relative = f"./{renamed_item_key[prefix_length+1:]} "
+                    renamed_item_value_relative = f"./{renamed_item_value[prefix_length+1:]} "
+                    renamed_items_with_relative_paths[renamed_item_key_relative] = renamed_item_value_relative
+                GeneralUtilities.ensure_file_exists(self.__renamed_items_file)
+                GeneralUtilities.write_lines_to_file(self.__renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
+            else:
+                GeneralUtilities.ensure_file_does_not_exist(self.__renamed_items_file)
 
     @GeneralUtilities.check_arguments
     def __ensure_git_folder_is_deescaped(self) -> None:
