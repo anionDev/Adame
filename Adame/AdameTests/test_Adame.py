@@ -130,7 +130,6 @@ Tests that the start-command works as expected"""
             environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(
                 f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" ' +
                 '-U -v -x -y -K ascii'), "", 0, "", "", 44)
-            environment_for_test.adame._internal_sc.register_mock_program_call("git",  ".*", ".*", 0, "", "", 40, 29)
 
             # act
             exitcode = environment_for_test.adame.start(environment_for_test.adame_configuration_file)

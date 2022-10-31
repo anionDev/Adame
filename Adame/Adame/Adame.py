@@ -17,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.29"
+version = "1.2.30"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -488,7 +488,7 @@ class Adame:
     def __log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
         GeneralUtilities.write_text_to_file(self.__running_information_file, self.__get_running_information_file_content(container_is_running, ids_is_running))
         self._internal_sc.git_unstage_all_changes(self.__repository_folder)
-        self.__commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", True, 1)
+        self.__commit(f"{action} container (Container-process: {str(container_is_running)}; IDS-process: {str(ids_is_running)})", True, 1, not container_is_running)
 
     @GeneralUtilities.check_arguments
     def __adame_general_diagonisis(self) -> bool:
