@@ -255,7 +255,7 @@ Ensures that adame._internal_process_is_running does not throw an exception when
             GeneralUtilities.ensure_file_exists(file_c_d_head)  # item 11
 
             # act
-            renamed_items = adame._internal_ensure_git_folder_is_escaped(folder, renamed_items_file)
+            renamed_items = adame._internal_ensure_git_folder_are_escaped(folder, renamed_items_file)
 
             assert renamed_items is not None
             # TODO add assert for renamed items
@@ -281,7 +281,7 @@ Ensures that adame._internal_process_is_running does not throw an exception when
             assert os.path.isfile(os.path.join(folder_c, "d.gitxd.gitxd", "head"))  # item 11
 
             # act
-            adame._internal_ensure_git_folder_is_deescaped(folder, renamed_items_file)
+            adame._internal_ensure_git_folder_are_deescaped(folder, renamed_items_file)
 
             # assert
             assert os.path.isdir(folder_a)  # item 1
