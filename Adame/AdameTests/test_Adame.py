@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 from ScriptCollection.GeneralUtilities import GeneralUtilities
+from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
 from ..Adame.Adame import Adame
 from .EnvironmentForTest import EnvironmentForTest
 
@@ -208,6 +209,103 @@ Ensures that adame._internal_process_is_running does not throw an exception when
         adame.verbose = True
         adame.set_test_mode(False)
         assert not adame._internal_process_is_running(42, "test")
+
+    def test_escape_git_folders_in_folder(self) -> None:
+        # arrange
+        adame = Adame()
+        folder = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+        renamed_items_file = os.path.join(folder, "renamings.csv")
+        try:
+            GeneralUtilities.ensure_directory_exists(folder)
+
+            # folder
+            # +-- a (folder)
+            # |  +-- b1 (folder)
+            # |  |   +-- .git (file)
+            # |  +-- b2 (folder)
+            # |      +-- .git (folder)
+            # |          +-- head  (file)
+            # +-- .git (folder)
+            # |   +-- head (file)
+            # +-- c
+            #     +-- d1.gitd2.gitd3 (folder)
+            # |       +-- head (file)
+
+            folder_a = os.path.join(folder, "a")  # item 1
+            folder_a_b1 = os.path.join(folder_a, "b1")  # item 2
+            file_a_b1_git = os.path.join(folder_a_b1, ".git")  # item 3
+            folder_a_b2 = os.path.join(folder_a, "b2")  # item 4
+            folder_a_b2_git = os.path.join(folder_a_b2, ".git")  # item 5
+            file_a_b2_git_head = os.path.join(folder_a_b2_git, "head")  # item 6
+            folder_git = os.path.join(folder, ".git")  # item 7
+            file_git_head = os.path.join(folder_git, "head")  # item 8
+            folder_c = os.path.join(folder, "c")  # item 9
+            folder_d = os.path.join(folder_c, "d.gitd.gitd")  # item 10
+            file_c_d_head = os.path.join(folder_d, "head")  # item 11
+
+            GeneralUtilities.ensure_directory_exists(folder_a)  # item 1
+            GeneralUtilities.ensure_directory_exists(folder_a_b1)  # item 2
+            GeneralUtilities.ensure_file_exists(file_a_b1_git)  # item 3
+            GeneralUtilities.ensure_directory_exists(folder_a_b2)  # item 4
+            GeneralUtilities.ensure_directory_exists(folder_a_b2_git)  # item 5
+            GeneralUtilities.ensure_file_exists(file_a_b2_git_head)  # item 6
+            GeneralUtilities.ensure_directory_exists(folder_git)  # item 7
+            GeneralUtilities.ensure_file_exists(file_git_head)  # item 8
+            GeneralUtilities.ensure_directory_exists(folder_c)  # item 9
+            GeneralUtilities.ensure_directory_exists(folder_d)  # item 10
+            GeneralUtilities.ensure_file_exists(file_c_d_head)  # item 11
+
+            # act
+            renamed_items = adame._internal_ensure_git_folder_is_escaped(folder, renamed_items_file)
+
+            assert renamed_items is not None
+            # TODO add assert for renamed items
+
+            # assert
+            assert os.path.isdir(folder_a)  # item 1
+            assert os.path.isdir(folder_a_b1)  # item 2
+            assert not os.path.isfile(file_a_b1_git)  # item 3
+            assert os.path.isfile(file_a_b1_git+"x")  # item 3
+            assert os.path.isdir(folder_a_b2)  # item 4
+            assert not os.path.isdir(folder_a_b2_git)  # item 5
+            assert os.path.isdir(folder_a_b2_git+"x")  # item 5
+            assert not os.path.isfile(file_a_b2_git_head)  # item 6
+            assert os.path.isfile(os.path.join(folder_a_b2_git+"x", "head"))  # item 6
+            assert not os.path.isdir(folder_git)  # item 7
+            assert os.path.isdir(folder_git+"x")  # item 7
+            assert not os.path.isfile(file_git_head)  # item 8
+            assert os.path.isfile(os.path.join(folder_git+"x", "head"))  # item 8
+            assert os.path.isdir(folder_c)  # item 9
+            assert not os.path.isdir(folder_d)  # item 10
+            assert os.path.isdir(os.path.join(folder_c, "d.gitxd.gitxd"))  # item 10
+            assert not os.path.isfile(file_c_d_head)  # item 11
+            assert os.path.isfile(os.path.join(folder_c, "d.gitxd.gitxd", "head"))  # item 11
+
+            # act
+            adame._internal_ensure_git_folder_is_deescaped(folder, renamed_items_file)
+
+            # assert
+            assert os.path.isdir(folder_a)  # item 1
+            assert os.path.isdir(folder_a_b1)  # item 2
+            assert os.path.isfile(file_a_b1_git)  # item 3
+            assert not os.path.isfile(file_a_b1_git+"x")  # item 3
+            assert os.path.isdir(folder_a_b2)  # item 4
+            assert os.path.isdir(folder_a_b2_git)  # item 5
+            assert not os.path.isdir(folder_a_b2_git+"x")  # item 5
+            assert os.path.isfile(file_a_b2_git_head)  # item 6
+            assert not os.path.isfile(os.path.join(folder_a_b2_git+"x", "head"))  # item 6
+            assert os.path.isdir(folder_git)  # item 7
+            assert not os.path.isdir(folder_git+"x")  # item 7
+            assert os.path.isfile(file_git_head)  # item 8
+            assert not os.path.isfile(os.path.join(folder_git+"x", "head"))  # item 8
+            assert os.path.isdir(folder_c)  # item 9
+            assert os.path.isdir(folder_d)  # item 10
+            assert not os.path.isdir(os.path.join(folder_c, "d.gitxd.gitxd"))  # item 10
+            assert os.path.isfile(file_c_d_head)  # item 11
+            assert not os.path.isfile(os.path.join(folder_c, "d.gitxd.gitxd", "head"))  # item 11
+
+        finally:
+            GeneralUtilities.ensure_directory_exists(folder)
 
     def test_create_demonstration_repository(self):
         """DemonstrationTest

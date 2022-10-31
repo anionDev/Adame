@@ -409,41 +409,43 @@ class Adame:
         self.__start_program_synchronously("git", f"checkout {branch}", self.__repository_folder, True)
 
     @GeneralUtilities.check_arguments
-    def __ensure_git_folder_is_escaped(self) -> None:
-        if os.path.isdir(self.__volumes_folder):
-            renamed_items = self._internal_sc.escape_git_repositories_in_folder(self.__volumes_folder)
+    def _internal_ensure_git_folder_is_escaped(self, volumes_folder: str, renamed_items_file: str) -> dict[str, str]:
+        result: dict[str, str] = None
+        if os.path.isdir(volumes_folder):
+            renamed_items = self._internal_sc.escape_git_repositories_in_folder(volumes_folder)
             if 0 < len(renamed_items):
-                prefix_length = len(self.__volumes_folder)
+                prefix_length = len(volumes_folder)
                 renamed_items_with_relative_paths: dict[str, str] = dict[str, str]()
                 for renamed_item_key, renamed_item_value in renamed_items.items():
-                    if not renamed_item_key.startswith(self.__volumes_folder):
-                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_key}" does not start with "{self.__volumes_folder}"')
-                    if not renamed_item_value.startswith(self.__volumes_folder):
-                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_value}" does not start with "{self.__volumes_folder}"')
-                    renamed_item_key_relative = f"./{renamed_item_key[prefix_length+1:]} "
-                    renamed_item_value_relative = f"./{renamed_item_value[prefix_length+1:]} "
+                    if not renamed_item_key.startswith(volumes_folder):
+                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_key}" does not start with "{volumes_folder}"')
+                    if not renamed_item_value.startswith(volumes_folder):
+                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_value}" does not start with "{volumes_folder}"')
+                    renamed_item_key_relative = f"./{renamed_item_key[prefix_length+1:]}"
+                    renamed_item_value_relative = f"./{renamed_item_value[prefix_length+1:]}"
                     renamed_items_with_relative_paths[renamed_item_key_relative] = renamed_item_value_relative
-                GeneralUtilities.ensure_file_exists(self.__renamed_items_file)
-                GeneralUtilities.write_lines_to_file(self.__renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
+                result = renamed_items_with_relative_paths
+                GeneralUtilities.ensure_file_exists(renamed_items_file)
+                GeneralUtilities.write_lines_to_file(renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
             else:
-                GeneralUtilities.ensure_file_does_not_exist(self.__renamed_items_file)
+                GeneralUtilities.ensure_file_does_not_exist(renamed_items_file)
+        return result
 
     @GeneralUtilities.check_arguments
-    def __ensure_git_folder_is_deescaped(self) -> None:
-        if os.path.isfile(self.__renamed_items_file):
-            lines: list[list[str]] = GeneralUtilities.read_csv_file(self.__renamed_items_file, False, False, False)
-            renamed_items_with_absolute_paths: dict[str, str] = dict[str, str]()
+    def _internal_ensure_git_folder_is_deescaped(self, volumes_folder: str, renamed_items_file: str) -> None:
+        if os.path.isfile(renamed_items_file):
+            lines: list[list[str]] = GeneralUtilities.read_csv_file(renamed_items_file, False, False, False)
+            # TODO sort list to ensure there are no filenotfound-exceptions when a renamed file will is attempted to be renamed in an already renamed folder
             for line in lines:
                 key_relative = line[0]
                 value_relative = line[1]
-                key_absolute = GeneralUtilities.resolve_relative_path(key_relative, self.__volumes_folder)
-                value_absolute = GeneralUtilities.resolve_relative_path(value_relative, self.__volumes_folder)
-                renamed_items_with_absolute_paths[key_absolute] = value_absolute
-                self._internal_sc.deescape_git_repositories_in_folder(renamed_items_with_absolute_paths)
+                key_absolute = GeneralUtilities.resolve_relative_path(key_relative, volumes_folder)
+                value_absolute = GeneralUtilities.resolve_relative_path(value_relative, volumes_folder)
+                os.rename(key_absolute, value_absolute)
 
     @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
-        self.__ensure_git_folder_is_escaped()
+        self._internal_ensure_git_folder_is_escaped(self.__volumes_folder, self.__renamed_items_file)
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
         content = content.replace("\\", self.__path_separator)
@@ -452,7 +454,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
-        self.__ensure_git_folder_is_deescaped()
+        self._internal_ensure_git_folder_is_deescaped(self.__volumes_folder, self.__renamed_items_file)
 
     @GeneralUtilities.check_arguments
     def __use_file(self, repository_folder: str, file_or_folder: str) -> bool:
