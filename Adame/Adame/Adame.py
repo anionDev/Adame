@@ -17,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.27"
+version = "1.2.28"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -835,7 +835,7 @@ IDS-process:{ids_is_running_as_string}
             self.__volumes_folder = os.path.join(self._internal_configuration_folder, "Volumes")
             self.__running_information_file = os.path.join(self._internal_configuration_folder, "RunningInformation.txt")
             self.__dockercompose_file = os.path.join(self._internal_configuration_folder, "docker-compose.yml")
-            self.__renamed_items_file = os.path.join(self._internal_configuration_folder, "RenamedItems.csv")
+            self.__renamed_items_file = os.path.join(self.__volumes_folder, "RenamedItems.csv")
             self.__gitconfig_file = os.path.join(self._internal_configuration_folder, self.__gitconfiguration_filename)
             self.__metadata_file = os.path.join(self._internal_configuration_folder, self.__metadata_filename)
             self.__applicationprovidedsecurityinformation_file = os.path.join(
