@@ -1,4 +1,3 @@
-from genericpath import isdir
 import os
 from pathlib import Path
 import configparser
@@ -18,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.25"
+version = "1.2.26"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
