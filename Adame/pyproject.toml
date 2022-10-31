@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Adame"
 dynamic = ["readme"]
-version = "1.2.26"
+version = "1.2.27"
 authors = [
   { name="Marius Göcke", email="marius.goecke@gmail.com" },
 ]

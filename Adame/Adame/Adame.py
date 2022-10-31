@@ -17,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.26"
+version = "1.2.27"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -410,7 +410,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def _internal_ensure_git_folder_is_escaped(self, volumes_folder: str, renamed_items_file: str) -> dict[str, str]:
         result: dict[str, str] = None
-        if os.path.isdir(volumes_folder):
+        if not os.path.isfile(renamed_items_file) and os.path.isdir(volumes_folder):
             renamed_items = self._internal_sc.escape_git_repositories_in_folder(volumes_folder)
             if 0 < len(renamed_items):
                 prefix_length = len(volumes_folder)
@@ -427,7 +427,7 @@ class Adame:
                 GeneralUtilities.ensure_file_exists(renamed_items_file)
                 GeneralUtilities.write_lines_to_file(renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
             else:
-                GeneralUtilities.ensure_file_does_not_exist(renamed_items_file)
+                GeneralUtilities.ensure_file_exists(renamed_items_file)
         return result
 
     @GeneralUtilities.check_arguments
@@ -441,6 +441,7 @@ class Adame:
                 key_absolute = GeneralUtilities.resolve_relative_path(key_relative, volumes_folder)
                 value_absolute = GeneralUtilities.resolve_relative_path(value_relative, volumes_folder)
                 os.rename(key_absolute, value_absolute)
+            GeneralUtilities.ensure_file_does_not_exist(renamed_items_file)
 
     @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
@@ -834,7 +835,7 @@ IDS-process:{ids_is_running_as_string}
             self.__volumes_folder = os.path.join(self._internal_configuration_folder, "Volumes")
             self.__running_information_file = os.path.join(self._internal_configuration_folder, "RunningInformation.txt")
             self.__dockercompose_file = os.path.join(self._internal_configuration_folder, "docker-compose.yml")
-            self.__renamed_items_file = os.path.join(self._internal_configuration_folder, "renamed_items.csv")
+            self.__renamed_items_file = os.path.join(self._internal_configuration_folder, "RenamedItems.csv")
             self.__gitconfig_file = os.path.join(self._internal_configuration_folder, self.__gitconfiguration_filename)
             self.__metadata_file = os.path.join(self._internal_configuration_folder, self.__metadata_filename)
             self.__applicationprovidedsecurityinformation_file = os.path.join(
