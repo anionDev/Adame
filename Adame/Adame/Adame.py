@@ -17,7 +17,7 @@ import psutil
 import netifaces
 
 product_name = "Adame"
-version = "1.2.26"
+version = "1.2.27"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
