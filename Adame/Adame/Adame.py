@@ -408,18 +408,20 @@ class Adame:
         self.__start_program_synchronously("git", f"checkout {branch}", self.__repository_folder, True)
 
     @GeneralUtilities.check_arguments
-    def _internal_ensure_git_folder_is_escaped(self, volumes_folder: str, renamed_items_file: str) -> dict[str, str]:
+    def _internal_ensure_git_folder_are_escaped(self, volumes_folder: str, renamed_items_file: str) -> dict[str, str]:
         result: dict[str, str] = None
-        if not os.path.isfile(renamed_items_file) and os.path.isdir(volumes_folder):
+        self.__log_information("Ensure git-folders are escaped...", True, True, True)
+        if os.path.isdir(volumes_folder) and not os.path.isfile(renamed_items_file):
+            self.__log_information("Escape git-folders...", True, True, True)
             renamed_items = self._internal_sc.escape_git_repositories_in_folder(volumes_folder)
             if 0 < len(renamed_items):
                 prefix_length = len(volumes_folder)
                 renamed_items_with_relative_paths: dict[str, str] = dict[str, str]()
                 for renamed_item_key, renamed_item_value in renamed_items.items():
                     if not renamed_item_key.startswith(volumes_folder):
-                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_key}" does not start with "{volumes_folder}"')
+                        self.__log_warning(f'Renamed item "{renamed_item_key}" does not start with "{volumes_folder}"', False, True, True)
                     if not renamed_item_value.startswith(volumes_folder):
-                        GeneralUtilities.write_message_to_stdout(f'Warning: Renamed item "{renamed_item_value}" does not start with "{volumes_folder}"')
+                        self.__log_warning(f'Renamed item "{renamed_item_value}" does not start with "{volumes_folder}"', False, True, True)
                     renamed_item_key_relative = f"./{renamed_item_key[prefix_length+1:]}"
                     renamed_item_value_relative = f"./{renamed_item_value[prefix_length+1:]}"
                     renamed_items_with_relative_paths[renamed_item_key_relative] = renamed_item_value_relative
@@ -428,11 +430,15 @@ class Adame:
                 GeneralUtilities.write_lines_to_file(renamed_items_file, [f"{key};{value}" for key, value in renamed_items_with_relative_paths.items()])
             else:
                 GeneralUtilities.ensure_file_exists(renamed_items_file)
+        else:
+            self.__log_information("No folders for escaping available.", True, True, True)
         return result
 
     @GeneralUtilities.check_arguments
-    def _internal_ensure_git_folder_is_deescaped(self, volumes_folder: str, renamed_items_file: str) -> None:
+    def _internal_ensure_git_folder_are_deescaped(self, volumes_folder: str, renamed_items_file: str) -> None:
+        self.__log_information("Ensure git-folders are deescaped...", True, True, True)
         if os.path.isfile(renamed_items_file):
+            self.__log_information("Deescape git-folders...", True, True, True)
             lines: list[list[str]] = GeneralUtilities.read_csv_file(renamed_items_file, False, False, False)
             # TODO sort list to ensure there are no filenotfound-exceptions when a renamed file will is attempted to be renamed in an already renamed folder
             for line in lines:
@@ -442,10 +448,13 @@ class Adame:
                 value_absolute = GeneralUtilities.resolve_relative_path(value_relative, volumes_folder)
                 os.rename(key_absolute, value_absolute)
             GeneralUtilities.ensure_file_does_not_exist(renamed_items_file)
+        else:
+            self.__log_information("No folders for deescaping available.", True, True, True)
 
     @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
-        self._internal_ensure_git_folder_is_escaped(self.__volumes_folder, self.__renamed_items_file)
+        self.__log_information("Save metadata...", True, True, True)
+        self._internal_ensure_git_folder_are_escaped(self.__volumes_folder, self.__renamed_items_file)
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
         content = content.replace("\\", self.__path_separator)
@@ -453,8 +462,9 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
+        self.__log_information("Restore metadata...", True, True, True)
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
-        self._internal_ensure_git_folder_is_deescaped(self.__volumes_folder, self.__renamed_items_file)
+        self._internal_ensure_git_folder_are_deescaped(self.__volumes_folder, self.__renamed_items_file)
 
     @GeneralUtilities.check_arguments
     def __use_file(self, repository_folder: str, file_or_folder: str) -> bool:
@@ -501,6 +511,7 @@ class Adame:
             return result
         tools = [
             "chmod",
+            "chown",
             "docker-compose",
             "git",
         ]
@@ -512,7 +523,7 @@ class Adame:
         ]
         for tool in tools:
             if not self.__tool_exists_in_path(tool):
-                GeneralUtilities.write_message_to_stderr(f"Tool '{tool}' is not available")
+                self.__log_error(f"Tool '{tool}' is not available")
                 result = False
         for tool in recommended_tools:
             if not self.__tool_exists_in_path(tool):
@@ -626,6 +637,8 @@ This function is idempotent."""
 
     @GeneralUtilities.check_arguments
     def __start_ids(self) -> bool:
+        if self.verbose:
+            GeneralUtilities.write_message_to_stdout("Start ids...")
         success = True
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
@@ -648,6 +661,7 @@ This function is idempotent."""
 
     @GeneralUtilities.check_arguments
     def __stop_ids(self) -> bool:
+        self.__log_information("Stop ids...", True, True, True)
         result = 0
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
         if(ids == "snort"):
@@ -881,11 +895,11 @@ IDS-process:{ids_is_running_as_string}
                 self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remoteaddress])
 
             if(not self.__gpgkey_of_owner_is_available):
-                self.__log_information(
-                    "Warning: GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
+                self.__log_warning(
+                    "GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
             if(not self.__remote_address_is_available):
-                self.__log_information(
-                    "Warning: Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
+                self.__log_warning(
+                    "Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
 
         except Exception as exception:
             self.__log_exception(f"Error while loading configurationfile '{self.__propertiesconfiguration_file}'.", exception)
@@ -1088,6 +1102,8 @@ The license of this repository is defined in the file 'License.txt'.
         # no_changes_behavior=0 => No commit
         # no_changes_behavior=1 => Commit anyway
         # no_changes_behavior=2 => Exception
+        self.__log_information(f"Commit changes (message='{message}', stage_all_changes={str(stage_all_changes)}, " +
+                               f"no_changes_behavior={str(no_changes_behavior)}, overhead={str(overhead)}')...", True, True, True)
         repository = self.__repository_folder
         if overhead:
             self.__save_metadata()
@@ -1162,6 +1178,10 @@ The license of this repository is defined in the file 'License.txt'.
     @GeneralUtilities.check_arguments
     def __log_warning(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
         self.__write_to_log("Warning", message, is_verbose_log_entry, write_to_console, write_to_logfile)
+
+    @GeneralUtilities.check_arguments
+    def __log_error(self, message: str, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = False) -> None:
+        self.__write_to_log("Error", message, is_verbose_log_entry, write_to_console, write_to_logfile)
 
     @GeneralUtilities.check_arguments
     def __log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True) -> None:
