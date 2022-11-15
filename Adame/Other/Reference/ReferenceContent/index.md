@@ -4,6 +4,6 @@ This is the reference of Adame.
 
 ## Content
 
-- [Usage](./usage.md)
-- [Configuration](./configuration.md)
-- [Generated files](./generatedfiles.md)
+- [Usage](./Articles/Usage.md)
+- [Configuration](./Articles/Configuration.md)
+- [Generated files](./Articles/Generatedfiles.md)
