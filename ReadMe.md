@@ -28,7 +28,7 @@ Adame is able to do the following things:
 
 ## Reference
 
-The reference can be found [here](Reference/Index.md).
+The reference can be found [here](./Adame/Other/Reference/ReferenceContent/index.md).
 
 ## Runtime-requirements
 
