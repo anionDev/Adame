@@ -1,60 +1,25 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
+			"name": "Entire repository",
+		},
+		{
+			"path": "./Adame",
+			"name": "Adame",
 		}
 	],
 	"tasks": {
 		"version": "2.0.0",
 		"tasks": [
 			{
-				"label": "Adame: Build entire codeunit",
-				"command": "SCBuildCodeunit",
-				"args": [
-					"--codeunitfolder",
-					"${workspaceFolder}/Adame"
-				],
+				"label": "Build all codeunits",
+				"command": "SCBuildCodeunits",
+				"args": [],
 				"type": "shell",
-			},
-			{
-				"label": "Adame: Common tasks",
-				"command": "python",
-				"args": [
-					"${workspaceFolder}/Adame/Other/CommonTasks.py"
-				],
-				"type": "shell",
-			},
-			{
-				"label": "Adame: Build",
-				"command": "python",
-				"args": [
-					"${workspaceFolder}/Adame/Other/Build/Build.py"
-				],
-				"type": "shell",
-			},
-			{
-				"label": "Adame: Run testcases",
-				"command": "python",
-				"args": [
-					"${workspaceFolder}/Adame/Other/QualityCheck/RunTestcases.py"
-				],
-				"type": "shell",
-			},
-			{
-				"label": "Adame: Linting",
-				"command": "python",
-				"args": [
-					"${workspaceFolder}/Adame/Other/QualityCheck/Linting.py"
-				],
-				"type": "shell",
-			},
-			{
-				"label": "Adame: Generate reference",
-				"command": "python",
-				"args": [
-					"${workspaceFolder}/Adame/Other/Reference/GenerateReference.py"
-				],
-				"type": "shell",
+				"options": {
+					"cwd": "${workspaceFolder}",
+				},
 			}
 		]
 	},
@@ -71,23 +36,12 @@
 		]
 	},
 	"settings": {
-		"files.associations": {
-			"*.codeunit": "xml",
-		},
-		"python.testing.autoTestDiscoverOnSaveEnabled": true,
-		"python.testing.unittestEnabled": false,
-		"python.testing.pytestEnabled": true,
-		"python.testing.pytestArgs": [
-			"--verbose",
-			"Adame/AdameTests/",
-		],
-		"python.linting.pylintEnabled": true,
-		"spellright.language": [
-			"en",
-		],
 		"spellright.documentTypes": [
 			"markdown",
 			"plaintext",
+		],
+		"spellright.language": [
+			"en",
 		],
 	}
 }
