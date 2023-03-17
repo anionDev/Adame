@@ -5,5 +5,5 @@ packaging>=21.3
 psutil>=5.9.4
 pylint>=2.13.4
 pytest>=7.1.1
-ScriptCollection>=3.3.69
+ScriptCollection>=3.3.70
 wheel>=0.37.1
