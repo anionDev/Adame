@@ -1000,26 +1000,25 @@ Logs/Overhead/**
 
 ## Purpose
 
-This repository manages the data of the application {configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_name)}.
+This repository manages the application {configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_name)} and its data.
 
-# Technical information
+## Technical information
 
-## Image
+### Image
 
-The docker-image {image} will be used.
+The image {image} will be used.
 
-## Backup
+### Backup
 
 {remote_address_info}
 
-## Integrity
+### Integrity
 
 {gpgkey_of_owner_info}
 
-# License
+## License
 
-The license of this repository is defined in the file 'License.txt'.
-
+The license of this repository is defined in the file `License.txt`.
 """
 
     @GeneralUtilities.check_arguments
