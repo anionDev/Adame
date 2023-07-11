@@ -965,7 +965,7 @@ Logs/Overhead/**
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remoteaddress] = ""
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotename] = "Backup"
-        securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch] = "master"
+        securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch] = "main"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress] = ""
