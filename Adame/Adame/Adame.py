@@ -14,7 +14,6 @@ from packaging.version import parse
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 import psutil
-import netifaces
 
 product_name = "Adame"
 version = "1.2.32"
@@ -119,23 +118,23 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str) -> None:
         if name is None:
-            raise Exception("Argument 'name' is not defined")
+            raise ValueError("Argument 'name' is not defined")
         else:
             name = name.replace(" ", "-")
 
         if folder is None:
-            raise Exception("Argument 'folder' is not defined")
+            raise ValueError("Argument 'folder' is not defined")
         else:
             if (os.path.isdir(folder) and not GeneralUtilities.folder_is_empty(folder)):
-                raise Exception(f"Folder '{folder}' does already have content")
+                raise ValueError(f"Folder '{folder}' does already have content")
             else:
                 GeneralUtilities.ensure_directory_exists(folder)
 
         if image is None:
-            raise Exception("Argument 'image' is not defined")
+            raise ValueError("Argument 'image' is not defined")
 
         if owner is None:
-            raise Exception("Argument 'owner' is not defined")
+            raise ValueError("Argument 'owner' is not defined")
 
         if gpgkey_of_owner is None:
             gpgkey_of_owner = ""
@@ -347,10 +346,10 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __diagnosis(self) -> None:
         if not self.__adame_general_diagonisis():
-            raise Exception("General diagnosis found discrepancies")
+            raise ValueError("General diagnosis found discrepancies")
         if self.__configuration is not None:
             if not self.__adame_repository_diagonisis():
-                raise Exception(f"General diagnosis found discrepancies in repository '{self.__repository_folder}'")
+                raise ValueError(f"General diagnosis found discrepancies in repository '{self.__repository_folder}'")
 
     # </checkintegrity-command>
 
@@ -482,7 +481,7 @@ class Adame:
         if self.__test_mode:
             return
         if (not GeneralUtilities.current_user_has_elevated_privileges()):
-            raise Exception("Adame requries elevated privileges to get executed")
+            raise ValueError("Adame requries elevated privileges to get executed")
 
     @GeneralUtilities.check_arguments
     def __log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
@@ -540,7 +539,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __check_configurationfile_argument(self, configurationfile: str) -> None:
         if configurationfile is None:
-            raise Exception("Argument 'configurationfile' is not defined")
+            raise ValueError("Argument 'configurationfile' is not defined")
         if not os.path.isfile(configurationfile):
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
 
@@ -830,7 +829,7 @@ IDS-process:{ids_is_running_as_string}
             self.__log_information("Load configuration...", True, True, True)
             configurationfile = GeneralUtilities.resolve_relative_path_from_current_working_directory(configurationfile)
             if not os.path.isfile(configurationfile):
-                raise Exception(F"'{configurationfile}' does not exist")
+                raise ValueError(F"'{configurationfile}' does not exist")
             self.__configuration_file = configurationfile
             self.__repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             configuration = configparser.ConfigParser()
@@ -885,7 +884,7 @@ IDS-process:{ids_is_running_as_string}
             self.__log_information("Load security-configuration...", True, True, True)
             securityconfiguration = configparser.ConfigParser()
             if not os.path.isfile(self.__propertiesconfiguration_file):
-                raise Exception(F"'{self.__propertiesconfiguration_file}' does not exist")
+                raise ValueError(F"'{self.__propertiesconfiguration_file}' does not exist")
             securityconfiguration.read(self.__propertiesconfiguration_file)
             self.__securityconfiguration = securityconfiguration
 
@@ -1096,7 +1095,7 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __get_local_ip_address(self) -> str:
-        return netifaces.ifaddresses(self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
+        return "<insert local ip address>"  # TODO calculate value
 
     @GeneralUtilities.check_arguments
     def __commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0, overhead: bool = True) -> None:
