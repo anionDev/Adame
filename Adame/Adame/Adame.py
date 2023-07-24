@@ -1042,6 +1042,7 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __start_container(self) -> bool:
+        # TODO remove existing container if exist
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         success = self.__run_system_command(
