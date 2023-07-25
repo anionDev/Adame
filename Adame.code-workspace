@@ -15,10 +15,21 @@
 			{
 				"label": "Build all codeunits",
 				"command": "SCBuildCodeunits",
-				"args": [ ],
+				"args": [],
 				"type": "shell",
 				"options": {
 					"cwd": "${workspaceFolder}",
+				},
+			},
+			{
+				"label": "Adame: Update dependencies",
+				"command": "python",
+				"args": [
+					"UpdateDependencies.py"
+				],
+				"type": "shell",
+				"options": {
+					"cwd": "${workspaceFolder}/Adame/Other",
 				},
 			}
 		]
@@ -42,6 +53,6 @@
 		],
 		"spellright.language": [
 			"en",
-		],
+		]
 	}
 }

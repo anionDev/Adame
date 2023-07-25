@@ -14,6 +14,7 @@ from packaging.version import parse
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 import psutil
+import yaml
 
 product_name = "Adame"
 version = "1.2.32"
@@ -1052,6 +1053,20 @@ The license of this repository is defined in the file `License.txt`.
         else:
             self.__log_warning("Container could not be started")
         return success
+
+    @GeneralUtilities.check_arguments
+    def _internal_remove_existing_container(self, docker_compose_file: str) -> None:
+        with open(docker_compose_file, "r") as stream:
+            parsed = yaml.safe_load(stream)
+            container_names: list[str] = []
+            try:
+                for service_name in parsed['services']:
+                    service = parsed['services'][service_name]
+                    container_names.append(service['container_name'])
+            except Exception as e:
+                pass  # TODO log warning
+            for container_name in container_names:
+                pass  # TODO remove container
 
     @GeneralUtilities.check_arguments
     def __get_running_processes(self) -> list:

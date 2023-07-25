@@ -2,7 +2,7 @@ Copyright © 2020 Marius Göcke
 
 Currently there is no license to use Adame.
 Adame uses dependencies which are released under their own license.
--netifaces is licensed under the terms of the MIT-license (see appendix 1)
+-PyYAML is licensed under the terms of the MIT-license (see appendix 1)
 -psutil is licensed under the terms of the BSD-license (see appendix 2)
 -ScriptCollection is licensed under the terms of the MIT-license (see appendix 1)
 
