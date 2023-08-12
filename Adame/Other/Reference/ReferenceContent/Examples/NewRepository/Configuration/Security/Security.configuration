@@ -1,13 +1,14 @@
 [general]
 enableids = true
-gpgkeyofowner =
-remoteaddress =
+gpgkeyofowner = 
+remoteaddress = 
 remotename = Backup
 remotebranch = main
 idsname = snort
-siemaddress =
+siemaddress = 
 siemfolder = /var/log/Hostname/demoapplication
 siemuser = username_on_siem_system
 
 [snort]
 globalconfigurationfile = /etc/snort/snort.conf
+

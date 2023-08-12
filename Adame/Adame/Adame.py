@@ -1057,17 +1057,17 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def _internal_remove_existing_container(self, docker_compose_file: str) -> None:
-        with open(docker_compose_file, "r") as stream:
+        with open(docker_compose_file, "r", encoding="utf-8") as stream:
             parsed = yaml.safe_load(stream)
             container_names: list[str] = []
             try:
                 for service_name in parsed['services']:
                     service = parsed['services'][service_name]
                     container_names.append(service['container_name'])
-            except Exception as e:
-                pass  # TODO log warning
+            except Exception as exception:
+                self.__log_warning(f"Can not check for container-name due to an exception: {str(exception)}")
             for container_name in container_names:
-                pass  # TODO remove container
+                self.__run_system_command("docker", f"container rm -f {container_name}", self._internal_configuration_folder)
 
     @GeneralUtilities.check_arguments
     def __get_running_processes(self) -> list:
