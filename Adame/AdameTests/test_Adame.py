@@ -124,8 +124,8 @@ Tests that the start-command works as expected"""
         try:
             environment_for_test.create()
             # mock program calls which are maybe not available in a development-environment:
-            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(
-                f"--project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull " +
+            environment_for_test.adame._internal_sc.register_mock_program_call("docker",  re.escape(
+                f"compose --project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull " +
                 "--force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
             environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(
                 f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" ' +
@@ -164,8 +164,8 @@ Tests that the stop-command works as expected"""
             environment_for_test = EnvironmentForTest()
             environment_for_test.create()
             # mock program calls which are maybe not available in a development-environment:
-            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(
-                f"--project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
+            environment_for_test.adame._internal_sc.register_mock_program_call("docker",  re.escape(
+                f"compose --project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
             environment_for_test.adame._internal_sc.register_mock_program_call("snort", re.escape(
                 f'-D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii'), "", 0, "", "", 44)
             assert environment_for_test.adame.start(environment_for_test.adame_configuration_file) == 0
@@ -178,8 +178,8 @@ Tests that the stop-command works as expected"""
             environment_for_test.adame._internal_sc.verify_no_pending_mock_program_calls()
 
             # mock program calls which are maybe not available in a development-environment:
-            environment_for_test.adame._internal_sc.register_mock_program_call("docker-compose",  re.escape(
-                f"--project-name {environment_for_test.adame._internal_get_container_name()} down"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 68)
+            environment_for_test.adame._internal_sc.register_mock_program_call("docker",  re.escape(
+                f"compose --project-name {environment_for_test.adame._internal_get_container_name()} down"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 68)
             environment_for_test.adame.register_mock_process_query(
                 44, f'snort -D -i eth0 -c "{environment_for_test.adame._internal_networktrafficgeneratedrules_file}" -l "{environment_for_test.adame._internal_log_folder_for_ids}" -U -v -x -y -K ascii')
             environment_for_test.adame._internal_sc.register_mock_program_call("kill",  re.escape("-TERM 44"), "", 0, "", "", 72)

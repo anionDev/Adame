@@ -14,10 +14,10 @@ from packaging.version import parse
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 import psutil
-import netifaces
+import yaml
 
 product_name = "Adame"
-version = "1.2.31"
+version = "1.2.32"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -119,23 +119,23 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __create(self, name: str, folder: str, image: str, owner: str, gpgkey_of_owner: str) -> None:
         if name is None:
-            raise Exception("Argument 'name' is not defined")
+            raise ValueError("Argument 'name' is not defined")
         else:
             name = name.replace(" ", "-")
 
         if folder is None:
-            raise Exception("Argument 'folder' is not defined")
+            raise ValueError("Argument 'folder' is not defined")
         else:
-            if(os.path.isdir(folder) and not GeneralUtilities.folder_is_empty(folder)):
-                raise Exception(f"Folder '{folder}' does already have content")
+            if (os.path.isdir(folder) and not GeneralUtilities.folder_is_empty(folder)):
+                raise ValueError(f"Folder '{folder}' does already have content")
             else:
                 GeneralUtilities.ensure_directory_exists(folder)
 
         if image is None:
-            raise Exception("Argument 'image' is not defined")
+            raise ValueError("Argument 'image' is not defined")
 
         if owner is None:
-            raise Exception("Argument 'owner' is not defined")
+            raise ValueError("Argument 'owner' is not defined")
 
         if gpgkey_of_owner is None:
             gpgkey_of_owner = ""
@@ -308,11 +308,11 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __exportlogs(self) -> None:
-        if(not self.__tool_exists_in_path("rsync")):
+        if (not self.__tool_exists_in_path("rsync")):
             self.__log_warning("rsync is not available", False, True, True)
             return
 
-        if(not self.__check_siem_is_reachable()):
+        if (not self.__check_siem_is_reachable()):
             self.__log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
             return
 
@@ -326,7 +326,7 @@ class Adame:
             if os.path.basename(log_file) != self.__gitkeep_filename:
                 exitcode = self.__start_program_synchronously(
                     "rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
-                if(exitcode == 0):
+                if (exitcode == 0):
                     self.__log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                     os.remove(log_file)
                 else:
@@ -347,10 +347,10 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __diagnosis(self) -> None:
         if not self.__adame_general_diagonisis():
-            raise Exception("General diagnosis found discrepancies")
+            raise ValueError("General diagnosis found discrepancies")
         if self.__configuration is not None:
             if not self.__adame_repository_diagonisis():
-                raise Exception(f"General diagnosis found discrepancies in repository '{self.__repository_folder}'")
+                raise ValueError(f"General diagnosis found discrepancies in repository '{self.__repository_folder}'")
 
     # </checkintegrity-command>
 
@@ -394,7 +394,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
-        if(len(self.__mock_process_queries) > 0):
+        if (len(self.__mock_process_queries) > 0):
             for mock_query_result in self.__mock_process_queries:
                 raise AssertionError("The following mock-process-queries were not queried:\n    " +
                                      ",\n    ".join([f"'pid: {r.process_id}, command: '{r.command}'" for r in mock_query_result]))
@@ -468,9 +468,9 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __use_file(self, repository_folder: str, file_or_folder: str) -> bool:
-        if(GeneralUtilities.string_is_none_or_whitespace(file_or_folder)):
+        if (GeneralUtilities.string_is_none_or_whitespace(file_or_folder)):
             return True
-        if(file_or_folder == ".git" or file_or_folder.replace("\\", self.__path_separator).startswith(f".git{self.__path_separator}")):
+        if (file_or_folder == ".git" or file_or_folder.replace("\\", self.__path_separator).startswith(f".git{self.__path_separator}")):
             return False
         if Path(os.path.join(repository_folder, file_or_folder)).is_symlink():
             return False
@@ -481,8 +481,8 @@ class Adame:
     def __check_whether_execution_is_possible(self) -> None:
         if self.__test_mode:
             return
-        if(not GeneralUtilities.current_user_has_elevated_privileges()):
-            raise Exception("Adame requries elevated privileges to get executed")
+        if (not GeneralUtilities.current_user_has_elevated_privileges()):
+            raise ValueError("Adame requries elevated privileges to get executed")
 
     @GeneralUtilities.check_arguments
     def __log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
@@ -492,7 +492,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __adame_general_diagonisis(self) -> bool:
-        if(not self.__check_whether_required_tools_for_adame_are_available()):
+        if (not self.__check_whether_required_tools_for_adame_are_available()):
             return False
         # Add other checks if required
         return True
@@ -512,7 +512,7 @@ class Adame:
         tools = [
             "chmod",
             "chown",
-            "docker-compose",
+            "docker",
             "git",
         ]
         recommended_tools = [
@@ -540,7 +540,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __check_configurationfile_argument(self, configurationfile: str) -> None:
         if configurationfile is None:
-            raise Exception("Argument 'configurationfile' is not defined")
+            raise ValueError("Argument 'configurationfile' is not defined")
         if not os.path.isfile(configurationfile):
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
 
@@ -605,7 +605,7 @@ This function is idempotent."""
 
     @GeneralUtilities.check_arguments
     def __ensure_container_is_not_running(self) -> bool:
-        if(self._internal_container_is_running()):
+        if (self._internal_container_is_running()):
             return self.__stop_container()
         return True
 
@@ -620,7 +620,7 @@ This function is idempotent."""
     @GeneralUtilities.check_arguments
     def __ensure_ids_is_not_running(self) -> bool:
         """This function ensures that the intrusion-detection-system (ids) is not running anymore."""
-        if(self._internal_ids_is_running()):
+        if (self._internal_ids_is_running()):
             return self.__stop_ids()
         return True
 
@@ -631,7 +631,7 @@ This function is idempotent."""
     @GeneralUtilities.check_arguments
     def _internal_ids_is_running(self) -> bool:
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
-        if(ids == "snort"):
+        if (ids == "snort"):
             return self.__get_stored_running_processes()[1]
         return False
 
@@ -641,7 +641,7 @@ This function is idempotent."""
             GeneralUtilities.write_message_to_stdout("Start ids...")
         success = True
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
-        if(ids == "snort"):
+        if (ids == "snort"):
             if self.format_datetimes_to_utc:
                 utc_argument = " -U"
             else:
@@ -664,9 +664,9 @@ This function is idempotent."""
         self.__log_information("Stop ids...", True, True, True)
         result = 0
         ids = self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__securityconfiguration_section_general_key_idsname)
-        if(ids == "snort"):
+        if (ids == "snort"):
             for process in self.__get_running_processes():
-                if(process.command.startswith("snort") and self.__repository_folder in process.command):
+                if (process.command.startswith("snort") and self.__repository_folder in process.command):
                     result = self.__start_program_synchronously("kill", f"-TERM {process.process_id}")[0]
                     if result != 0:
                         result = self.__start_program_synchronously("kill", f"-9 {process.process_id}")[0]
@@ -685,7 +685,7 @@ This function is idempotent."""
     @GeneralUtilities.check_arguments
     def __run_system_command(self, program: str, argument: str, working_directory: str = None) -> bool:
         """Starts a program which should be organize its asynchronous execution by itself. This function ensures that the asynchronous program will not get terminated when Adame terminates."""
-        if(working_directory is None):
+        if (working_directory is None):
             working_directory = os.getcwd()
         working_directory = GeneralUtilities.resolve_relative_path_from_current_working_directory(working_directory)
         self.__log_information(f"Start '{working_directory}>{program} {argument}'", True, True, True)
@@ -693,7 +693,7 @@ This function is idempotent."""
             self.__start_program_synchronously(program, argument, working_directory)  # mocks defined in self.__sc will be used here when running the unit-tests
         else:
             original_cwd = os.getcwd()
-            if(GeneralUtilities.string_is_none_or_whitespace(working_directory)):
+            if (GeneralUtilities.string_is_none_or_whitespace(working_directory)):
                 working_directory = original_cwd
             os.chdir(working_directory)
             try:
@@ -803,7 +803,7 @@ IDS-process:{ids_is_running_as_string}
     @GeneralUtilities.check_arguments
     def __migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         # Migration should only be done when the repository already exist and the repository-creation-process is already completed.
-        if(os.path.isdir(os.path.join(self.__repository_folder, ".git"))):
+        if (os.path.isdir(os.path.join(self.__repository_folder, ".git"))):
             config_format_version = parse(configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_formatversion))
             adame_version = parse(version)
             # Migration should only be done when the current adame-version and the repository-format-version differ.
@@ -830,7 +830,7 @@ IDS-process:{ids_is_running_as_string}
             self.__log_information("Load configuration...", True, True, True)
             configurationfile = GeneralUtilities.resolve_relative_path_from_current_working_directory(configurationfile)
             if not os.path.isfile(configurationfile):
-                raise Exception(F"'{configurationfile}' does not exist")
+                raise ValueError(F"'{configurationfile}' does not exist")
             self.__configuration_file = configurationfile
             self.__repository_folder = os.path.dirname(os.path.dirname(configurationfile))
             configuration = configparser.ConfigParser()
@@ -885,7 +885,7 @@ IDS-process:{ids_is_running_as_string}
             self.__log_information("Load security-configuration...", True, True, True)
             securityconfiguration = configparser.ConfigParser()
             if not os.path.isfile(self.__propertiesconfiguration_file):
-                raise Exception(F"'{self.__propertiesconfiguration_file}' does not exist")
+                raise ValueError(F"'{self.__propertiesconfiguration_file}' does not exist")
             securityconfiguration.read(self.__propertiesconfiguration_file)
             self.__securityconfiguration = securityconfiguration
 
@@ -894,10 +894,10 @@ IDS-process:{ids_is_running_as_string}
             self.__remote_address_is_available = GeneralUtilities.string_has_nonwhitespace_content(
                 self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remoteaddress])
 
-            if(not self.__gpgkey_of_owner_is_available):
+            if (not self.__gpgkey_of_owner_is_available):
                 self.__log_warning(
                     "GPGKey of the owner of the repository is not set. It is highly recommended to set this value to ensure the integrity of the app-repository.")
-            if(not self.__remote_address_is_available):
+            if (not self.__remote_address_is_available):
                 self.__log_warning(
                     "Remote-address of the repository is not set. It is highly recommended to set this value to save the content of the app-repository externally.")
 
@@ -966,7 +966,7 @@ Logs/Overhead/**
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remoteaddress] = ""
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotename] = "Backup"
-        securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch] = "master"
+        securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch] = "main"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress] = ""
@@ -996,33 +996,34 @@ Logs/Overhead/**
         else:
             gpgkey_of_owner_info = "Currently there is no GPG-key defined to ensure the integrity of this repository."
 
-        return f"""# Purpose
+        return f"""# {configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_name)}
 
-This repository manages the data of the application {configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_name)}.
+## Purpose
 
-# Technical information
+This repository manages the application {configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_name)} and its data.
 
-# Image
+## Technical information
 
-The docker-image {image} will be used.
+### Image
 
-# Backup
+The image {image} will be used.
+
+### Backup
 
 {remote_address_info}
 
-# Integrity
+### Integrity
 
 {gpgkey_of_owner_info}
 
-# License
+## License
 
-The license of this repository is defined in the file 'License.txt'.
-
+The license of this repository is defined in the file `License.txt`.
 """
 
     @GeneralUtilities.check_arguments
     def __run_script_if_available(self, file: str, name: str):
-        if(GeneralUtilities.string_has_content(file)):
+        if (GeneralUtilities.string_has_content(file)):
             self.__log_information(f"Run {name} (File: {file})", False, True, True)
             file = GeneralUtilities.resolve_relative_path(file, self._internal_configuration_folder)
             self.__start_program_synchronously("sh", file, self._internal_configuration_folder, True)
@@ -1030,7 +1031,7 @@ The license of this repository is defined in the file 'License.txt'.
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
         result = self.__start_program_synchronously(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
+            "docker", f"compose --project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -1042,16 +1043,31 @@ The license of this repository is defined in the file 'License.txt'.
 
     @GeneralUtilities.check_arguments
     def __start_container(self) -> bool:
+        # TODO remove existing container if exist
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         success = self.__run_system_command(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+            "docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
         else:
             self.__log_warning("Container could not be started")
         return success
+
+    @GeneralUtilities.check_arguments
+    def _internal_remove_existing_container(self, docker_compose_file: str) -> None:
+        with open(docker_compose_file, "r", encoding="utf-8") as stream:
+            parsed = yaml.safe_load(stream)
+            container_names: list[str] = []
+            try:
+                for service_name in parsed['services']:
+                    service = parsed['services'][service_name]
+                    container_names.append(service['container_name'])
+            except Exception as exception:
+                self.__log_warning(f"Can not check for container-name due to an exception: {str(exception)}")
+            for container_name in container_names:
+                self.__run_system_command("docker", f"container rm -f {container_name}", self._internal_configuration_folder)
 
     @GeneralUtilities.check_arguments
     def __get_running_processes(self) -> list:
@@ -1076,7 +1092,7 @@ The license of this repository is defined in the file 'License.txt'.
     @GeneralUtilities.check_arguments
     def _internal_process_is_running(self, process_id: int, command: str) -> bool:
         for process in self.__get_running_processes():
-            if(self.__process_is_running_helper(process.process_id, process.command, process_id, command)):
+            if (self.__process_is_running_helper(process.process_id, process.command, process_id, command)):
                 return True
         return False
 
@@ -1086,7 +1102,7 @@ The license of this repository is defined in the file 'License.txt'.
             if expected_command in actual_command:
                 return True
             else:
-                if(GeneralUtilities.string_is_none_or_whitespace(actual_command)):
+                if (GeneralUtilities.string_is_none_or_whitespace(actual_command)):
                     self.__log_warning(f"It seems that the process with id {expected_pid} was not executed", False, True, False)
                 else:
                     self.__log_warning(
@@ -1095,7 +1111,7 @@ The license of this repository is defined in the file 'License.txt'.
 
     @GeneralUtilities.check_arguments
     def __get_local_ip_address(self) -> str:
-        return netifaces.ifaddresses(self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_networkinterface])[netifaces.AF_INET][0]['addr']
+        return "<insert local ip address>"  # TODO calculate value
 
     @GeneralUtilities.check_arguments
     def __commit(self, message: str, stage_all_changes: bool = True, no_changes_behavior: int = 0, overhead: bool = True) -> None:
@@ -1186,24 +1202,24 @@ The license of this repository is defined in the file 'License.txt'.
     @GeneralUtilities.check_arguments
     def __log_exception(self, message: str, exception: Exception, is_verbose_log_entry: bool = False, write_to_console: bool = True, write_to_logfile: bool = True) -> None:
         self.__write_to_log("Error", f"{message}; {str(exception)}", is_verbose_log_entry, write_to_console, write_to_logfile)
-        if(self.verbose):
+        if (self.verbose):
             GeneralUtilities.write_exception_to_stderr_with_traceback(exception, traceback, message)
 
     @GeneralUtilities.check_arguments
     def __write_to_log(self, loglevel: str, message: str, is_verbose_log_entry: bool, write_to_console: bool, write_to_logfile: bool) -> None:
         if is_verbose_log_entry and not self.verbose:
             return
-        if(self.format_datetimes_to_utc):
+        if (self.format_datetimes_to_utc):
             date_as_string = datetime.utcnow()
         else:
             date_as_string = datetime.now()
         logentry = f"[{GeneralUtilities.datetime_to_string_for_logfile_entry(date_as_string)}] [{loglevel}] {message}"
-        if(write_to_console):
-            if(loglevel == "Error"):
+        if (write_to_console):
+            if (loglevel == "Error"):
                 GeneralUtilities.write_message_to_stderr(logentry)
             else:
                 GeneralUtilities.write_message_to_stdout(logentry)
-        if(write_to_logfile and self.__log_file_for_adame_overhead is not None):
+        if (write_to_logfile and self.__log_file_for_adame_overhead is not None):
             GeneralUtilities.ensure_file_exists(self.__log_file_for_adame_overhead)
             if GeneralUtilities.file_is_empty(self.__log_file_for_adame_overhead):
                 prefix = ''
@@ -1237,7 +1253,7 @@ Another focus of Adame is IT-forensics and IT-security: Adame generates a basic 
 Required commandline-commands:
 -chmod (For setting up permissions on the generated files)
 -chown (For setting up ownerships on the generated files)
--docker-compose (For starting and stopping Docker-container)
+-docker (For starting and stopping Docker-container)
 -git (For integrity)
 
 Recommended commandline-commands:
@@ -1247,7 +1263,7 @@ Recommended commandline-commands:
 -ssh (Required for rsync)
 -snort (For inspecting the network-traffic of the application)
 
-Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
+Adame must be executed with elevated privileges. This is required to run commands like docker or snort.
 """, formatter_class=RawTextHelpFormatter)
 
     arger.add_argument("-v", "--verbose", action="store_true", required=False, default=False)

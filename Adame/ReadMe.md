@@ -37,7 +37,7 @@ Furthermore Adame requires that the following commandline-commands are available
 
 - `chmod` (For setting up permissions on the generated files)
 - `chown` (For setting up ownerships on the generated files)
-- `docker-compose` >= 1.27.4 (For starting and stopping Docker-container)
+- `docker` >= 1.27.4 (For starting and stopping Docker-container)
 - `git` >=2.30.0 (For integrity)
 - `gpg` (For checking the integrity of commits)
 - `kill` (For killing snort)
@@ -88,7 +88,7 @@ To install an Adame simply execute `pip install Adame-x.x.x-py3-none-any.whl`.
 
 ## TODO-List
 
-- Bug: When running in a different folder (like `adame startadvanced -c someotherfolder/Adame.configuration` then the prescript and postscript may have wrong working-directories.
+- Bug: When running in a different folder (like `adame startadvanced -c someotherfolder/Adame.configuration`) then the prescript and postscript may have wrong working-directories.
 - Feature: Before starting the docker-container then if a container with same name already exists the already existing container should be stopped and then removed to avoid errors due to already existing container-names.
 - Feature: After waiting `maximalexpectedstartduration` seconds there must be a check whether the container is running (and healthy if the health-information is available). If not then an error must be thrown
 
