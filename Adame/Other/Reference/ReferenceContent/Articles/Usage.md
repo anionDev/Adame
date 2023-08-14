@@ -7,7 +7,7 @@ The behavior of all commands (except `create`) is idempotent.
 Caution:
 
 - The commands are not intended to be executed in an unattended script since it is recommended to enable gpg-signing which contains the user-interaction of the pinentry-dialog.
-- Adame requires elevated privileges for executing commands like snort or docker-compose.
+- Adame requires elevated privileges for executing commands like snort or docker.
 
 ## Commands
 

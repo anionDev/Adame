@@ -512,7 +512,7 @@ class Adame:
         tools = [
             "chmod",
             "chown",
-            "docker-compose",
+            "docker",
             "git",
         ]
         recommended_tools = [
@@ -1031,7 +1031,7 @@ The license of this repository is defined in the file `License.txt`.
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
         result = self.__start_program_synchronously(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
+            "docker", f"compose --project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -1047,7 +1047,7 @@ The license of this repository is defined in the file `License.txt`.
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         success = self.__run_system_command(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+            "docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
@@ -1253,7 +1253,7 @@ Another focus of Adame is IT-forensics and IT-security: Adame generates a basic 
 Required commandline-commands:
 -chmod (For setting up permissions on the generated files)
 -chown (For setting up ownerships on the generated files)
--docker-compose (For starting and stopping Docker-container)
+-docker (For starting and stopping Docker-container)
 -git (For integrity)
 
 Recommended commandline-commands:
@@ -1263,7 +1263,7 @@ Recommended commandline-commands:
 -ssh (Required for rsync)
 -snort (For inspecting the network-traffic of the application)
 
-Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
+Adame must be executed with elevated privileges. This is required to run commands like docker or snort.
 """, formatter_class=RawTextHelpFormatter)
 
     arger.add_argument("-v", "--verbose", action="store_true", required=False, default=False)

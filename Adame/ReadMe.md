@@ -37,7 +37,7 @@ Furthermore Adame requires that the following commandline-commands are available
 
 - `chmod` (For setting up permissions on the generated files)
 - `chown` (For setting up ownerships on the generated files)
-- `docker-compose` >= 1.27.4 (For starting and stopping Docker-container)
+- `docker` >= 1.27.4 (For starting and stopping Docker-container)
 - `git` >=2.30.0 (For integrity)
 - `gpg` (For checking the integrity of commits)
 - `kill` (For killing snort)
