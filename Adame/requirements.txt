@@ -1,9 +1,9 @@
 autopep8>=2.0.4
 coverage>=7.3.1
-packaging>=23.1
+packaging>=23.2
 psutil>=5.9.5
 pylint>=2.17.7
 pytest>=7.4.2
 PyYAML>=6.0.1
-ScriptCollection>=3.4.28
+ScriptCollection>=3.4.30
 wheel>=0.41.2
