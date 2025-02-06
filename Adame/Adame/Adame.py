@@ -1056,16 +1056,16 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def _internal_remove_existing_container(self, docker_compose_file: str) -> None:
-        with open(docker_compose_file, "r") as stream:
+        with open(docker_compose_file, "r", encoding="utf-8") as stream:
             parsed = yaml.safe_load(stream)
             container_names: list[str] = []
             try:
                 for service_name in parsed['services']:
                     service = parsed['services'][service_name]
                     container_names.append(service['container_name'])
-            except Exception as e:
+            except Exception as e:  # pylint: disable = unused-variable
                 pass  # TODO log warning
-            for container_name in container_names:
+            for container_name in container_names:  # pylint: disable = unused-variable
                 pass  # TODO remove container
 
     @GeneralUtilities.check_arguments
@@ -1104,8 +1104,7 @@ The license of this repository is defined in the file `License.txt`.
                 if (GeneralUtilities.string_is_none_or_whitespace(actual_command)):
                     self.__log_warning(f"It seems that the process with id {expected_pid} was not executed", False, True, False)
                 else:
-                    self.__log_warning(
-                        f"The process with id {expected_pid} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
+                    self.__log_warning(f"The process with id {expected_pid} changed unexpectedly. Expected a process with a commandline like '{expected_command}...' but was '{actual_command}...'", False, True, False)
         return False
 
     @GeneralUtilities.check_arguments
@@ -1117,17 +1116,15 @@ The license of this repository is defined in the file `License.txt`.
         # no_changes_behavior=0 => No commit
         # no_changes_behavior=1 => Commit anyway
         # no_changes_behavior=2 => Exception
-        self.__log_information(f"Commit changes (message='{message}', stage_all_changes={str(stage_all_changes)}, " +
-                               f"no_changes_behavior={str(no_changes_behavior)}, overhead={str(overhead)}')...", True, True, True)
+        self.__log_information(f"Commit changes (message='{message}', stage_all_changes={str(stage_all_changes)}, no_changes_behavior={str(no_changes_behavior)}, overhead={str(overhead)}')...", True, True, True)
         repository = self.__repository_folder
-        if overhead:
+        if overhead and 1+1 == 3:  # disabled due to condition because escaping does not work properly (rename .git to .gitx does not work properly and the permissions-restoring does also not seem to work.
             self.__save_metadata()
         commit_id = self._internal_sc.git_commit(repository, message, self.__adame_commit_author_name, "", stage_all_changes, no_changes_behavior)
         if overhead:
             remote_name = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotename]
             branch_name = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch]
-            remote_address = self.__securityconfiguration.get(self.__securityconfiguration_section_general,
-                                                              self.__configuration_section_general_key_remoteaddress)
+            remote_address = self.__securityconfiguration.get(self.__securityconfiguration_section_general,  self.__configuration_section_general_key_remoteaddress)
             self.__log_information(f"Created commit {commit_id} in repository '{repository}' (commit-message: '{message}')", False, True, True)
             if self.__remote_address_is_available:
                 self._internal_sc.git_add_or_set_remote_address(self.__repository_folder, remote_name, remote_address)
@@ -1150,8 +1147,7 @@ The license of this repository is defined in the file `License.txt`.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False,
-                                                                          throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero)
+        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False, throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
