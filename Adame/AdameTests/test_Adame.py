@@ -305,12 +305,11 @@ Ensures that adame._internal_process_is_running does not throw an exception when
         finally:
             GeneralUtilities.ensure_directory_exists(folder)
 
-    def test_create_demonstration_repository(self):
+    def test_create_demonstration_repository(self):  # TODO fix testcase
         """DemonstrationTest
 Generates a simple adame-managed-repository as demonstration."""
 
-        result_folder = GeneralUtilities.resolve_relative_path(
-            f"..{os.path.sep}Other{os.path.sep}Reference{os.path.sep}ReferenceContent{os.path.sep}Examples{os.path.sep}NewRepository", os.path.dirname(os.path.realpath(__file__)))
+        result_folder = GeneralUtilities.resolve_relative_path(f"..{os.path.sep}Other{os.path.sep}Reference{os.path.sep}ReferenceContent{os.path.sep}Examples{os.path.sep}NewRepository", os.path.dirname(os.path.realpath(__file__)))
         GeneralUtilities.ensure_directory_does_not_exist(result_folder)
         tests_folder = tempfile.gettempdir()+os.path.sep+str(uuid.uuid4())
         GeneralUtilities.ensure_directory_exists(tests_folder)
