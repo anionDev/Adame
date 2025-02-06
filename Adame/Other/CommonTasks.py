@@ -21,6 +21,7 @@ def common_tasks():
         "../..", os.path.dirname(file)))  # Should always be the same as the project-version
     sc.replace_version_in_ini_file(GeneralUtilities.resolve_relative_path("../setup.cfg", folder_of_current_file), codeunit_version)
     sc.replace_version_in_python_file(GeneralUtilities.resolve_relative_path(f"../{codeunitname}/{codeunitname}.py", folder_of_current_file), codeunit_version)
+    t.take_readmefile_from_main_readmefile_of_repository(file)
     t.standardized_tasks_do_common_tasks(file, codeunit_version, verbosity, targetenvironmenttype, True, additional_arguments_file, False, cmd_args)
 
 

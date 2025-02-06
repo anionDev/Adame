@@ -16,7 +16,7 @@ TODO
 
 This is the file where custom application-related rules (typically one rule per line) for the used IDS can be stored in.
 
-`__localipaddress__` can be used in this file as placeholder for the ip-address of the network-interface defined in the file `Adame.configuration`. Adame will automatically replace this placeholder in the file `Networktraffic.Generated.rules` when the configuration will be re-applied.
+`__localipaddress__` can be used in this file as placeholder for the IP-address of the network-interface defined in the file `Adame.configuration`. Adame will automatically replace this placeholder in the file `Networktraffic.Generated.rules` when the configuration will be re-applied.
 
 ## LogfilePatterns.txt
 

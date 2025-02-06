@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.32"
+version = "1.2.43"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -512,7 +512,7 @@ class Adame:
         tools = [
             "chmod",
             "chown",
-            "docker-compose",
+            "docker",
             "git",
         ]
         recommended_tools = [
@@ -966,7 +966,7 @@ Logs/Overhead/**
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner] = gpgkey_of_owner
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remoteaddress] = ""
         securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotename] = "Backup"
-        securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch] = "master"
+        securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_remotebranch] = "main"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress] = ""
@@ -1031,7 +1031,7 @@ The license of this repository is defined in the file `License.txt`.
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
         result = self.__start_program_synchronously(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
+            "docker", f"compose --project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -1043,10 +1043,11 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __start_container(self) -> bool:
+        # TODO remove existing container if exist
         self.__run_script_if_available(self.__configuration.get(
             self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         success = self.__run_system_command(
-            "docker-compose", f"--project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+            "docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
@@ -1063,10 +1064,10 @@ The license of this repository is defined in the file `License.txt`.
                 for service_name in parsed['services']:
                     service = parsed['services'][service_name]
                     container_names.append(service['container_name'])
-            except Exception as e:  # pylint: disable = unused-variable
-                pass  # TODO log warning
-            for container_name in container_names:  # pylint: disable = unused-variable
-                pass  # TODO remove container
+            except Exception as exception:
+                self.__log_warning(f"Can not check for container-name due to an exception: {str(exception)}")
+            for container_name in container_names:
+                self.__run_system_command("docker", f"container rm -f {container_name}", self._internal_configuration_folder)
 
     @GeneralUtilities.check_arguments
     def __get_running_processes(self) -> list:
@@ -1248,7 +1249,7 @@ Another focus of Adame is IT-forensics and IT-security: Adame generates a basic 
 Required commandline-commands:
 -chmod (For setting up permissions on the generated files)
 -chown (For setting up ownerships on the generated files)
--docker-compose (For starting and stopping Docker-container)
+-docker (For starting and stopping Docker-container)
 -git (For integrity)
 
 Recommended commandline-commands:
@@ -1258,7 +1259,7 @@ Recommended commandline-commands:
 -ssh (Required for rsync)
 -snort (For inspecting the network-traffic of the application)
 
-Adame must be executed with elevated privileges. This is required to run commands like docker-compose or snort.
+Adame must be executed with elevated privileges. This is required to run commands like docker or snort.
 """, formatter_class=RawTextHelpFormatter)
 
     arger.add_argument("-v", "--verbose", action="store_true", required=False, default=False)
