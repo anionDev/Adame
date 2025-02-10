@@ -11,7 +11,7 @@ class EnvironmentForTest:
     adame_configuration_file: str = None
 
     def __init__(self, folder=None):
-        if(folder is None):
+        if (folder is None):
             folder = os.path.join(tempfile.gettempdir(), "AdameTests", str(uuid.uuid4()))
         GeneralUtilities.ensure_directory_exists(folder)
         self.folder = folder
@@ -26,11 +26,11 @@ class EnvironmentForTest:
         assert self.adame.create(name, self.folder, "httpd:latest", owner) == 0
         assert not self.adame._internal_container_is_running()
         self.adame.set_test_mode(True)
-        self.adame.verify_no_pending_mock_process_queries()
+        self.adame._internal_verify_no_pending_mock_process_queries()
         self.adame._internal_sc.verify_no_pending_mock_program_calls()
 
     @GeneralUtilities.check_arguments
     def dispose(self):
         GeneralUtilities.ensure_directory_does_not_exist(self.folder)
-        self.adame.verify_no_pending_mock_process_queries()
+        self.adame._internal_verify_no_pending_mock_process_queries()
         self.adame._internal_sc.verify_no_pending_mock_program_calls()
