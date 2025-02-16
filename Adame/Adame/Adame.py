@@ -382,7 +382,7 @@ class Adame:
         self._internal_sc.execute_program_really_if_no_mock_call_is_defined = self.__test_mode
 
     @GeneralUtilities.check_arguments
-    def register_mock_process_query(self, process_id: int, command: str) -> None:
+    def _internal_register_mock_process_query(self, process_id: int, command: str) -> None:
         "This function is for test-purposes only"
         process = Adame.__process()
         process.process_id = process_id
@@ -392,7 +392,7 @@ class Adame:
         self.__mock_process_queries.append(resultlist)
 
     @GeneralUtilities.check_arguments
-    def verify_no_pending_mock_process_queries(self) -> None:
+    def _internal_verify_no_pending_mock_process_queries(self) -> None:
         "This function is for test-purposes only"
         if (len(self.__mock_process_queries) > 0):
             for mock_query_result in self.__mock_process_queries:
@@ -453,7 +453,8 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __save_metadata(self) -> None:
-        self.__log_information("Save metadata...", True, True, True)
+        return  # disabled due to condition because escaping does not work properly (rename .git to .gitx does not work properly and the permissions-restoring does also not seem to work.
+        self.__log_information("Save metadata...", True, True, True)  # pylint: disable=unreachable
         self._internal_ensure_git_folder_are_escaped(self.__volumes_folder, self.__renamed_items_file)
         self._internal_sc.export_filemetadata(self.__repository_folder, self.__metadata_file, self.encoding, self.__use_file)
         content = GeneralUtilities.read_text_from_file(self.__metadata_file, self.encoding)
@@ -462,7 +463,8 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __restore_metadata(self) -> None:
-        self.__log_information("Restore metadata...", True, True, True)
+        return   # disabled due to condition because escaping does not work properly (rename .git to .gitx does not work properly and the permissions-restoring does also not seem to work.
+        self.__log_information("Restore metadata...", True, True, True)  # pylint: disable=unreachable
         self._internal_sc.restore_filemetadata(self.__repository_folder, self.__metadata_file, False, self.encoding)
         self._internal_ensure_git_folder_are_deescaped(self.__volumes_folder, self.__renamed_items_file)
 
@@ -1119,7 +1121,7 @@ The license of this repository is defined in the file `License.txt`.
         # no_changes_behavior=2 => Exception
         self.__log_information(f"Commit changes (message='{message}', stage_all_changes={str(stage_all_changes)}, no_changes_behavior={str(no_changes_behavior)}, overhead={str(overhead)}')...", True, True, True)
         repository = self.__repository_folder
-        if overhead and 1+1 == 3:  # disabled due to condition because escaping does not work properly (rename .git to .gitx does not work properly and the permissions-restoring does also not seem to work.
+        if overhead:  # disabled due to condition because escaping does not work properly (rename .git to .gitx does not work properly and the permissions-restoring does also not seem to work.
             self.__save_metadata()
         commit_id = self._internal_sc.git_commit(repository, message, self.__adame_commit_author_name, "", stage_all_changes, no_changes_behavior)
         if overhead:
