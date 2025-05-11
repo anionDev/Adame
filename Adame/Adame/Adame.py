@@ -164,8 +164,7 @@ class Adame:
         self.__create_securityconfiguration_file(gpgkey_of_owner)
 
         self.__load_securityconfiguration()
-        self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,
-                                                                                                  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
+        self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
 
         self._internal_sc.set_permission(self._internal_log_folder_for_ids, "666", True)
 
@@ -972,8 +971,7 @@ Logs/Overhead/**
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress] = ""
-        securityconfiguration[self.__securityconfiguration_section_general][
-            self.__securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self.__get_hostname()}/{self._internal_get_container_name()}"
+        securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self.__get_hostname()}/{self._internal_get_container_name()}"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser] = "username_on_siem_system"
         securityconfiguration.add_section(self.__securityconfiguration_section_snort)
         securityconfiguration[self.__securityconfiguration_section_snort][self.__securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
@@ -1032,8 +1030,10 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
-        result = self.__start_program_synchronously(
-            "docker", f"compose --project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
+        projectname = self._internal_get_container_name()
+        # TODO do "docker compose -p {projectname} stop"
+        # TODO for each container in compose-project save the output of "docker logs {containername}" in the log-folder in the file "Container_{containername}.log"
+        result = self.__start_program_synchronously("docker", f"compose --project-name {projectname} down", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -1046,10 +1046,8 @@ The license of this repository is defined in the file `License.txt`.
     @GeneralUtilities.check_arguments
     def __start_container(self) -> bool:
         # TODO remove existing container if exist
-        self.__run_script_if_available(self.__configuration.get(
-            self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
-        success = self.__run_system_command(
-            "docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+        self.__run_script_if_available(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
+        success = self.__run_system_command("docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
