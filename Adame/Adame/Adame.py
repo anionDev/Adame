@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.46"
+version = "1.2.47"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -1330,12 +1330,11 @@ Adame must be executed with elevated privileges. This is required to run command
     else:
         core.verbose = options.verbose
 
-    if options.image is None:
-        options.image = "SomeImage:latest"
-
     if options.command == create_command_name:
         if options.folder is None:
             options.folder = options.name+"App"
+        if options.image is None:
+            options.image = "SomeImage:latest"
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
 
     elif options.command == start_command_name:
