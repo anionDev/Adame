@@ -315,9 +315,9 @@ class Adame:
             self.__log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
             return
 
-        siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
-        siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
-        siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
+        # siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
+        # siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
+        # siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
         log_folders: list[str] = []
         log_folders.append(self.__log_folder_for_internal_overhead)
         log_folders.append(self._internal_log_folder_for_ids)
@@ -334,8 +334,8 @@ class Adame:
         target_folder: str = GeneralUtilities.resolve_relative_path(f"./{appname}/{timebased_subfolder}/{log_name}", log_target_folder_base)
         all_log_files = [file_to_export for file_to_export in GeneralUtilities.get_all_files_of_folder(log_folder) if ((not file_to_export.endswith(self.__gitkeep_filename)) and (not file_to_export.endswith(".gitignore")))]
         for log_file in all_log_files:
-            target_file: str = GeneralUtilities.get_time_based_logfilename(os.path.relpath(log_file, target_folder), log_folder)
-            GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_folder}'...")  # TODO implement
+            target_file: str = GeneralUtilities.resolve_relative_path(os.path.relpath(log_file, target_folder), log_folder)
+            GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_folder}'...")
             GeneralUtilities.ensure_directory_exists(os.path.dirname(target_file))
             self._internal_sc.copy(log_file, target_file)
             # TODO GeneralUtilities.ensure_file_does_not_exist(log_file)
