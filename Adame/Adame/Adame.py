@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.48"
+version = "1.2.49"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -316,26 +316,43 @@ class Adame:
             self.__log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
             return
 
-        # siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
-        # siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
-        # siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
-        log_folders: list[str] = []
-        log_folders.append(self.__log_folder_for_internal_overhead)
-        log_folders.append(self._internal_log_folder_for_ids)
-        log_folders.append(self.__log_folder_for_application)
-        for log_folder in log_folders:
-            self.__export_files_from_log_folder(log_folder)
+        siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
+        siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
+        siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
+
+        siem_export_enabled: bool = GeneralUtilities.string_has_content(siemaddress) and GeneralUtilities.string_has_content(siemfolder) and GeneralUtilities.string_has_content(siemuser)
+        if siem_export_enabled:
+            log_files = GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_internal_overhead) + \
+                GeneralUtilities.get_direct_files_of_folder(self._internal_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_application)
+            sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+            for log_file in log_files:
+                if os.path.basename(log_file) != self.__gitkeep_filename:
+                    exitcode = self.__start_program_synchronously(
+                        "rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
+                    if (exitcode == 0):
+                        self.__log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
+                        os.remove(log_file)
+                    else:
+                        self.__log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
+
+        log_target_folder_base = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]  # TODO create another property for this
+        if GeneralUtilities.string_has_content(log_target_folder_base):
+            log_folders: list[str] = []
+            log_folders.append(self.__log_folder_for_internal_overhead)
+            log_folders.append(self._internal_log_folder_for_ids)
+            log_folders.append(self.__log_folder_for_application)
+            for log_folder in log_folders:
+                self.__export_files_from_log_folder(log_folder, log_target_folder_base)
 
     @GeneralUtilities.check_arguments
-    def __export_files_from_log_folder(self, log_folder: str) -> None:
-        log_target_folder_base = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
+    def __export_files_from_log_folder(self, local_log_folder: str, log_target_folder_base: str) -> None:
         timebased_subfolder: str = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
         appname: str = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_name]
-        log_name: str = os.path.basename(log_folder)
+        log_name: str = os.path.basename(local_log_folder)
         target_folder: str = GeneralUtilities.resolve_relative_path(f"./{appname}/{timebased_subfolder}/{log_name}", log_target_folder_base)
-        all_log_files = [file_to_export for file_to_export in GeneralUtilities.get_all_files_of_folder(log_folder) if ((not file_to_export.endswith(self.__gitkeep_filename)) and (not file_to_export.endswith(".gitignore")))]
+        all_log_files = [file_to_export for file_to_export in GeneralUtilities.get_all_files_of_folder(local_log_folder) if ((not file_to_export.endswith(self.__gitkeep_filename)) and (not file_to_export.endswith(".gitignore")))]
         for log_file in all_log_files:
-            target_file: str = GeneralUtilities.resolve_relative_path(os.path.relpath(log_file, target_folder), log_folder)
+            target_file: str = GeneralUtilities.resolve_relative_path("./"+os.path.relpath(log_file, local_log_folder), target_folder)
             final_target_folder = os.path.dirname(target_file)
             GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_file}' (log-folder: '{final_target_folder}')...")
             GeneralUtilities.ensure_directory_exists(final_target_folder)
