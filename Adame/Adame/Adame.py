@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.44"
+version = "1.2.45"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -164,8 +164,7 @@ class Adame:
         self.__create_securityconfiguration_file(gpgkey_of_owner)
 
         self.__load_securityconfiguration()
-        self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,
-                                                                                                  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
+        self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
 
         self._internal_sc.set_permission(self._internal_log_folder_for_ids, "666", True)
 
@@ -316,21 +315,30 @@ class Adame:
             self.__log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
             return
 
-        siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
-        siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
-        siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
-        log_files = GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_internal_overhead) + \
-            GeneralUtilities.get_direct_files_of_folder(self._internal_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_application)
-        sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
-        for log_file in log_files:
-            if os.path.basename(log_file) != self.__gitkeep_filename:
-                exitcode = self.__start_program_synchronously(
-                    "rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
-                if (exitcode == 0):
-                    self.__log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
-                    os.remove(log_file)
-                else:
-                    self.__log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
+        # siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
+        # siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
+        # siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
+        log_folders: list[str] = []
+        log_folders.append(self.__log_folder_for_internal_overhead)
+        log_folders.append(self._internal_log_folder_for_ids)
+        log_folders.append(self.__log_folder_for_application)
+        for log_folder in log_folders:
+            self.__export_files_from_log_folder(log_folder)
+
+    @GeneralUtilities.check_arguments
+    def __export_files_from_log_folder(self, log_folder: str) -> None:
+        log_target_folder_base = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
+        timebased_subfolder: str = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+        appname: str = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_name]
+        log_name: str = os.path.basename(log_folder)
+        target_folder: str = GeneralUtilities.resolve_relative_path(f"./{appname}/{timebased_subfolder}/{log_name}", log_target_folder_base)
+        all_log_files = [file_to_export for file_to_export in GeneralUtilities.get_all_files_of_folder(log_folder) if ((not file_to_export.endswith(self.__gitkeep_filename)) and (not file_to_export.endswith(".gitignore")))]
+        for log_file in all_log_files:
+            target_file: str = GeneralUtilities.resolve_relative_path(os.path.relpath(log_file, target_folder), log_folder)
+            GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_folder}'...")
+            GeneralUtilities.ensure_directory_exists(os.path.dirname(target_file))
+            self._internal_sc.copy(log_file, target_file)
+            # TODO GeneralUtilities.ensure_file_does_not_exist(log_file)
 
     # </exportlogs-command>
 
@@ -972,8 +980,7 @@ Logs/Overhead/**
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "true"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_idsname] = "snort"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress] = ""
-        securityconfiguration[self.__securityconfiguration_section_general][
-            self.__securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self.__get_hostname()}/{self._internal_get_container_name()}"
+        securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder] = f"/var/log/{self.__get_hostname()}/{self._internal_get_container_name()}"
         securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser] = "username_on_siem_system"
         securityconfiguration.add_section(self.__securityconfiguration_section_snort)
         securityconfiguration[self.__securityconfiguration_section_snort][self.__securityconfiguration_section_snort_key_globalconfigurationfile] = "/etc/snort/snort.conf"
@@ -1032,8 +1039,10 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
-        result = self.__start_program_synchronously(
-            "docker", f"compose --project-name {self._internal_get_container_name()} down", self._internal_configuration_folder)[0]
+        projectname = self._internal_get_container_name()
+        # TODO do "docker compose -p {projectname} stop"
+        # TODO for each container in compose-project save the output of "docker logs {containername}" in the log-folder in the file "Container_{containername}.log"
+        result = self.__start_program_synchronously("docker", f"compose --project-name {projectname} down", self._internal_configuration_folder)[0]
         success = result == 0
         if success:
             self.__log_information("Container was stopped", False, True, True)
@@ -1046,10 +1055,8 @@ The license of this repository is defined in the file `License.txt`.
     @GeneralUtilities.check_arguments
     def __start_container(self) -> bool:
         # TODO remove existing container if exist
-        self.__run_script_if_available(self.__configuration.get(
-            self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
-        success = self.__run_system_command(
-            "docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+        self.__run_script_if_available(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
+        success = self.__run_system_command("docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
@@ -1272,8 +1279,8 @@ Adame must be executed with elevated privileges. This is required to run command
     create_command_name = "create"
     create_parser = subparsers.add_parser(create_command_name)
     create_parser.add_argument("-n", "--name", required=True)
-    create_parser.add_argument("-f", "--folder", required=True)
-    create_parser.add_argument("-i", "--image", required=True)
+    create_parser.add_argument("-f", "--folder", required=True, default=None)
+    create_parser.add_argument("-i", "--image", required=False, default=None)
     create_parser.add_argument("-o", "--owner", required=True)
     create_parser.add_argument("-g", "--gpgkey_of_owner", required=False)
 
@@ -1323,6 +1330,11 @@ Adame must be executed with elevated privileges. This is required to run command
         core.verbose = True
     else:
         core.verbose = options.verbose
+
+    if options.folder is None:
+        options.folder = options.name+"App"
+    if options.image is None:
+        options.image = "SomeImage:latest"
 
     if options.command == create_command_name:
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
