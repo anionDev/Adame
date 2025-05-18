@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<coverage version="1.0" date="2025-05-18_22-59-33" tag="v1.2.47">
+  <assembly name="Adame">
+    <class name="Adame.py" coveredlines="645" coverablelines="948" totallines="1376" coveredbranches="0" totalbranches="0" coveredcodeelements="0" fullcoveredcodeelements="0" totalcodeelements="0" />
+  </assembly>
+</coverage>
