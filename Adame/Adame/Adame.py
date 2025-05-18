@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.45"
+version = "1.2.46"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -1235,8 +1235,7 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __set_git_configuration(self):
-        self.__start_program_synchronously(
-            "git", f"config --local include.path ../{self.__configurationfolder_name}/{self.__gitconfiguration_filename}", self.__repository_folder)
+        self.__start_program_synchronously("git", f"config --local include.path ../{self.__configurationfolder_name}/{self.__gitconfiguration_filename}", self.__repository_folder)
 
     # </helper-functions>
 
@@ -1279,7 +1278,7 @@ Adame must be executed with elevated privileges. This is required to run command
     create_command_name = "create"
     create_parser = subparsers.add_parser(create_command_name)
     create_parser.add_argument("-n", "--name", required=True)
-    create_parser.add_argument("-f", "--folder", required=True, default=None)
+    create_parser.add_argument("-f", "--folder", required=False, default=None)
     create_parser.add_argument("-i", "--image", required=False, default=None)
     create_parser.add_argument("-o", "--owner", required=True)
     create_parser.add_argument("-g", "--gpgkey_of_owner", required=False)
@@ -1331,12 +1330,12 @@ Adame must be executed with elevated privileges. This is required to run command
     else:
         core.verbose = options.verbose
 
-    if options.folder is None:
-        options.folder = options.name+"App"
     if options.image is None:
         options.image = "SomeImage:latest"
 
     if options.command == create_command_name:
+        if options.folder is None:
+            options.folder = options.name+"App"
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
 
     elif options.command == start_command_name:
