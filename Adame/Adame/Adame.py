@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.49"
+version = "1.2.50"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -308,13 +308,6 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __exportlogs(self) -> None:
-        if (not self.__tool_exists_in_path("rsync")):
-            self.__log_warning("rsync is not available", False, True, True)
-            return
-
-        if (not self.__check_siem_is_reachable()):
-            self.__log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
-            return
 
         siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
         siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
@@ -322,6 +315,12 @@ class Adame:
 
         siem_export_enabled: bool = GeneralUtilities.string_has_content(siemaddress) and GeneralUtilities.string_has_content(siemfolder) and GeneralUtilities.string_has_content(siemuser)
         if siem_export_enabled:
+            if (not self.__tool_exists_in_path("rsync")):
+                self.__log_warning("rsync is not available", False, True, True)
+                return
+            if (not self.__check_siem_is_reachable()):
+                self.__log_warning("The log-files can not be exported due to a missing SIEM-connection", False, True, True)
+                return
             log_files = GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_internal_overhead) + \
                 GeneralUtilities.get_direct_files_of_folder(self._internal_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_application)
             sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
