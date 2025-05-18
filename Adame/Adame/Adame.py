@@ -1335,8 +1335,6 @@ Adame must be executed with elevated privileges. This is required to run command
             options.image = "SomeImage:latest"
         if not hasattr(options, 'folder'):
             options.folder = options.name+"App"
-        if options.image is None:
-            options.image = "SomeImage:latest"
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
 
     elif options.command == start_command_name:
