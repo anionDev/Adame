@@ -4,6 +4,7 @@ import configparser
 import socket
 import time
 import traceback
+import shutil
 import uuid
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
@@ -17,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.47"
+version = "1.2.48"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -335,9 +336,10 @@ class Adame:
         all_log_files = [file_to_export for file_to_export in GeneralUtilities.get_all_files_of_folder(log_folder) if ((not file_to_export.endswith(self.__gitkeep_filename)) and (not file_to_export.endswith(".gitignore")))]
         for log_file in all_log_files:
             target_file: str = GeneralUtilities.resolve_relative_path(os.path.relpath(log_file, target_folder), log_folder)
-            GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_folder}'...")
-            GeneralUtilities.ensure_directory_exists(os.path.dirname(target_file))
-            self._internal_sc.copy(log_file, target_file)
+            final_target_folder = os.path.dirname(target_file)
+            GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_file}' (log-folder: '{final_target_folder}')...")
+            GeneralUtilities.ensure_directory_exists(final_target_folder)
+            shutil.copy2(log_file, final_target_folder)
             # TODO GeneralUtilities.ensure_file_does_not_exist(log_file)
 
     # </exportlogs-command>
