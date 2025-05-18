@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.50"
+version = "1.2.51"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -326,8 +326,7 @@ class Adame:
             sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
             for log_file in log_files:
                 if os.path.basename(log_file) != self.__gitkeep_filename:
-                    exitcode = self.__start_program_synchronously(
-                        "rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
+                    exitcode = self.__start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
                     if (exitcode == 0):
                         self.__log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                         os.remove(log_file)
@@ -336,6 +335,7 @@ class Adame:
 
         log_target_folder_base = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]  # TODO create another property for this
         if GeneralUtilities.string_has_content(log_target_folder_base):
+            self.__log_information(f"Export logs to '{log_target_folder_base}'...", True, True, True)
             log_folders: list[str] = []
             log_folders.append(self.__log_folder_for_internal_overhead)
             log_folders.append(self._internal_log_folder_for_ids)
@@ -353,10 +353,9 @@ class Adame:
         for log_file in all_log_files:
             target_file: str = GeneralUtilities.resolve_relative_path("./"+os.path.relpath(log_file, local_log_folder), target_folder)
             final_target_folder = os.path.dirname(target_file)
-            GeneralUtilities.write_message_to_stdout(f"TODO export log-file '{log_file}' to '{target_file}' (log-folder: '{final_target_folder}')...")
             GeneralUtilities.ensure_directory_exists(final_target_folder)
             shutil.copy2(log_file, final_target_folder)
-            # TODO GeneralUtilities.ensure_file_does_not_exist(log_file)
+            GeneralUtilities.ensure_file_does_not_exist(log_file)
 
     # </exportlogs-command>
 
