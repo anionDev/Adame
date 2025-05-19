@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.54"
+version = "1.2.55"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -311,10 +311,20 @@ class Adame:
     def __exportlogs(self) -> None:
         self.__log_information("Export logs", False, True, True)
 
+        log_target_folder_base = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
+        if GeneralUtilities.string_has_content(log_target_folder_base):
+            self.__log_information(f"Export logs to log-folder '{log_target_folder_base}'.", False, True, True)
+            log_folders: list[str] = []
+            log_folders.append(self.__log_folder_for_internal_overhead)
+            log_folders.append(self._internal_log_folder_for_ids)
+            log_folders.append(self.__log_folder_for_application)
+            timebased_subfolder: str = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+            for log_folder in log_folders:
+                self.__export_files_from_log_folder(log_folder, log_target_folder_base, timebased_subfolder)
+
         siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
         siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
         siemuser = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemuser]
-
         siem_export_enabled: bool = GeneralUtilities.string_has_content(siemaddress) and GeneralUtilities.string_has_content(siemfolder) and GeneralUtilities.string_has_content(siemuser)
         if siem_export_enabled:
             self.__log_information("Export logs to SIEM", False, True, True)
@@ -336,20 +346,10 @@ class Adame:
                     else:
                         self.__log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
 
-        log_target_folder_base = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
-        if GeneralUtilities.string_has_content(log_target_folder_base):
-            self.__log_information(f"Export logs to log-folder '{log_target_folder_base}'.", False, True, True)
-            log_folders: list[str] = []
-            log_folders.append(self.__log_folder_for_internal_overhead)
-            log_folders.append(self._internal_log_folder_for_ids)
-            log_folders.append(self.__log_folder_for_application)
-            for log_folder in log_folders:
-                self.__export_files_from_log_folder(log_folder, log_target_folder_base)
         self.__log_information("Finished exporting logs", False, True, True)
 
     @GeneralUtilities.check_arguments
-    def __export_files_from_log_folder(self, local_log_folder: str, log_target_folder_base: str) -> None:
-        timebased_subfolder: str = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
+    def __export_files_from_log_folder(self, local_log_folder: str, log_target_folder_base: str, timebased_subfolder: str) -> None:
         appname: str = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_name]
         log_name: str = os.path.basename(local_log_folder)
         target_folder: str = GeneralUtilities.resolve_relative_path(f"./{appname}/{timebased_subfolder}/{log_name}", log_target_folder_base)
