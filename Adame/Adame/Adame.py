@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.52"
+version = "1.2.53"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -334,7 +334,7 @@ class Adame:
                     else:
                         self.__log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
 
-        log_target_folder_base = self.__securityconfiguration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
+        log_target_folder_base = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
         if GeneralUtilities.string_has_content(log_target_folder_base):
             self.__log_information(f"Export logs to '{log_target_folder_base}'...", True, True, True)
             log_folders: list[str] = []
