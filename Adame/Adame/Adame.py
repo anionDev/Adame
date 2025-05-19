@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.51"
+version = "1.2.52"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -41,6 +41,7 @@ class Adame:
     __configuration_section_general_key_remotename: str = "remotename"
     __configuration_section_general_key_remotebranch: str = "remotebranch"
     __configuration_section_general_key_maximalexpectedstartduration: str = "maximalexpectedstartduration"
+    __configuration_section_general_key_logtargetfolder: str = "logtargetfolder"
     __configuration_section_general_key_maximalexpectedstartduration_defaultvalue: int = 0
     __securityconfiguration_section_general: str = "general"
     __securityconfiguration_section_general_key_siemaddress: str = "siemaddress"
@@ -333,7 +334,7 @@ class Adame:
                     else:
                         self.__log_warning(f"Exporting Log-file '{log_file}' to {siemaddress} resulted in exitcode {str(exitcode)}", False, True, True)
 
-        log_target_folder_base = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]  # TODO create another property for this
+        log_target_folder_base = self.__securityconfiguration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
         if GeneralUtilities.string_has_content(log_target_folder_base):
             self.__log_information(f"Export logs to '{log_target_folder_base}'...", True, True, True)
             log_folders: list[str] = []
@@ -821,11 +822,13 @@ IDS-process:{ids_is_running_as_string}
             raise
 
     @GeneralUtilities.check_arguments
-    def __migrate_v_1_2_2_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> None:
-        configuration_v_1_2_2.set(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration,
-                                  str(self.__configuration_section_general_key_maximalexpectedstartduration_defaultvalue))
-        configuration_v_1_2_2.set(self.__configuration_section_general, self.__configuration_section_general_key_formatversion, "1.2.3")
+    def __migrate_to_v_1_2_3(self, configuration_file: str, configuration_v_1_2_2: configparser.ConfigParser) -> None:
+        configuration_v_1_2_2.set(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration, str(self.__configuration_section_general_key_maximalexpectedstartduration_defaultvalue))
         self.__save_configfile(configuration_file, configuration_v_1_2_2)
+
+    def __migrate_to_v_1_2_52(self, configuration_file: str, previous_config: configparser.ConfigParser) -> None:
+        previous_config.set(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder, "")
+        self.__save_configfile(configuration_file, previous_config)
 
     @GeneralUtilities.check_arguments
     def __migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
@@ -842,7 +845,12 @@ IDS-process:{ids_is_running_as_string}
                     raise ValueError("Migrations of repository-format-versions older than v1.2.2 are not supported")
 
                 if config_format_version == parse('1.2.2'):
-                    config_format_version = self.__migrate_overhead('1.2.2', '1.2.3', lambda:  self.__migrate_v_1_2_2_to_v_1_2_3(configuration_file, configuration))
+                    config_format_version = self.__migrate_overhead('1.2.2', '1.2.3', lambda:  self.__migrate_to_v_1_2_3(configuration_file, configuration))
+                if config_format_version < parse('1.2.52'):
+                    config_format_version = self.__migrate_overhead(config_format_version, '1.2.52', lambda:  self.__migrate_to_v_1_2_52(configuration_file, configuration))
+
+                configuration.set(self.__configuration_section_general, self.__configuration_section_general_key_formatversion, version)
+                self.__save_configfile(configuration_file, configuration)
 
                 configuration = configparser.ConfigParser()
                 configuration.read(configuration_file)
