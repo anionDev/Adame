@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.53"
+version = "1.2.54"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -309,6 +309,7 @@ class Adame:
 
     @GeneralUtilities.check_arguments
     def __exportlogs(self) -> None:
+        self.__log_information("Export logs", False, True, True)
 
         siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
         siemfolder = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemfolder]
@@ -316,6 +317,7 @@ class Adame:
 
         siem_export_enabled: bool = GeneralUtilities.string_has_content(siemaddress) and GeneralUtilities.string_has_content(siemfolder) and GeneralUtilities.string_has_content(siemuser)
         if siem_export_enabled:
+            self.__log_information("Export logs to SIEM", False, True, True)
             if (not self.__tool_exists_in_path("rsync")):
                 self.__log_warning("rsync is not available", False, True, True)
                 return
@@ -336,13 +338,14 @@ class Adame:
 
         log_target_folder_base = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
         if GeneralUtilities.string_has_content(log_target_folder_base):
-            self.__log_information(f"Export logs to '{log_target_folder_base}'...", True, True, True)
+            self.__log_information(f"Export logs to log-folder '{log_target_folder_base}'.", False, True, True)
             log_folders: list[str] = []
             log_folders.append(self.__log_folder_for_internal_overhead)
             log_folders.append(self._internal_log_folder_for_ids)
             log_folders.append(self.__log_folder_for_application)
             for log_folder in log_folders:
                 self.__export_files_from_log_folder(log_folder, log_target_folder_base)
+        self.__log_information("Finished exporting logs", False, True, True)
 
     @GeneralUtilities.check_arguments
     def __export_files_from_log_folder(self, local_log_folder: str, log_target_folder_base: str) -> None:
@@ -352,6 +355,7 @@ class Adame:
         target_folder: str = GeneralUtilities.resolve_relative_path(f"./{appname}/{timebased_subfolder}/{log_name}", log_target_folder_base)
         all_log_files = [file_to_export for file_to_export in GeneralUtilities.get_all_files_of_folder(local_log_folder) if ((not file_to_export.endswith(self.__gitkeep_filename)) and (not file_to_export.endswith(".gitignore")))]
         for log_file in all_log_files:
+            self.__log_information(f"Export log-file '{log_file}' to log-folder...", True, True, True)
             target_file: str = GeneralUtilities.resolve_relative_path("./"+os.path.relpath(log_file, local_log_folder), target_folder)
             final_target_folder = os.path.dirname(target_file)
             GeneralUtilities.ensure_directory_exists(final_target_folder)
