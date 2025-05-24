@@ -5,5 +5,5 @@ psutil>=7.0.0
 pylint>=3.3.7
 pytest>=8.3.5
 PyYAML>=6.0.2
-ScriptCollection>=3.5.128
+ScriptCollection>=3.5.131
 wheel>=0.45.1
