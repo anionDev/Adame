@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.56"
+version = "1.2.57"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
