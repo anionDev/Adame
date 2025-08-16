@@ -1,0 +1,7 @@
+{
+  "name": "Adame",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "version": "1.2.58"
+}
