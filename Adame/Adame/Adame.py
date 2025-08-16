@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.57"
+version = "1.2.58"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -274,7 +274,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __stopadvanced(self) -> None:
         self.__stop()
-        self.__commit("Saved changes")  # FIXME this saves filemetadata. saving filemetadata should only be done when the container really was running
+        self.__commit("Saved changes", no_changes_behavior=1)  # FIXME this saves filemetadata. saving filemetadata should only be done when the container really was running
         self.__exportlogs()
 
     # </stopadvanced-command>
@@ -339,7 +339,7 @@ class Adame:
             sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
             for log_file in log_files:
                 if os.path.basename(log_file) != self.__gitkeep_filename:
-                    exitcode = self.__start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False)[0]
+                    exitcode = self.__start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False, True)[0]
                     if (exitcode == 0):
                         self.__log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                         os.remove(log_file)
@@ -1064,7 +1064,7 @@ The license of this repository is defined in the file `License.txt`.
         if (GeneralUtilities.string_has_content(file)):
             self.__log_information(f"Run {name} (File: {file})", False, True, True)
             file = GeneralUtilities.resolve_relative_path(file, self._internal_configuration_folder)
-            self.__start_program_synchronously("sh", file, self._internal_configuration_folder, True)
+            self.__start_program_synchronously("sh", file, self._internal_configuration_folder, True, True)
 
     @GeneralUtilities.check_arguments
     def __stop_container(self) -> None:
@@ -1178,7 +1178,7 @@ The license of this repository is defined in the file `License.txt`.
         return name
 
     @GeneralUtilities.check_arguments
-    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True) -> tuple[int, str, str, int]:
+    def __start_program_synchronously(self, program: str, argument: str, workingdirectory: str = None, expect_exitcode_zero: bool = True, print_live_output: bool = False) -> tuple[int, str, str, int]:
         workingdirectory = GeneralUtilities.str_none_safe(workingdirectory)
         self.__log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         self.__log_diagnostic_information(f"Argument: '{argument}'")
@@ -1186,7 +1186,7 @@ The license of this repository is defined in the file `License.txt`.
             verbose_argument = 2
         else:
             verbose_argument = 1
-        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False, throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero)
+        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False, throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero, print_live_output=print_live_output)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
