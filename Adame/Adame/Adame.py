@@ -18,7 +18,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.58"
+version = "1.2.59"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -311,6 +311,7 @@ class Adame:
     def __exportlogs(self) -> None:
         self.__log_information("Export logs", False, True, True)
 
+        timebased_subfolder: str = GeneralUtilities.get_time_based_logfilename(f"{product_name}Log")
         log_target_folder_base = self.__configuration[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder]
         if GeneralUtilities.string_has_content(log_target_folder_base):
             self.__log_information(f"Export logs to log-folder '{log_target_folder_base}'.", False, True, True)
@@ -318,7 +319,6 @@ class Adame:
             log_folders.append(self.__log_folder_for_internal_overhead)
             log_folders.append(self._internal_log_folder_for_ids)
             log_folders.append(self.__log_folder_for_application)
-            timebased_subfolder: str = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
             for log_folder in log_folders:
                 self.__export_files_from_log_folder(log_folder, log_target_folder_base, timebased_subfolder)
 
@@ -336,10 +336,9 @@ class Adame:
                 return
             log_files = GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_internal_overhead) + \
                 GeneralUtilities.get_direct_files_of_folder(self._internal_log_folder_for_ids)+GeneralUtilities.get_direct_files_of_folder(self.__log_folder_for_application)
-            sublogfolder = GeneralUtilities.get_time_based_logfilename("Log", self.format_datetimes_to_utc)
             for log_file in log_files:
                 if os.path.basename(log_file) != self.__gitkeep_filename:
-                    exitcode = self.__start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{sublogfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{sublogfolder}', "", False, True)[0]
+                    exitcode = self.__start_program_synchronously("rsync", f'--compress --verbose --rsync-path="mkdir -p {siemfolder}/{timebased_subfolder}/ && rsync" -e ssh {log_file} {siemuser}@{siemaddress}:{siemfolder}/{timebased_subfolder}', "", False, True)[0]
                     if (exitcode == 0):
                         self.__log_information(f"Logfile '{log_file}' was successfully exported to {siemaddress}", True, True, True)
                         os.remove(log_file)
@@ -907,8 +906,7 @@ IDS-process:{ids_is_running_as_string}
 
             self.__log_folder_for_internal_overhead = os.path.join(self.__log_folder, "Overhead")
             GeneralUtilities.ensure_directory_exists(self.__log_folder_for_internal_overhead)
-            self.__log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(
-                self.__log_folder_for_internal_overhead, product_name, self.format_datetimes_to_utc)
+            self.__log_file_for_adame_overhead = GeneralUtilities.get_time_based_logfile_by_folder(self.__log_folder_for_internal_overhead, product_name)
             GeneralUtilities.ensure_file_exists(self.__log_file_for_adame_overhead)
 
             if load_securityconfiguration:
