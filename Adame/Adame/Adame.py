@@ -9,7 +9,6 @@ import uuid
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
-from distutils.spawn import find_executable  # pylint: disable=deprecated-module
 import argparse
 from packaging.version import parse
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
@@ -18,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.59"
+version = "1.2.60"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -1194,7 +1193,7 @@ The license of this repository is defined in the file `License.txt`.
 
     @GeneralUtilities.check_arguments
     def __tool_exists_in_path(self, name: str) -> bool:
-        return find_executable(name) is not None
+        return shutil.which(name) is not None
 
     class __process:
         "This class is for test-purposes only"
