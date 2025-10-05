@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from ScriptCollection.GeneralUtilities import GeneralUtilities
-from ..Adame.Adame import Adame
+from ..Adame.AdameCore import Adame
 from .EnvironmentForTest import EnvironmentForTest
 
 
