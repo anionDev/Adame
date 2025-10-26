@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.60"
+version = "1.2.61"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -1179,11 +1179,7 @@ The license of this repository is defined in the file `License.txt`.
         workingdirectory = GeneralUtilities.str_none_safe(workingdirectory)
         self.__log_information(f"Start program '{workingdirectory}>{program} {argument}' synchronously", True)
         self.__log_diagnostic_information(f"Argument: '{argument}'")
-        if self.verbose:
-            verbose_argument = 2
-        else:
-            verbose_argument = 1
-        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, verbose_argument, False, throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero, print_live_output=print_live_output)
+        result: tuple[int, str, str, int] = self._internal_sc.run_program(program, argument, workingdirectory, False, throw_exception_if_exitcode_is_not_zero=expect_exitcode_zero, print_live_output=print_live_output)
         self.__log_information(f"Program resulted in exitcode {result[0]}", True)
         self.__log_information("Stdout:", True)
         self.__log_information(result[1], True)
