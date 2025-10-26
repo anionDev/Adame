@@ -1,0 +1,11 @@
+@startuml CodeUnits-Overview
+title CodeUnits of Adame
+
+[Adame]
+note as AdameNote
+  Adame is a tool to manage docker-applications as part in a Linux-environment.
+end note
+Adame .. AdameNote
+
+
+@enduml
