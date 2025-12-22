@@ -1082,7 +1082,10 @@ The license of this repository is defined in the file `License.txt`.
     def __start_container(self) -> bool:
         # TODO remove existing container if exist
         self.__run_script_if_available(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
-        success = self.__run_system_command("docker", f"compose --project-name {self._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
+        parameters_argument:str=""
+        if os.path.isfile(self._internal_configuration_folder,"Parameters.env"):
+            parameters_argument=parameters_argument+" --env-file Parameters.env"
+        success = self.__run_system_command("docker", f"compose --project-name {self._internal_get_container_name()}{parameters_argument} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))
         if success:
             self.__log_information("Container was started", False, True, True)
