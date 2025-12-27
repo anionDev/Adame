@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "1.2.63"
+version = "2.0.0"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -1083,7 +1083,7 @@ The license of this repository is defined in the file `License.txt`.
         # TODO remove existing container if exist
         self.__run_script_if_available(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_prescript), "PreScript")
         parameters_argument:str=""
-        if os.path.isfile(self._internal_configuration_folder,"Parameters.env"):
+        if os.path.isfile(os.path.join(self._internal_configuration_folder,"Parameters.env")):
             parameters_argument=parameters_argument+" --env-file Parameters.env"
         success = self.__run_system_command("docker", f"compose --project-name {self._internal_get_container_name()}{parameters_argument} up --detach --build --quiet-pull --force-recreate --always-recreate-deps", self._internal_configuration_folder)
         time.sleep(int(self.__configuration.get(self.__configuration_section_general, self.__configuration_section_general_key_maximalexpectedstartduration)))

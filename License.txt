@@ -1,2 +1,2 @@
-You are allowed to use this product only for teaching- and research-reasons in an academical context or for personal usage or as a non-profit-organization.
-For a commercial license please contact the repository-owner.
+You are allowed to use this product under the terms and conditions of the MIT-license only for teaching- and research-reasons in an academical context or for personal usage or as a non-profit-organization.
+If you would like to obtain a commercial license or a license for other uses, please contact the repository owner.
