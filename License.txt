@@ -1,2 +1,17 @@
-You are allowed to use this product under the terms and conditions of the MIT-license only for teaching- and research-reasons in an academical context or for personal usage or as a non-profit-organization.
-If you would like to obtain a commercial license or a license for other uses, please contact the repository owner.
+You are allowed to use this product under the terms of the GRY License.
+If you would like to obtain a different license (for example a commercial license or a license for other uses), please contact the repository owner.
+
+GRY License:
+You are allowed to use this product only if you belong to the group of authorized users and if you accept and comply with the terms of use.
+Using this product means using the source-code or using the build artifacts (regardless of whether they are official build artifacts or self-built) directly or indirectly in a productive environment or with more than 10 users.
+Group of authorized users/organizations:
+-Non-profit organizations
+-Organizations whose main purpose is teaching or research in an academic context
+-Private users for personal use
+Terms of use:
+-Use of this product is prohibited for any human and every organization that harms individuals or infringes upon internationally recognized human rights.
+-This product is provided without any warranty of any kind, so you use it at your own risk.
+-Neither you nor any of your users may intend to generate profit from the use of this product in any form.
+-You must not provide administrative access to any third-party individuals or organizations.
+-You may grant usage access to this product only to people within your organization or to private users for their personal use.
+-You are allowed to implement changes in this product if you accept and comply the conditions defined the Contributor license agreement.
