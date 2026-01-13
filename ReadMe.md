@@ -23,7 +23,7 @@ See the [Changelog-folder](./Other/Resources/Changelog).
 
 Contributions are always welcome.
 
-This product has the contribution-requirements defines by [DefaultOpenSourceContributionProcess](https://projects.aniondev.de/PublicProjects/Common/ProjectTemplates/-/blob/main/Conventions/Contributing/DefaultOpenSourceContributionProcess/DefaultOpenSourceContributionProcess.md).
+See [Contributing.md](./Contributing.md) for information about that.
 
 ## Repository-structure
 
