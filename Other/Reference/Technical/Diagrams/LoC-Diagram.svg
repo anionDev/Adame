@@ -1,0 +1,111 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" version="1.1" class="marks" width="872" height="447" viewBox="0 0 872 447">
+  <ns0:rect width="872" height="447" fill="white" />
+  <ns0:g fill="none" stroke-miterlimit="10" transform="translate(67,10)">
+    <ns0:g class="mark-group role-frame root" role="graphics-object" aria-roledescription="group mark container">
+      <ns0:g transform="translate(0,0)">
+        <ns0:path class="background" aria-hidden="true" d="M0.5,0.5h800v400h-800Z" stroke="#ddd" />
+        <ns0:g>
+          <ns0:g class="mark-group role-axis" aria-hidden="true">
+            <ns0:g transform="translate(0.5,400.5)">
+              <ns0:path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none" />
+              <ns0:g>
+                <ns0:g class="mark-rule role-axis-grid" pointer-events="none">
+                  <ns0:line transform="translate(400,-400)" x2="0" y2="400" stroke="#ddd" stroke-width="1" opacity="1" />
+                </ns0:g>
+              </ns0:g>
+              <ns0:path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none" />
+            </ns0:g>
+          </ns0:g>
+          <ns0:g class="mark-group role-axis" aria-hidden="true">
+            <ns0:g transform="translate(0.5,0.5)">
+              <ns0:path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none" />
+              <ns0:g>
+                <ns0:g class="mark-rule role-axis-grid" pointer-events="none">
+                  <ns0:line transform="translate(0,400)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,360)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,320)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,280)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,240)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,200)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,160)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,120)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,80)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,40)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,0)" x2="800" y2="0" stroke="#ddd" stroke-width="1" opacity="1" />
+                </ns0:g>
+              </ns0:g>
+              <ns0:path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none" />
+            </ns0:g>
+          </ns0:g>
+          <ns0:g class="mark-group role-axis" role="graphics-symbol" aria-roledescription="axis" aria-label="X-axis titled 'Date' for a time scale with values from Tuesday, 13 January 2026, 9:01:58 PM to Tuesday, 13 January 2026, 9:01:58 PM">
+            <ns0:g transform="translate(0.5,400.5)">
+              <ns0:path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none" />
+              <ns0:g>
+                <ns0:g class="mark-rule role-axis-tick" pointer-events="none">
+                  <ns0:line transform="translate(400,0)" x2="0" y2="5" stroke="#888" stroke-width="1" opacity="1" />
+                </ns0:g>
+                <ns0:g class="mark-text role-axis-label" pointer-events="none">
+                  <ns0:text text-anchor="middle" transform="translate(400,15)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">:58</ns0:text>
+                </ns0:g>
+                <ns0:g class="mark-rule role-axis-domain" pointer-events="none">
+                  <ns0:line transform="translate(0,0)" x2="800" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                </ns0:g>
+                <ns0:g class="mark-text role-axis-title" pointer-events="none">
+                  <ns0:text text-anchor="middle" transform="translate(400,30)" font-family="sans-serif" font-size="11px" font-weight="bold" fill="#000" opacity="1">Date</ns0:text>
+                </ns0:g>
+              </ns0:g>
+              <ns0:path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none" />
+            </ns0:g>
+          </ns0:g>
+          <ns0:g class="mark-group role-axis" role="graphics-symbol" aria-roledescription="axis" aria-label="Y-axis titled 'Lines of Code' for a linear scale with values from 0 to 2,000">
+            <ns0:g transform="translate(0.5,0.5)">
+              <ns0:path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none" />
+              <ns0:g>
+                <ns0:g class="mark-rule role-axis-tick" pointer-events="none">
+                  <ns0:line transform="translate(0,400)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,360)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,320)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,280)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,240)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,200)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,160)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,120)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,80)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,40)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                  <ns0:line transform="translate(0,0)" x2="-5" y2="0" stroke="#888" stroke-width="1" opacity="1" />
+                </ns0:g>
+                <ns0:g class="mark-text role-axis-label" pointer-events="none">
+                  <ns0:text text-anchor="end" transform="translate(-7,403)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">0</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,363)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">200</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,323)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">400</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,283)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">600</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,243)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">800</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,203)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">1,000</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,163)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">1,200</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,123.00000000000001)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">1,400</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,82.99999999999999)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">1,600</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,42.99999999999999)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">1,800</ns0:text>
+                  <ns0:text text-anchor="end" transform="translate(-7,3)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2,000</ns0:text>
+                </ns0:g>
+                <ns0:g class="mark-rule role-axis-domain" pointer-events="none">
+                  <ns0:line transform="translate(0,400)" x2="0" y2="-400" stroke="#888" stroke-width="1" opacity="1" />
+                </ns0:g>
+                <ns0:g class="mark-text role-axis-title" pointer-events="none">
+                  <ns0:text text-anchor="middle" transform="translate(-51,200) rotate(-90) translate(0,-2)" font-family="sans-serif" font-size="11px" font-weight="bold" fill="#000" opacity="1">Lines of Code</ns0:text>
+                </ns0:g>
+              </ns0:g>
+              <ns0:path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none" />
+            </ns0:g>
+          </ns0:g>
+          <ns0:g class="mark-line role-mark layer_0_marks" role="graphics-object" aria-roledescription="line mark container">
+            <ns0:path aria-label="Date: Jan 13, 2026; Lines of Code: 1864; Version: v2.0.0; LinesOfCode: 1864; Timestamp: Jan 13, 2026" role="graphics-symbol" aria-roledescription="line mark" d="M400,27.2Z" stroke="#4c78a8" stroke-width="2" />
+          </ns0:g>
+          <ns0:g class="mark-symbol role-mark layer_1_marks" role="graphics-object" aria-roledescription="symbol mark container">
+            <ns0:path aria-label="Date: Jan 13, 2026; Lines of Code: 1864; Version: v2.0.0; LinesOfCode: 1864; Timestamp: Jan 13, 2026" role="graphics-symbol" aria-roledescription="point" transform="translate(400,27.19999999999998)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1" />
+          </ns0:g>
+        </ns0:g>
+        <ns0:path class="foreground" aria-hidden="true" d="" display="none" />
+      </ns0:g>
+    </ns0:g>
+  </ns0:g>
+</ns0:svg>

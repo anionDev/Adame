@@ -1,46 +1,17 @@
-Copyright © 2020 Marius Göcke
+You are allowed to use this product under the terms of the GRY License.
+If you would like to obtain a different license (for example a commercial license or a license for other uses), please contact the repository owner.
 
-Currently there is no license to use Adame.
-Adame uses dependencies which are released under their own license.
--PyYAML is licensed under the terms of the MIT-license (see appendix 1)
--psutil is licensed under the terms of the BSD-license (see appendix 2)
--ScriptCollection is licensed under the terms of the MIT-license (see appendix 1)
-
-----------------------------------------------------------------------
-Appendix 1:
-MIT License
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-----------------------------------------------------------------------
-Appendix 2:
-BSD 3-Clause License
-
-Copyright (c) 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola'
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
- * Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
- * Neither the name of the psutil authors nor the names of its contributors
-   may be used to endorse or promote products derived from this software without
-   specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-----------------------------------------------------------------------
+GRY License:
+You are allowed to use this product only if you belong to the group of authorized users and if you accept and comply with the terms of use.
+Using this product means using the source-code or using the build artifacts (regardless of whether they are official build artifacts or self-built) directly or indirectly in a productive environment or with more than 10 users.
+Group of authorized users/organizations:
+-Non-profit organizations
+-Organizations whose main purpose is teaching or research in an academic context
+-Private users for personal use
+Terms of use:
+-Use of this product is prohibited for any human and every organization that harms individuals or infringes upon internationally recognized human rights.
+-This product is provided without any warranty of any kind, so you use it at your own risk.
+-Neither you nor any of your users may intend to generate profit from the use of this product in any form.
+-You must not provide administrative access to any third-party individuals or organizations.
+-You may grant usage access to this product only to people within your organization or to private users for their personal use.
+-You are allowed to implement changes in this product if you accept and comply the conditions defined the Contributor license agreement.
