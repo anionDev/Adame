@@ -17,7 +17,8 @@
 				},
 				"aliases": [
 					"bb"
-				]
+				],
+				"allowcustomarguments": true
 			}
 		]
 	},
