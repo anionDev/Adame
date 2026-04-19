@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "2.0.1"
+version = "2.0.2"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -1243,7 +1243,7 @@ The license of this repository is defined in the file `License.txt`.
             date_as_string = datetime.utcnow()
         else:
             date_as_string = datetime.now()
-        logentry = f"[{GeneralUtilities.datetime_to_string_for_logfile_entry(date_as_string)}] [{loglevel}] {message}"
+        logentry = f"[{GeneralUtilities.datetime_to_string_for_logfile_entry(date_as_string,False)}] [{loglevel}] {message}"
         if (write_to_console):
             if (loglevel == "Error"):
                 GeneralUtilities.write_message_to_stderr(logentry)
