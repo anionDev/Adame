@@ -4,4 +4,5 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <cps:producttitle>Adame</cps:producttitle>
     <cps:remoteaddress>https://github.com/anionDev/Adame</cps:remoteaddress>
+    <cps:requiredenvironmentvariables></cps:requiredenvironmentvariables>
 </cps:productinformation>
