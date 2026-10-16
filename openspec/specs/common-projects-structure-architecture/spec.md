@@ -218,7 +218,10 @@ If there are already findings with another name-pattern then it is allowed to re
 The table MUST have exactly the following columns in this order:
 
 - `Id`: the id of the finding.
-- `State`: the state of the finding, which is `open`, `accepted`, `not verifiable` or `fixed`. Another state is only used if none of these applies, and the reason for it is written into `Notes`. If an issue is fixed partially then this MUST be treated as `open`.
+- `Priority`: the priority of the finding, which is `low`, `mid` or `high` or `very high`.
+  - Findings which reveals very important or critical security-problems must be marked as `very high`. 
+  - Findings which reveals very heavy performance-problems must be marked as `high` or `very high`. 
+- `State`: the state of the finding, which is `open`, `accepted`, `not verifiable` or `fixed`. Another state is only used if none of these three applies, and the reason for it is written into `Notes`. If an issue is fixed partially then this MUST be treated as `open`.
 - `Description`: what the finding is.
 - `Impact`: what the finding causes, depending on its topic, for example the security-impact or the performance-impact.
 - `Notes`: every further information, especially the content of further columns which a list of findings had before it was moved into the table.
