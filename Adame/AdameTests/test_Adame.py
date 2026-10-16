@@ -21,11 +21,11 @@ Tests that the constructor does not throw any exception"""
         """UnitTest
 Tests that the create-command works as expected"""
 
+        # arrange
+
+        environment_for_test = EnvironmentForTest()
+
         try:
-
-            # arrange
-
-            environment_for_test = EnvironmentForTest()
 
             # act
 
@@ -152,11 +152,12 @@ Tests that the start-command works as expected"""
         """UnitTest
 Tests that the stop-command works as expected"""
 
+        # arrange
+
+        environment_for_test = EnvironmentForTest()
+
         try:
 
-            # arrange
-
-            environment_for_test = EnvironmentForTest()
             environment_for_test.create()
             # mock program calls which are maybe not available in a development-environment:
             environment_for_test.adame._internal_sc.register_mock_program_call("docker",  re.escape(f"compose --project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
