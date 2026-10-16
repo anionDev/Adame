@@ -8,7 +8,7 @@ import shutil
 import uuid
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import argparse
 from packaging.version import parse, Version
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
@@ -1242,7 +1242,7 @@ The license of this repository is defined in the file `License.txt`.
         if is_verbose_log_entry and not self.verbose:
             return
         if (self.format_datetimes_to_utc):
-            date_as_string = datetime.utcnow()
+            date_as_string = datetime.now(timezone.utc).replace(tzinfo=None)
         else:
             date_as_string = datetime.now()
         logentry = f"[{GeneralUtilities.datetime_to_string_for_logfile_entry(date_as_string,False)}] [{loglevel}] {message}"
