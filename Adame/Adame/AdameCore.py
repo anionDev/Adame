@@ -515,7 +515,7 @@ class Adame:
         if self.__test_mode:
             return
         if (not GeneralUtilities.current_user_has_elevated_privileges()):
-            raise ValueError("Adame requries elevated privileges to get executed")
+            raise ValueError("Adame requires elevated privileges to get executed")
 
     @GeneralUtilities.check_arguments
     def __log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
@@ -625,7 +625,7 @@ This function is idempotent."""
 
     @GeneralUtilities.check_arguments
     def __check_siem_is_reachable(self) -> bool:
-        """This function checks wether the SIEM is available."""
+        """This function checks whether the SIEM is available."""
         siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
         if GeneralUtilities.string_is_none_or_whitespace(siemaddress):
             return False
@@ -743,13 +743,13 @@ This function is idempotent."""
         processid_of_ids_as_string = False
         for line in lines:
             if ":" in line:
-                splitted = line.split(":")
-                value_as_string = splitted[1].strip()
+                parts = line.split(":")
+                value_as_string = parts[1].strip()
                 if GeneralUtilities.string_has_nonwhitespace_content(value_as_string):
                     value = GeneralUtilities.string_to_boolean(value_as_string)
-                    if splitted[0] == "Container-process":
+                    if parts[0] == "Container-process":
                         processid_of_container_as_string = value
-                    if splitted[0] == "IDS-process":
+                    if parts[0] == "IDS-process":
                         processid_of_ids_as_string = value
         return (processid_of_container_as_string, processid_of_ids_as_string)
 
