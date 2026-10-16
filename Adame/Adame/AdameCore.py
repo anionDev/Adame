@@ -578,7 +578,7 @@ class Adame:
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
 
     @GeneralUtilities.check_arguments
-    def __check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None) -> None:
+    def __check_integrity_of_repository(self, amount_of_days_of_history_to_check: int) -> None:
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
         until = datetime.now()
