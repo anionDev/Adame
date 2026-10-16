@@ -5,3 +5,4 @@ CLAUDE.local.md
 .claude/*.lock
 Other/Logs
 Other/Resources/Artifacts
+/.notes/

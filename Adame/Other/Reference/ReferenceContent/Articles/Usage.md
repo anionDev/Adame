@@ -72,7 +72,7 @@ The purpose of this command is to help and give information when something is no
 
 #### Description
 
-This command ensures that the docker-application is running with the current configuration. This is the recommended comment which should be executed to keep the application up to date and safe.
+This command ensures that the docker-application is running with the current configuration. This is the recommended command which should be executed to keep the application up to date and safe.
 
 Example:
 
@@ -91,4 +91,4 @@ An application is running. Now we configure the environment to use a new version
 
 #### Description
 
-Tops the container and saves the current state of the repository.
+Stops the container and saves the current state of the repository.
