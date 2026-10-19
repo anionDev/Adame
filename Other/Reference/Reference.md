@@ -1,5 +1,37 @@
 # Adame
 
+## Features
+
+This section lists the typical features one can expect from Adame (as described in the `ReadMe.md` and the command-line-help). The `State` reflects whether the feature is actually functional in the current source-code (`available`) or whether it is documented/intended but not (fully) working yet (`unavailable`). Details for the limitations of the `unavailable`-features are collected in the `Findings`-section below.
+
+| Id      | State       | Description                                                                                                                                                                              |
+| ------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| feat-1  | available   | Create a new Adame-managed environment (a git-repository containing the configuration, the docker-compose-file, the IDS-rules and the volumes) via the `create`-command.                 |
+| feat-2  | available   | Start the managed application-container (`start`-command, runs `docker compose up`).                                                                                                      |
+| feat-3  | available   | Stop the managed application-container (`stop`-command, runs `docker compose down`).                                                                                                      |
+| feat-4  | available   | Apply the current environment-configuration, including regenerating the IDS-rule-file (`applyconfiguration`-command).                                                                     |
+| feat-5  | available   | Combined start which stops the container, re-applies the configuration, restores the state and starts the container again (`startadvanced`-command).                                     |
+| feat-6  | available   | Combined stop which stops the container, commits the current state and exports the logs (`stopadvanced`-command).                                                                         |
+| feat-7  | available   | Store every state-changing step of the environment as a commit in a git-repository, so the whole application including its data and configuration can be moved to another machine.        |
+| feat-8  | available   | Back up the app-repository to a configured remote git-server (`git push` on each commit once a remote-address is configured).                                                            |
+| feat-9  | available   | Sign commits with the owner's GPG-key to protect the integrity of the repository.                                                                                                        |
+| feat-10 | available   | Check the repository-integrity by reporting commits which are not signed by the owner's GPG-key (`checkintegrity`-command).                                                              |
+| feat-11 | available   | Automatically migrate an older repository-format-version to the current Adame-version when a command is executed.                                                                        |
+| feat-12 | available   | Run a user-defined pre-script before starting the container and a post-script after stopping the container.                                                                              |
+| feat-13 | available   | Integrate an intrusion-detection-system (snort) which is started and stopped together with the application (configurable via `enableids`).                                               |
+| feat-14 | available   | Use user-defined custom IDS-rules (`Networktraffic.Custom.rules`).                                                                                                                        |
+| feat-15 | available   | Export the collected log-files to a configured log-target-folder.                                                                                                                         |
+| feat-16 | available   | Export the collected log-files to a SIEM-server via rsync/ssh.                                                                                                                            |
+| feat-17 | available   | Diagnose the environment, e.g. check whether the required host-tools (docker, git, …) are available (`diagnosis`-command).                                                               |
+| feat-18 | available   | Switch the environment to another git-branch/state (`checkout`-command).                                                                                                                  |
+| feat-19 | unavailable | Automatically generated IDS-rules (the `include` of the global snort-configuration and the test-rule) — currently all generated rules are commented out (see SEC-2).                      |
+| feat-20 | unavailable | Resolve the configured network-interface's real local IP-address for use in the IDS-rules — currently a constant placeholder is returned (see SEC-1).                                     |
+| feat-21 | unavailable | Application-provided IDS-rules contributed through `ApplicationProvidedSecurityInformation.xml` — not implemented (see SEC-9).                                                            |
+| feat-22 | unavailable | Self-test of the IDS which verifies that a configured test-rule actually triggers — not implemented (see SEC-3).                                                                          |
+| feat-23 | unavailable | Capture the application-container-logs (`docker logs`) into the log-folder on stop — not implemented (see BUG-9).                                                                         |
+| feat-24 | unavailable | Preserve and restore the file-metadata (permissions and owners) of the volumes when the repository is moved to another machine — currently disabled (see BUG-3).                         |
+| feat-25 | unavailable | Reliably detect whether the container and the IDS are really running — currently only the last stored state is read, which becomes stale after a reboot or crash (see BUG-6).            |
+
 ## Findings
 
 This section is the single place where findings of code-reviews, security-checks, bug-searches, performance-analyses and similar analyses of this repository are collected.
