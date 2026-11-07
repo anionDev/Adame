@@ -1,0 +1,3 @@
+[codespell]
+# Skip generated artifacts (DiffReport, docfx Reference output), build output and generated reports plus binary/minified/map files.
+skip = ./.git,*/Other/Artifacts,*/Other/Resources/DependentCodeUnits,*/Other/Resources/GRYLibrary,*/CodeAnalysisResult,*/TestCoverageReport,*/TestCoverageBadges,*/TestCoverageHistory,*/bin,*/obj,*.min.js,*.min.css,*.map
