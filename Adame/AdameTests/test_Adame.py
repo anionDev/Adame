@@ -1,4 +1,5 @@
 import unittest
+import configparser
 import tempfile
 import uuid
 import os
@@ -112,6 +113,30 @@ Tests that the create-command works as expected"""
 
         except Exception as e:
             GeneralUtilities.write_exception_to_stderr(e)
+        finally:
+            environment_for_test.dispose()
+
+    def test_command_create_writes_logtargetfolder(self):
+        """UnitTest
+Tests that the create-command writes the key 'logtargetfolder', which is required by the log-export of start and stop"""
+
+        # arrange
+
+        environment_for_test = EnvironmentForTest()
+
+        try:
+
+            # act
+
+            environment_for_test.create()
+
+            # assert
+
+            configuration = configparser.ConfigParser()
+            configuration.read(environment_for_test.adame_configuration_file)
+            assert configuration.has_option("general", "logtargetfolder")
+            assert configuration.get("general", "logtargetfolder") == ""
+
         finally:
             environment_for_test.dispose()
 

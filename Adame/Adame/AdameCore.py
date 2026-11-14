@@ -794,6 +794,7 @@ IDS-process:{ids_is_running_as_string}
         local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_networkinterface] = "eth0"
         local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_prescript] = ""
         local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_postscript] = ""
+        local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder] = ""
 
         with open(self.__configuration_file, 'w+', encoding=self.encoding) as configfile:
             local_configparser.write(configfile)
@@ -835,6 +836,12 @@ IDS-process:{ids_is_running_as_string}
         previous_config.set(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder, "")
         self.__save_configfile(configuration_file, previous_config)
 
+    def __migrate_to_v_2_0_3(self, configuration_file: str, previous_config: configparser.ConfigParser) -> None:
+        # Repositories which were created with a version before v2.0.3 do not contain the key "logtargetfolder" because the create-command did not write it.
+        if not previous_config.has_option(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder):
+            previous_config.set(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder, "")
+            self.__save_configfile(configuration_file, previous_config)
+
     @GeneralUtilities.check_arguments
     def __migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
         # Migration should only be done when the repository already exist and the repository-creation-process is already completed.
@@ -853,6 +860,8 @@ IDS-process:{ids_is_running_as_string}
                     config_format_version = self.__migrate_overhead('1.2.2', '1.2.3', lambda:  self.__migrate_to_v_1_2_3(configuration_file, configuration))
                 if config_format_version < parse('1.2.52'):
                     config_format_version = self.__migrate_overhead(config_format_version, '1.2.52', lambda:  self.__migrate_to_v_1_2_52(configuration_file, configuration))
+                if config_format_version < parse('2.0.3'):
+                    config_format_version = self.__migrate_overhead(config_format_version, '2.0.3', lambda:  self.__migrate_to_v_2_0_3(configuration_file, configuration))
 
                 configuration.set(self.__configuration_section_general, self.__configuration_section_general_key_formatversion, version)
                 self.__save_configfile(configuration_file, configuration)
