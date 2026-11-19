@@ -8,6 +8,7 @@ version = "2.0.3"
 description = "Adame is a tool to manage docker-applications as part in a Linux-environment."
 readme = { file = "ReadMe.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
+license = "MIT"
 keywords = ["release", "build", "management"]
 authors = [
     { name = "Marius Göcke", email = "marius.goecke@gmail.com" },
@@ -16,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python :: 3.10",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Topic :: System :: Logging",
