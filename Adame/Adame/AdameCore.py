@@ -1136,6 +1136,9 @@ The license of this repository is defined in the file `License.txt`.
                 except psutil.AccessDenied:
                     # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
                     pass
+                except psutil.NoSuchProcess:
+                    # A process which terminated while the process-list was queried or which is a zombie (psutil.ZombieProcess is a subclass of psutil.NoSuchProcess) is not running anymore, so it can be ignored.
+                    pass
             return result
 
     @GeneralUtilities.check_arguments

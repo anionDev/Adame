@@ -1,10 +1,12 @@
 import unittest
+import unittest.mock
 import configparser
 import tempfile
 import uuid
 import os
 import re
 import shutil
+import psutil
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 from ..Adame.AdameCore import Adame
 from .EnvironmentForTest import EnvironmentForTest
@@ -224,6 +226,33 @@ Ensures that adame._internal_process_is_running does not throw an exception when
         adame.verbose = True
         adame.set_test_mode(False)
         assert not adame._internal_process_is_running(42, "test")
+
+    def test_process_is_running_ignores_zombie_and_terminated_processes(self):
+        """RegressionTest
+Ensures that adame._internal_process_is_running does not throw an exception when the process-list contains a zombie-process or a process which terminated in the meantime."""
+
+        # arrange
+        zombie_process = unittest.mock.Mock()
+        zombie_process.pid = 40
+        zombie_process.cmdline.side_effect = psutil.ZombieProcess(40)
+        terminated_process = unittest.mock.Mock()
+        terminated_process.pid = 41
+        terminated_process.cmdline.side_effect = psutil.NoSuchProcess(41)
+        running_process = unittest.mock.Mock()
+        running_process.pid = 42
+        running_process.cmdline.return_value = ["test"]
+        adame = Adame()
+        adame.set_test_mode(False)
+
+        # act
+        with unittest.mock.patch.object(psutil, "process_iter", return_value=[zombie_process, terminated_process, running_process]):
+            process_42_is_running = adame._internal_process_is_running(42, "test")
+        with unittest.mock.patch.object(psutil, "process_iter", return_value=[zombie_process, terminated_process, running_process]):
+            process_40_is_running = adame._internal_process_is_running(40, "test")
+
+        # assert
+        assert process_42_is_running
+        assert not process_40_is_running
 
     def test_escape_git_folders_in_folder(self) -> None:
         # arrange
