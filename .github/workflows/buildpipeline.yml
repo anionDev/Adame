@@ -17,7 +17,7 @@ jobs:
   build-pipeline:
     runs-on: [self-hosted, scriptcollection]
     container:
-      image: aniondev/scbuilder:latest
+      image: aniondev/scbuilder:v1.2.21
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     steps:
