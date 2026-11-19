@@ -29,7 +29,7 @@ dependencies = [
     "packaging>=25.0.0",
     "psutil>=7.2.2",
     "PyYAML>=6.0.3",
-    "ScriptCollection>=4.3.27",
+    "ScriptCollection>=5.0.2",
 ]
 
 [project.urls]
