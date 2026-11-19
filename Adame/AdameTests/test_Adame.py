@@ -1,9 +1,12 @@
 import unittest
+import unittest.mock
+import configparser
 import tempfile
 import uuid
 import os
 import re
 import shutil
+import psutil
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 from ..Adame.AdameCore import Adame
 from .EnvironmentForTest import EnvironmentForTest
@@ -21,11 +24,11 @@ Tests that the constructor does not throw any exception"""
         """UnitTest
 Tests that the create-command works as expected"""
 
+        # arrange
+
+        environment_for_test = EnvironmentForTest()
+
         try:
-
-            # arrange
-
-            environment_for_test = EnvironmentForTest()
 
             # act
 
@@ -115,6 +118,30 @@ Tests that the create-command works as expected"""
         finally:
             environment_for_test.dispose()
 
+    def test_command_create_writes_logtargetfolder(self):
+        """UnitTest
+Tests that the create-command writes the key 'logtargetfolder', which is required by the log-export of start and stop"""
+
+        # arrange
+
+        environment_for_test = EnvironmentForTest()
+
+        try:
+
+            # act
+
+            environment_for_test.create()
+
+            # assert
+
+            configuration = configparser.ConfigParser()
+            configuration.read(environment_for_test.adame_configuration_file)
+            assert configuration.has_option("general", "logtargetfolder")
+            assert configuration.get("general", "logtargetfolder") == ""
+
+        finally:
+            environment_for_test.dispose()
+
     def test_command_start(self):
         """UnitTest
 Tests that the start-command works as expected"""
@@ -152,11 +179,12 @@ Tests that the start-command works as expected"""
         """UnitTest
 Tests that the stop-command works as expected"""
 
+        # arrange
+
+        environment_for_test = EnvironmentForTest()
+
         try:
 
-            # arrange
-
-            environment_for_test = EnvironmentForTest()
             environment_for_test.create()
             # mock program calls which are maybe not available in a development-environment:
             environment_for_test.adame._internal_sc.register_mock_program_call("docker",  re.escape(f"compose --project-name {environment_for_test.adame._internal_get_container_name()} up --detach --build --quiet-pull --force-recreate --always-recreate-deps"), re.escape(environment_for_test.adame._internal_configuration_folder), 0, "", "", 40)
@@ -198,6 +226,33 @@ Ensures that adame._internal_process_is_running does not throw an exception when
         adame.verbose = True
         adame.set_test_mode(False)
         assert not adame._internal_process_is_running(42, "test")
+
+    def test_process_is_running_ignores_zombie_and_terminated_processes(self):
+        """RegressionTest
+Ensures that adame._internal_process_is_running does not throw an exception when the process-list contains a zombie-process or a process which terminated in the meantime."""
+
+        # arrange
+        zombie_process = unittest.mock.Mock()
+        zombie_process.pid = 40
+        zombie_process.cmdline.side_effect = psutil.ZombieProcess(40)
+        terminated_process = unittest.mock.Mock()
+        terminated_process.pid = 41
+        terminated_process.cmdline.side_effect = psutil.NoSuchProcess(41)
+        running_process = unittest.mock.Mock()
+        running_process.pid = 42
+        running_process.cmdline.return_value = ["test"]
+        adame = Adame()
+        adame.set_test_mode(False)
+
+        # act
+        with unittest.mock.patch.object(psutil, "process_iter", return_value=[zombie_process, terminated_process, running_process]):
+            process_42_is_running = adame._internal_process_is_running(42, "test")
+        with unittest.mock.patch.object(psutil, "process_iter", return_value=[zombie_process, terminated_process, running_process]):
+            process_40_is_running = adame._internal_process_is_running(40, "test")
+
+        # assert
+        assert process_42_is_running
+        assert not process_40_is_running
 
     def test_escape_git_folders_in_folder(self) -> None:
         # arrange

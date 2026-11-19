@@ -1,0 +1,6 @@
+# Betterleaks configuration
+
+# Keep all default rules; this config only adds allowlists.
+# (Without useDefault the default ruleset would be replaced and nothing would be scanned.)
+[extend]
+useDefault = true

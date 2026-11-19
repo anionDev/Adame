@@ -1,5 +1,5 @@
 [general]
-formatversion = 2.0.2
+formatversion = 2.0.3
 repositoryversion = 1.0.0
 name = DemoApplication
 owner = DemoOwner
@@ -8,4 +8,5 @@ repositoryid = de30de30-de30-de30-de30-de30de30de30
 networkinterface = eth0
 prescript = 
 postscript = 
+logtargetfolder = 
 

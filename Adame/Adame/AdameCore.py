@@ -8,16 +8,16 @@ import shutil
 import uuid
 from argparse import RawTextHelpFormatter
 from configparser import ConfigParser
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import argparse
-from packaging.version import parse
+from packaging.version import parse, Version
 from ScriptCollection.ScriptCollectionCore import ScriptCollectionCore
 from ScriptCollection.GeneralUtilities import GeneralUtilities
 import psutil
 import yaml
 
 product_name = "Adame"
-version = "2.0.2"
+version = "2.0.3"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -96,8 +96,8 @@ class Adame:
 
     __test_mode: bool = False
     _internal_demo_mode: bool = False
-    _internal_sc: ScriptCollectionCore = ScriptCollectionCore()
-    __mock_process_queries: list = list()
+    _internal_sc: ScriptCollectionCore = None
+    __mock_process_queries: list = None
     __gpgkey_of_owner_is_available: bool = False
     __remote_address_is_available: bool = False
 
@@ -106,6 +106,8 @@ class Adame:
     # <initialization>
 
     def __init__(self):
+        self.__mock_process_queries = list()
+        self._internal_sc = ScriptCollectionCore()
         self.set_test_mode(False)
 
     # </initialization>
@@ -147,7 +149,6 @@ class Adame:
 
         GeneralUtilities.ensure_directory_exists(self.__security_related_configuration_folder)
 
-        self.__create_file_in_repository(self.__readme_file, self.__get_readme_file_content(self.__configuration, image))
         self.__create_file_in_repository(self.__license_file, self.__get_license_file_content(self.__configuration))
         self.__create_file_in_repository(self.__gitignore_file, self.__get_gitignore_file_content())
         self.__create_file_in_repository(self.__dockercompose_file, self.__get_dockercompose_file_content(image))
@@ -165,6 +166,8 @@ class Adame:
         self.__create_securityconfiguration_file(gpgkey_of_owner)
 
         self.__load_securityconfiguration()
+        # The readme-file must be created after loading the security-configuration because its content depends on the security-configuration.
+        self.__create_file_in_repository(self.__readme_file, self.__get_readme_file_content(self.__configuration, image))
         self.__create_file_in_repository(self.__gitconfig_file, self.__get_gitconfig_file_content(owner,  self.__gpgkey_of_owner_is_available, gpgkey_of_owner))
 
         self._internal_sc.set_permission(self._internal_log_folder_for_ids, "666", True)
@@ -512,7 +515,7 @@ class Adame:
         if self.__test_mode:
             return
         if (not GeneralUtilities.current_user_has_elevated_privileges()):
-            raise ValueError("Adame requries elevated privileges to get executed")
+            raise ValueError("Adame requires elevated privileges to get executed")
 
     @GeneralUtilities.check_arguments
     def __log_running_state(self, container_is_running: bool, ids_is_running: bool, action: str) -> None:
@@ -537,7 +540,7 @@ class Adame:
     @GeneralUtilities.check_arguments
     def __check_whether_required_tools_for_adame_are_available(self) -> bool:
         result = True
-        if not self.__test_mode:
+        if self.__test_mode:
             return result
         tools = [
             "chmod",
@@ -557,8 +560,8 @@ class Adame:
                 result = False
         for tool in recommended_tools:
             if not self.__tool_exists_in_path(tool):
+                # A missing recommended tool is not a discrepancy which lets the diagnosis fail.
                 self.__log_warning(f"Recommended tool '{tool}' is not available")
-                result = False
         return result
 
     @GeneralUtilities.check_arguments
@@ -575,14 +578,14 @@ class Adame:
             raise FileNotFoundError(f"File '{configurationfile}' does not exist")
 
     @GeneralUtilities.check_arguments
-    def __check_integrity_of_repository(self, amount_of_days_of_history_to_check: int = None) -> None:
+    def __check_integrity_of_repository(self, amount_of_days_of_history_to_check: int) -> None:
         """This function checks the integrity of the app-repository.
 This function is idempotent."""
         until = datetime.now()
         since = until - timedelta(days=amount_of_days_of_history_to_check)
-        commit_hashs_to_check_in_given_interval = self._internal_sc.get_commit_ids_between_dates(self.__repository_folder, until, since)
+        commit_hashs_to_check_in_given_interval = self._internal_sc.get_commit_ids_between_dates(self.__repository_folder, since, until)
         for commithash in commit_hashs_to_check_in_given_interval:
-            if not self._internal_sc.commit_is_signed_by_key(self.__repository_folder, commithash, self.__configuration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner]):
+            if not self._internal_sc.commit_is_signed_by_key(self.__repository_folder, commithash, self.__securityconfiguration[self.__securityconfiguration_section_general][self.__configuration_section_general_key_gpgkeyofowner]):
                 self.__log_warning(f"The app-repository '{self.__repository_folder}' contains the unsigned commit {commithash}", False, True, True)
 
     @GeneralUtilities.check_arguments
@@ -622,7 +625,7 @@ This function is idempotent."""
 
     @GeneralUtilities.check_arguments
     def __check_siem_is_reachable(self) -> bool:
-        """This function checks wether the SIEM is available."""
+        """This function checks whether the SIEM is available."""
         siemaddress = self.__securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_siemaddress]
         if GeneralUtilities.string_is_none_or_whitespace(siemaddress):
             return False
@@ -697,10 +700,10 @@ This function is idempotent."""
         if (ids == "snort"):
             for process in self.__get_running_processes():
                 if (process.command.startswith("snort") and self.__repository_folder in process.command):
-                    result = self.__start_program_synchronously("kill", f"-TERM {process.process_id}")[0]
+                    # The exitcode is evaluated manually here to be able to fall back to sending SIGKILL if sending SIGTERM did not work.
+                    result = self.__start_program_synchronously("kill", f"-TERM {process.process_id}", None, False)[0]
                     if result != 0:
-                        result = self.__start_program_synchronously("kill", f"-9 {process.process_id}")[0]
-        result = 0
+                        result = self.__start_program_synchronously("kill", f"-9 {process.process_id}", None, False)[0]
         success = result == 0
         if success:
             self.__log_information("IDS was stopped", False, True, True)
@@ -740,18 +743,18 @@ This function is idempotent."""
         processid_of_ids_as_string = False
         for line in lines:
             if ":" in line:
-                splitted = line.split(":")
-                value_as_string = splitted[1].strip()
+                parts = line.split(":")
+                value_as_string = parts[1].strip()
                 if GeneralUtilities.string_has_nonwhitespace_content(value_as_string):
                     value = GeneralUtilities.string_to_boolean(value_as_string)
-                    if splitted[0] == "Container-process":
+                    if parts[0] == "Container-process":
                         processid_of_container_as_string = value
-                    if splitted[0] == "IDS-process":
+                    if parts[0] == "IDS-process":
                         processid_of_ids_as_string = value
         return (processid_of_container_as_string, processid_of_ids_as_string)
 
     @GeneralUtilities.check_arguments
-    def __get_running_information_file_content(self, container_is_running: bool, ids_is_running: int) -> str:
+    def __get_running_information_file_content(self, container_is_running: bool, ids_is_running: bool) -> str:
         container_is_running_as_string = str(container_is_running)
         ids_is_running_as_string = str(ids_is_running)
         return f"""Container-process:{container_is_running_as_string}
@@ -791,6 +794,7 @@ IDS-process:{ids_is_running_as_string}
         local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_networkinterface] = "eth0"
         local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_prescript] = ""
         local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_postscript] = ""
+        local_configparser[self.__configuration_section_general][self.__configuration_section_general_key_logtargetfolder] = ""
 
         with open(self.__configuration_file, 'w+', encoding=self.encoding) as configfile:
             local_configparser.write(configfile)
@@ -813,12 +817,12 @@ IDS-process:{ids_is_running_as_string}
             configuration.write(file_writer)
 
     @GeneralUtilities.check_arguments
-    def __migrate_overhead(self, sourceVersion, target_version, function) -> None:
+    def __migrate_overhead(self, sourceVersion, target_version: str, function) -> Version:
         try:
             self.__log_information(f"Start migrating from v{sourceVersion} to v{target_version}", False, True, True)
             function()
             self.__commit(f"Migrated from v{sourceVersion} to v{target_version}", True, no_changes_behavior=1, overhead=False)
-            return target_version
+            return parse(target_version)
         except Exception as exception:
             self.__log_exception(f"Error while migrating from v{sourceVersion} to v{target_version}", exception, False, True, True)
             raise
@@ -831,6 +835,12 @@ IDS-process:{ids_is_running_as_string}
     def __migrate_to_v_1_2_52(self, configuration_file: str, previous_config: configparser.ConfigParser) -> None:
         previous_config.set(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder, "")
         self.__save_configfile(configuration_file, previous_config)
+
+    def __migrate_to_v_2_0_3(self, configuration_file: str, previous_config: configparser.ConfigParser) -> None:
+        # Repositories which were created with a version before v2.0.3 do not contain the key "logtargetfolder" because the create-command did not write it.
+        if not previous_config.has_option(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder):
+            previous_config.set(self.__configuration_section_general, self.__configuration_section_general_key_logtargetfolder, "")
+            self.__save_configfile(configuration_file, previous_config)
 
     @GeneralUtilities.check_arguments
     def __migrate_configuration_if_required(self, configuration_file: str, configuration: configparser.ConfigParser) -> configparser.ConfigParser:
@@ -850,6 +860,8 @@ IDS-process:{ids_is_running_as_string}
                     config_format_version = self.__migrate_overhead('1.2.2', '1.2.3', lambda:  self.__migrate_to_v_1_2_3(configuration_file, configuration))
                 if config_format_version < parse('1.2.52'):
                     config_format_version = self.__migrate_overhead(config_format_version, '1.2.52', lambda:  self.__migrate_to_v_1_2_52(configuration_file, configuration))
+                if config_format_version < parse('2.0.3'):
+                    config_format_version = self.__migrate_overhead(config_format_version, '2.0.3', lambda:  self.__migrate_to_v_2_0_3(configuration_file, configuration))
 
                 configuration.set(self.__configuration_section_general, self.__configuration_section_general_key_formatversion, version)
                 self.__save_configfile(configuration_file, configuration)
@@ -991,7 +1003,6 @@ Logs/Overhead/**
     def __create_securityconfiguration_file(self, gpgkey_of_owner: str) -> None:
         securityconfiguration = ConfigParser()
         securityconfiguration.add_section(self.__securityconfiguration_section_general)
-        securityconfiguration[self.__securityconfiguration_section_general][self.__securityconfiguration_section_general_key_enabledids] = "false"
         self.__add_default_ids_configuration_to_securityconfiguration(securityconfiguration, gpgkey_of_owner)
 
         with open(self.__propertiesconfiguration_file, 'w+', encoding=self.encoding) as configfile:
@@ -1022,12 +1033,12 @@ Logs/Overhead/**
     def __get_readme_file_content(self, configuration: ConfigParser, image: str) -> str:
 
         if self.__remote_address_is_available:
-            remote_address_info = f"The data of this repository will be saved as backup in '{configuration.get(self.__securityconfiguration_section_general, self.__configuration_section_general_key_remoteaddress)}'."
+            remote_address_info = f"The data of this repository will be saved as backup in '{self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__configuration_section_general_key_remoteaddress)}'."
         else:
             remote_address_info = "Currently there is no backup-address defined for backups of this repository."
 
         if self.__gpgkey_of_owner_is_available:
-            gpgkey_of_owner_info = f"The integrity of the data of this repository will ensured using the GPG-key {configuration.get(self.__securityconfiguration_section_general, self.__configuration_section_general_key_gpgkeyofowner)}."
+            gpgkey_of_owner_info = f"The integrity of the data of this repository will ensured using the GPG-key {self.__securityconfiguration.get(self.__securityconfiguration_section_general, self.__configuration_section_general_key_gpgkeyofowner)}."
         else:
             gpgkey_of_owner_info = "Currently there is no GPG-key defined to ensure the integrity of this repository."
 
@@ -1064,7 +1075,7 @@ The license of this repository is defined in the file `License.txt`.
             self.__start_program_synchronously("sh", file, self._internal_configuration_folder, True, True)
 
     @GeneralUtilities.check_arguments
-    def __stop_container(self) -> None:
+    def __stop_container(self) -> bool:
         projectname = self._internal_get_container_name()
         # TODO do "docker compose -p {projectname} stop"
         # TODO for each container in compose-project save the output of "docker logs {containername}" in the log-folder in the file "Container_{containername}.log"
@@ -1124,6 +1135,9 @@ The license of this repository is defined in the file `License.txt`.
                     result.append(process)
                 except psutil.AccessDenied:
                     # The process searched for is always queryable. Some other processes may not be queryable but they can be ignored since they are not relevant for this use-case.
+                    pass
+                except psutil.NoSuchProcess:
+                    # A process which terminated while the process-list was queried or which is a zombie (psutil.ZombieProcess is a subclass of psutil.NoSuchProcess) is not running anymore, so it can be ignored.
                     pass
             return result
 
@@ -1240,7 +1254,7 @@ The license of this repository is defined in the file `License.txt`.
         if is_verbose_log_entry and not self.verbose:
             return
         if (self.format_datetimes_to_utc):
-            date_as_string = datetime.utcnow()
+            date_as_string = datetime.now(timezone.utc).replace(tzinfo=None)
         else:
             date_as_string = datetime.now()
         logentry = f"[{GeneralUtilities.datetime_to_string_for_logfile_entry(date_as_string,False)}] [{loglevel}] {message}"
@@ -1356,9 +1370,9 @@ Adame must be executed with elevated privileges. This is required to run command
         core.verbose = options.verbose
 
     if options.command == create_command_name:
-        if not hasattr(options, 'image'):
+        if options.image is None:
             options.image = "SomeImage:latest"
-        if not hasattr(options, 'folder'):
+        if options.folder is None:
             options.folder = options.name+"App"
         return core.create(options.name, options.folder, options.image, options.owner, options.gpgkey_of_owner)
 
@@ -1386,7 +1400,7 @@ Adame must be executed with elevated privileges. This is required to run command
     elif options.command == diagnosis_command_name:
         return core.diagnosis(options.configurationfile)
 
-    elif options.command == checkintegrity_command_name:
+    elif options.command == checkout_command_name:
         return core.checkout(options.configurationfile, options.branch)
 
     else:

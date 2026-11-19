@@ -6,4 +6,4 @@ This is the reference of Adame.
 
 - [Usage](./Articles/Usage.md)
 - [Configuration](./Articles/Configuration.md)
-- [Generated files](./Articles/Generatedfiles.md)
+- [Generated files](./Articles/GeneratedFiles.md)

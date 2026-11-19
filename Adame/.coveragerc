@@ -1,6 +1,6 @@
 [run]
 source = .
-omit = ./venv/*,*__init__.py,./Adame/Other/*,./AdameTests/*,Setup.py
+omit = ./venv/*,*__init__.py,./Adame/Other/*,./AdameTests/*
 
 [report]
-omit = ./venv/*,*__init__.py,./Adame/Other/*,./AdameTests/*,Setup.py
+omit = ./venv/*,*__init__.py,./Adame/Other/*,./AdameTests/*
