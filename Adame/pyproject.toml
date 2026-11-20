@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Adame"
-version = "2.0.5"
+version = "2.0.6"
 description = "Adame is a tool to manage docker-applications as part in a Linux-environment."
 readme = { file = "ReadMe.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
@@ -33,8 +33,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/anionDev/Adame"
-Changelog = "https://github.com/anionDev/Adame/tree/main/Other/Resources/Changelog"
+Homepage = "https://github.com/anionDevelopment/Adame"
+Changelog = "https://github.com/anionDevelopment/Adame/tree/main/Other/Resources/Changelog"
 
 [project.scripts]
 adame = "Adame.AdameCore:adame_cli"
