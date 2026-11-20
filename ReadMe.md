@@ -5,7 +5,7 @@
 ## Purpose
 
 Adame (pronounced: `ăˈ.dam`) is the abbreviation for "Automatic Docker Application Management Engine". So in short: Adame is a tool to manage applications running in a container as part in a Linux-environment.
-The details can be found [here](https://github.com/anionDev/Adame/tree/main/Adame).
+The details can be found [here](https://github.com/anionDevelopment/Adame/tree/main/Adame).
 
 ## Reference
 

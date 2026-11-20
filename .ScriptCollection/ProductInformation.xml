@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <productinformation xmlns="https://projects.aniondev.de/PublicProjects/Common/ProjectTemplates/-/tree/v3.0.4/Conventions/RepositoryStructure/CommonProjectStructure">
   <producttitle>Adame</producttitle>
-  <remoteaddress>https://github.com/anionDev/Adame</remoteaddress>
+  <remoteaddress>https://github.com/anionDevelopment/Adame</remoteaddress>
   <requiredenvironmentvariables />
 </productinformation>
