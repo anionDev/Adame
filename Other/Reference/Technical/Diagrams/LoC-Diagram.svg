@@ -48,7 +48,7 @@
               <path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none" />
             </g>
           </g>
-          <g class="mark-group role-axis" role="graphics-symbol" aria-roledescription="axis" aria-label="X-axis titled 'Date' for a utc scale with values from 2026-01-13 20:01:58 (UTC) to 2026-11-20 09:17:09 (UTC)">
+          <g class="mark-group role-axis" role="graphics-symbol" aria-roledescription="axis" aria-label="X-axis titled 'Date' for a utc scale with values from 2026-01-13 20:01:58 (UTC) to 2026-11-20 09:38:53 (UTC)">
             <g transform="translate(0.5,400.5)">
               <path class="background" aria-hidden="true" d="M0,0h0v0h0Z" pointer-events="none" />
               <g>
@@ -65,22 +65,22 @@
                   <line transform="translate(750,0)" x2="0" y2="5" stroke="#888" stroke-width="1" opacity="1" />
                 </g>
                 <g class="mark-text role-axis-label" pointer-events="none">
-                  <text text-anchor="end" transform="translate(46.79483913642331,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-02-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(118.92441745515224,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-03-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(198.78216487945923,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-04-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(276.0638559352402,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-05-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(355.92160335954725,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-06-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(433.2032944153282,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-07-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(513.0610418396352,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-08-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(592.9187892639421,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-09-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(670.2004803197232,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-10-01 00:00:00 (UTC)</text>
-                  <text text-anchor="end" transform="translate(750.0582277440301,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-11-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(46.79256505465376,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-02-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(118.91863810309799,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-03-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(198.77250469244697,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-04-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(276.05044010149436,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-05-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(355.9043066908433,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-06-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(433.18224209989074,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-07-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(513.0361086892397,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-08-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(592.8899752785887,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-09-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(670.1679106876361,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="1">2026-10-01 00:00:00 (UTC)</text>
+                  <text text-anchor="end" transform="translate(750.0217772769851,7) rotate(315) translate(0,8)" font-family="sans-serif" font-size="10px" fill="#000" opacity="0">2026-11-01 00:00:00 (UTC)</text>
                 </g>
                 <g class="mark-rule role-axis-domain" pointer-events="none">
                   <line transform="translate(0,0)" x2="800" y2="0" stroke="#888" stroke-width="1" opacity="1" />
                 </g>
                 <g class="mark-text role-axis-title" pointer-events="none">
-                  <text text-anchor="middle" transform="translate(400,168.49242404917504)" font-family="sans-serif" font-size="11px" font-weight="bold" fill="#000" opacity="1">Date</text>
+                  <text text-anchor="middle" transform="translate(400,168.492424049175)" font-family="sans-serif" font-size="11px" font-weight="bold" fill="#000" opacity="1">Date</text>
                 </g>
               </g>
               <path class="foreground" aria-hidden="true" d="" pointer-events="none" display="none" />
@@ -129,29 +129,32 @@
             </g>
           </g>
           <g class="mark-line role-mark layer_0_marks" role="graphics-object" aria-roledescription="line mark container">
-            <path aria-label="Date: 2026-01-13 20:01:58 (UTC); Lines of Code: 1864; Version: v2.0.0" role="graphics-symbol" aria-roledescription="line mark" d="M0,61.091L30.675,61.091L246.001,60.909L798.601,41.818L798.621,34.545L798.742,34.545L800,34.545" stroke="#4c78a8" stroke-width="2" />
+            <path aria-label="Date: 2026-01-13 20:01:58 (UTC); Lines of Code: 1864; Version: v2.0.0" role="graphics-symbol" aria-roledescription="line mark" d="M0,61.091L30.673,61.091L245.989,60.909L798.562,41.818L798.582,34.545L798.703,34.545L799.961,34.545L800,34.364" stroke="#4c78a8" stroke-width="2" />
           </g>
           <g class="mark-symbol role-mark layer_1_marks" role="graphics-object" aria-roledescription="symbol mark container">
             <path aria-label="Date: 2026-01-13 20:01:58 (UTC); Lines of Code: 1864; Version: v2.0.0" role="graphics-symbol" aria-roledescription="point" transform="translate(0,61.090909090909086)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-01-13 20:01:58 (UTC); Lines of Code: 1864; Version: v2.0.0</title>
             </path>
-            <path aria-label="Date: 2026-01-25 17:48:59 (UTC); Lines of Code: 1864; Version: v2.0.1" role="graphics-symbol" aria-roledescription="point" transform="translate(30.6747788092977,61.090909090909086)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+            <path aria-label="Date: 2026-01-25 17:48:59 (UTC); Lines of Code: 1864; Version: v2.0.1" role="graphics-symbol" aria-roledescription="point" transform="translate(30.673288111678843,61.090909090909086)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-01-25 17:48:59 (UTC); Lines of Code: 1864; Version: v2.0.1</title>
             </path>
-            <path aria-label="Date: 2026-04-19 07:55:14 (UTC); Lines of Code: 1865; Version: v2.0.2" role="graphics-symbol" aria-roledescription="point" transform="translate(246.00133774547587,60.90909090909089)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+            <path aria-label="Date: 2026-04-19 07:55:14 (UTC); Lines of Code: 1865; Version: v2.0.2" role="graphics-symbol" aria-roledescription="point" transform="translate(245.98938285541152,60.90909090909089)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-04-19 07:55:14 (UTC); Lines of Code: 1865; Version: v2.0.2</title>
             </path>
-            <path aria-label="Date: 2026-11-19 20:14:56 (UTC); Lines of Code: 1970; Version: v2.0.3" role="graphics-symbol" aria-roledescription="point" transform="translate(798.6006706765737,41.8181818181818)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+            <path aria-label="Date: 2026-11-19 20:14:56 (UTC); Lines of Code: 1970; Version: v2.0.3" role="graphics-symbol" aria-roledescription="point" transform="translate(798.5618611997198,41.8181818181818)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-11-19 20:14:56 (UTC); Lines of Code: 1970; Version: v2.0.3</title>
             </path>
-            <path aria-label="Date: 2026-11-19 20:26:22 (UTC); Lines of Code: 2010; Version: v2.0.4" role="graphics-symbol" aria-roledescription="point" transform="translate(798.6211240870923,34.545454545454525)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+            <path aria-label="Date: 2026-11-19 20:26:22 (UTC); Lines of Code: 2010; Version: v2.0.4" role="graphics-symbol" aria-roledescription="point" transform="translate(798.5823136162671,34.545454545454525)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-11-19 20:26:22 (UTC); Lines of Code: 2010; Version: v2.0.4</title>
             </path>
-            <path aria-label="Date: 2026-11-19 21:33:50 (UTC); Lines of Code: 2010; Version: v2.0.5" role="graphics-symbol" aria-roledescription="point" transform="translate(798.7418170984325,34.545454545454525)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+            <path aria-label="Date: 2026-11-19 21:33:50 (UTC); Lines of Code: 2010; Version: v2.0.5" role="graphics-symbol" aria-roledescription="point" transform="translate(798.7030007623072,34.545454545454525)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-11-19 21:33:50 (UTC); Lines of Code: 2010; Version: v2.0.5</title>
             </path>
-            <path aria-label="Date: 2026-11-20 09:17:09 (UTC); Lines of Code: 2010; Version: v2.0.6" role="graphics-symbol" aria-roledescription="point" transform="translate(800,34.545454545454525)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+            <path aria-label="Date: 2026-11-20 09:17:09 (UTC); Lines of Code: 2010; Version: v2.0.6" role="graphics-symbol" aria-roledescription="point" transform="translate(799.9611225201492,34.545454545454525)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
               <title>Date: 2026-11-20 09:17:09 (UTC); Lines of Code: 2010; Version: v2.0.6</title>
+            </path>
+            <path aria-label="Date: 2026-11-20 09:38:53 (UTC); Lines of Code: 2011; Version: v2.0.7" role="graphics-symbol" aria-roledescription="point" transform="translate(800,34.363636363636374)" d="M2.739,0A2.739,2.739,0,1,1,-2.739,0A2.739,2.739,0,1,1,2.739,0" fill="#4c78a8" stroke-width="2" opacity="1">
+              <title>Date: 2026-11-20 09:38:53 (UTC); Lines of Code: 2011; Version: v2.0.7</title>
             </path>
           </g>
         </g>
