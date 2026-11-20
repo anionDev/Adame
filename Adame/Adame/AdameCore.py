@@ -17,7 +17,7 @@ import psutil
 import yaml
 
 product_name = "Adame"
-version = "2.0.6"
+version = "2.0.7"
 __version__ = version
 versioned_product_name = f"{product_name} v{version}"
 
@@ -770,6 +770,7 @@ IDS-process:{ids_is_running_as_string}
     gpgsign = {str(gpgkey_of_owner_is_available).lower()}
 [user]
     name = {username}
+    email = 
     signingkey = {gpgkey_of_owner}
 """
 
